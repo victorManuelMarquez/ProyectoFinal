@@ -1,5 +1,7 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.task.AppChecker;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -18,15 +20,20 @@ public class LoadingScreen extends JFrame {
         BorderLayout defaultLayout = (BorderLayout) getContentPane().getLayout();
         defaultLayout.setVgap(8);
 
+        add(new JLabel(), BorderLayout.NORTH);
+
         JTextArea textArea = new JTextArea();
         textArea.setFont(UIManager.getFont("Label.font"));
         textArea.setDisabledTextColor(UIManager.getColor("TextArea.foreground"));
+        textArea.setMargin(new Insets(0, 8, 0, 8));
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
+        textArea.setBackground(null);
         textArea.setEnabled(false);
 
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(480, 360));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         add(scrollPane);
 
         JProgressBar progressBar = new JProgressBar();
@@ -37,7 +44,7 @@ public class LoadingScreen extends JFrame {
     }
 
     public static void createAndShow() {
-        String localTitle = "Iniciando...";
+        String localTitle = "Iniciando programa";
         try {
             LoadingScreen window = new LoadingScreen(localTitle);
             window.pack();
@@ -51,23 +58,30 @@ public class LoadingScreen extends JFrame {
     static class LSWindowEvents extends WindowAdapter {
 
         private final JFrame root;
-        private final JTextArea contentArea;
-        private final JProgressBar actualProgress;
+
+        private final AppChecker checker;
 
         public LSWindowEvents(JTextArea contentArea, JProgressBar actualProgress) {
-            this.contentArea = contentArea;
-            this.actualProgress = actualProgress;
             root = (JFrame) SwingUtilities.getRoot(contentArea);
+            checker = new AppChecker(contentArea);
+            checker.addPropertyChangeListener(evt -> {
+                if ("progress".equals(evt.getPropertyName())) {
+                    actualProgress.setValue(getChecker().getProgress());
+                } else if ("everythingIsOk".equals(evt.getPropertyName())) {
+                    getRoot().dispose();
+                }
+            });
         }
 
         @Override
         public void windowOpened(WindowEvent e) {
-            getContentArea().append(getRoot().getTitle() + System.lineSeparator());
-            getActualProgress().setIndeterminate(true);
+            getChecker().execute();
         }
 
         @Override
         public void windowClosing(WindowEvent e) {
+            if (!getChecker().isDone())
+                getChecker().cancel(true);
             getRoot().dispose();
         }
 
@@ -75,12 +89,8 @@ public class LoadingScreen extends JFrame {
             return root;
         }
 
-        public JTextArea getContentArea() {
-            return contentArea;
-        }
-
-        public JProgressBar getActualProgress() {
-            return actualProgress;
+        protected AppChecker getChecker() {
+            return checker;
         }
 
     }
