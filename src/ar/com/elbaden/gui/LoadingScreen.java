@@ -63,7 +63,7 @@ public class LoadingScreen extends JFrame {
 
         public LSWindowEvents(JTextArea contentArea, JProgressBar actualProgress) {
             root = (JFrame) SwingUtilities.getRoot(contentArea);
-            checker = new AppChecker(contentArea);
+            checker = new AppChecker(root, contentArea);
             checker.addPropertyChangeListener(evt -> {
                 if ("progress".equals(evt.getPropertyName())) {
                     actualProgress.setValue(getChecker().getProgress());

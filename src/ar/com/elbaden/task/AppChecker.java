@@ -1,22 +1,25 @@
 package ar.com.elbaden.task;
 
+import ar.com.elbaden.connection.DataBank;
+
 import javax.swing.*;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public final class AppChecker extends SwingWorker<Void, String> {
 
+    private final JFrame root;
     private final JTextArea publisher;
 
-    public AppChecker(JTextArea publisher) {
+    public AppChecker(JFrame root, JTextArea publisher) {
+        this.root = root;
         this.publisher = publisher;
     }
 
     @Override
-    protected Void doInBackground() throws InterruptedException {
+    protected Void doInBackground() {
         String localStarting = "Iniciando comprobación...";
         publish(localStarting);
-        Thread.sleep(3000);
+        checkDriver();
         return null;
     }
 
@@ -28,16 +31,26 @@ public final class AppChecker extends SwingWorker<Void, String> {
 
     @Override
     protected void done() {
-        try {
-            Void ignore = get();
-        } catch (InterruptedException | ExecutionException e) {
-            // ignore
-        }
         if (!isCancelled()) {
             String localFinished = "Comprobación finalizada.";
             publish(localFinished);
             firePropertyChange("everythingIsOk", "checking", "done");
         }
+    }
+
+    private void checkDriver() {
+        if (DataBank.isDriverPresent(getRoot())) {
+            String localDriverSuccess = "Driver encontrado...";
+            publish(localDriverSuccess);
+        } else {
+            String localDriverNotFound = "Driver no encontrado.";
+            publish(localDriverNotFound);
+            cancel(true);
+        }
+    }
+
+    public JFrame getRoot() {
+        return root;
     }
 
     public JTextArea getPublisher() {
