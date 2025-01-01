@@ -1,5 +1,7 @@
 package ar.com.elbaden.main;
 
+import ar.com.elbaden.gui.LoadingScreen;
+
 import javax.swing.*;
 
 public class App implements Runnable {
@@ -9,6 +11,8 @@ public class App implements Runnable {
     }
 
     @Override
-    public void run() {}
+    public void run() {
+        LoadingScreen.createAndShow();
+    }
 
 }
