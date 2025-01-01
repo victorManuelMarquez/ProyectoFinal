@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui;
 
 import ar.com.elbaden.task.AppChecker;
+import ar.com.elbaden.task.Countdown;
 
 import javax.swing.*;
 import java.awt.*;
@@ -60,15 +61,23 @@ public class LoadingScreen extends JFrame {
         private final JFrame root;
 
         private final AppChecker checker;
+        private final Countdown countdown;
 
         public LSWindowEvents(JTextArea contentArea, JProgressBar actualProgress) {
             root = (JFrame) SwingUtilities.getRoot(contentArea);
             checker = new AppChecker(root, contentArea);
+            countdown = new Countdown(root, actualProgress);
             checker.addPropertyChangeListener(evt -> {
-                if ("progress".equals(evt.getPropertyName())) {
-                    actualProgress.setValue(getChecker().getProgress());
-                } else if ("everythingIsOk".equals(evt.getPropertyName())) {
+                if ("everythingIsOk".equals(evt.getPropertyName())) {
                     getRoot().dispose();
+                } else if (SwingWorker.StateValue.DONE.equals(evt.getNewValue())) {
+                    if (checker.isCancelled())
+                        countdown.execute();
+                }
+            });
+            countdown.addPropertyChangeListener(evt -> {
+                if ("progress".equals(evt.getPropertyName())) {
+                    actualProgress.setValue(countdown.getProgress());
                 }
             });
         }
