@@ -34,8 +34,11 @@ public final class AppChecker extends SwingWorker<Void, String> {
         if (!isCancelled()) {
             String localFinished = "Comprobación finalizada.";
             publish(localFinished);
-            firePropertyChange("everythingIsOk", "checking", "done");
         }
+    }
+
+    private void launchCountdown() {
+        firePropertyChange("countdown", "checking", "interrupt");
     }
 
     private void checkDriver() {
@@ -45,6 +48,7 @@ public final class AppChecker extends SwingWorker<Void, String> {
         } else {
             String localDriverNotFound = "Driver no encontrado.";
             publish(localDriverNotFound);
+            launchCountdown();
             cancel(true);
         }
     }

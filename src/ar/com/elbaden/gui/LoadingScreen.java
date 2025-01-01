@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 public class LoadingScreen extends JFrame {
 
@@ -56,7 +58,7 @@ public class LoadingScreen extends JFrame {
         }
     }
 
-    static class LSWindowEvents extends WindowAdapter {
+    static class LSWindowEvents extends WindowAdapter implements PropertyChangeListener {
 
         private final JFrame root;
 
@@ -66,20 +68,15 @@ public class LoadingScreen extends JFrame {
         public LSWindowEvents(JTextArea contentArea, JProgressBar actualProgress) {
             root = (JFrame) SwingUtilities.getRoot(contentArea);
             checker = new AppChecker(root, contentArea);
+            checker.addPropertyChangeListener(this);
             countdown = new Countdown(root, actualProgress);
-            checker.addPropertyChangeListener(evt -> {
-                if ("everythingIsOk".equals(evt.getPropertyName())) {
-                    getRoot().dispose();
-                } else if (SwingWorker.StateValue.DONE.equals(evt.getNewValue())) {
-                    if (checker.isCancelled())
-                        countdown.execute();
-                }
-            });
-            countdown.addPropertyChangeListener(evt -> {
-                if ("progress".equals(evt.getPropertyName())) {
-                    actualProgress.setValue(countdown.getProgress());
-                }
-            });
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if ("countdown".equals(evt.getPropertyName())) {
+                getCountdown().execute();
+            }
         }
 
         @Override
@@ -91,6 +88,8 @@ public class LoadingScreen extends JFrame {
         public void windowClosing(WindowEvent e) {
             if (!getChecker().isDone())
                 getChecker().cancel(true);
+            if (!getCountdown().isDone())
+                getCountdown().cancel(true);
             getRoot().dispose();
         }
 
@@ -100,6 +99,10 @@ public class LoadingScreen extends JFrame {
 
         protected AppChecker getChecker() {
             return checker;
+        }
+
+        protected Countdown getCountdown() {
+            return countdown;
         }
 
     }

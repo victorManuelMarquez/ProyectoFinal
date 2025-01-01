@@ -13,6 +13,11 @@ public final class Countdown extends SwingWorker<Void, String> {
         this.root = root;
         this.publisher = publisher;
         this.seconds = Math.max(seconds, 10);
+        addPropertyChangeListener(evt-> {
+            if ("progress".equals(evt.getPropertyName())) {
+                publisher.setValue(getProgress());
+            }
+        });
     }
 
     public Countdown(JFrame root, JProgressBar publisher) {
