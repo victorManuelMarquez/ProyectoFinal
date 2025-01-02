@@ -61,12 +61,14 @@ public class LoadingScreen extends JFrame {
     static class LSWindowEvents extends WindowAdapter implements PropertyChangeListener {
 
         private final JFrame root;
+        private final JProgressBar actualProgress;
 
         private final AppChecker checker;
         private final Countdown countdown;
 
         public LSWindowEvents(JTextArea contentArea, JProgressBar actualProgress) {
             root = (JFrame) SwingUtilities.getRoot(contentArea);
+            this.actualProgress = actualProgress;
             checker = new AppChecker(root, contentArea);
             checker.addPropertyChangeListener(this);
             countdown = new Countdown(root, actualProgress);
@@ -76,6 +78,8 @@ public class LoadingScreen extends JFrame {
         public void propertyChange(PropertyChangeEvent evt) {
             if ("countdown".equals(evt.getPropertyName())) {
                 getCountdown().execute();
+            } else if ("progress".equals(evt.getPropertyName())) {
+                getActualProgress().setValue(getChecker().getProgress());
             }
         }
 
@@ -95,6 +99,10 @@ public class LoadingScreen extends JFrame {
 
         public JFrame getRoot() {
             return root;
+        }
+
+        public JProgressBar getActualProgress() {
+            return actualProgress;
         }
 
         protected AppChecker getChecker() {

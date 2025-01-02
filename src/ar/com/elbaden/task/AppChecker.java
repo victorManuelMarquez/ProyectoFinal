@@ -3,23 +3,38 @@ package ar.com.elbaden.task;
 import ar.com.elbaden.connection.DataBank;
 
 import javax.swing.*;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public final class AppChecker extends SwingWorker<Void, String> {
 
     private final JFrame root;
     private final JTextArea publisher;
+    private final List<Thread> threads;
 
     public AppChecker(JFrame root, JTextArea publisher) {
         this.root = root;
         this.publisher = publisher;
+        threads = Arrays.asList(
+                new Thread(this::checkDriver),
+                new Thread(this::checkConnection)
+        );
     }
 
     @Override
-    protected Void doInBackground() {
+    protected Void doInBackground() throws InterruptedException {
         String localStarting = "Iniciando comprobación...";
         publish(localStarting);
-        checkDriver();
+        int actualThread = 1;
+        Iterator<Thread> iterator = threads.iterator();
+        while (!isCancelled() && iterator.hasNext()) {
+            setProgress(actualThread * 100 / threads.size());
+            Thread thread = iterator.next();
+            thread.start();
+            thread.join();
+            actualThread++;
+        }
         return null;
     }
 
@@ -50,6 +65,16 @@ public final class AppChecker extends SwingWorker<Void, String> {
             publish(localDriverNotFound);
             launchCountdown();
             cancel(true);
+        }
+    }
+
+    private void checkConnection() {
+        if (DataBank.canConnect(getRoot())) {
+            String localConnected = "Conexión exitosa...";
+            publish(localConnected);
+        } else {
+            String localNotConnected = "Conexión fallida.";
+            publish(localNotConnected);
         }
     }
 
