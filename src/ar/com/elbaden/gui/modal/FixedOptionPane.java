@@ -6,7 +6,7 @@ public class FixedOptionPane extends JOptionPane {
 
     @Override
     public int getMaxCharactersPerLineCount() {
-        return 100;
+        return 60;
     }
 
 }
