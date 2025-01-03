@@ -31,7 +31,7 @@ public final class DataBank {
 
     public static boolean canConnect(JFrame root) {
         boolean connected = false;
-        try (Connection ignore = DriverManager.getConnection("mysql:jdbc://localhost:3306", "root", "")) {
+        try (Connection ignore = DriverManager.getConnection("jdbc:mysql://localhost:3306", "root", "")) {
             connected = true;
         } catch (SQLException sqlException) {
             StringBuilder message = buildMessageFor(sqlException);
