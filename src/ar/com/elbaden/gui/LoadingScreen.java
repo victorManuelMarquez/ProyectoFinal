@@ -15,6 +15,7 @@ public class LoadingScreen extends JFrame {
     public LoadingScreen(String title) throws HeadlessException {
         super(title);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        setResizable(false);
         setUndecorated(true);
         installComponents();
     }
