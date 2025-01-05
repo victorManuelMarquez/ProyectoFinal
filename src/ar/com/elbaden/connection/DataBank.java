@@ -1,6 +1,6 @@
 package ar.com.elbaden.connection;
 
-import ar.com.elbaden.gui.modal.FixedOptionPane;
+import ar.com.elbaden.gui.modal.PublishError;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
@@ -20,11 +20,7 @@ public final class DataBank {
         } catch (ClassNotFoundException | InvocationTargetException |
                  InstantiationException | IllegalAccessException |
                  NoSuchMethodException e) {
-            String localFatalError = "¡Error fatal!";
-            String localMessage = "El driver no existe o no puede ser utilizado.";
-            String message = localFatalError + System.lineSeparator() + localMessage;
-            String title = e.getClass().getSimpleName();
-            FixedOptionPane.showMessageDialog(root, message, title, JOptionPane.ERROR_MESSAGE);
+            PublishError.createAndShow(root, e);
         }
         return driverExists;
     }
@@ -34,25 +30,9 @@ public final class DataBank {
         try (Connection ignore = DriverManager.getConnection("jdbc:mysql://localhost:3306", "root", "")) {
             connected = true;
         } catch (SQLException sqlException) {
-            StringBuilder message = buildMessageFor(sqlException);
-            String title = sqlException.getClass().getSimpleName();
-            FixedOptionPane.showMessageDialog(root, message, title, JOptionPane.ERROR_MESSAGE);
+            PublishError.createAndShow(root, sqlException);
         }
         return connected;
-    }
-
-    private static StringBuilder buildMessageFor(SQLException sqlException) {
-        String formattedLocalError = "Se ha producido un error: %s";
-        String formattedLocalSQLError = "Código de error SQL (%s)";
-        String formattedLocalErrorCode = "Código de error del proveedor (%s)";
-        StringBuilder message = new StringBuilder();
-        message.append(String.format(formattedLocalError, sqlException.getMessage()));
-        message.append(System.lineSeparator());
-        message.append(String.format(formattedLocalSQLError, sqlException.getSQLState()));
-        message.append(System.lineSeparator());
-        if (sqlException.getErrorCode() != 0)
-            message.append(String.format(formattedLocalErrorCode, sqlException.getErrorCode()));
-        return message;
     }
 
 }
