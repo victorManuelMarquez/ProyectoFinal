@@ -25,6 +25,7 @@ public final class ConnectionSetUp extends JDialog {
         String localUserTxt = "Usuario:";
         String localPassTxt = "Contraseña:";
         String localShowTxt = "Mostrar";
+        String localHideTxt = "Ocultar";
         String localOk = "Aceptar";
         String localCancel = "Cancelar";
 
@@ -85,6 +86,12 @@ public final class ConnectionSetUp extends JDialog {
         JButton cancelBtn = new JButton(localCancel);
         buttonsPanel.add(cancelBtn);
 
+        showButton.addActionListener(_ -> {
+            char newChar = '\u0000';
+            char defaultChar = (Character) UIManager.get("PasswordField.echoChar");
+            passwordField.setEchoChar(passwordField.getEchoChar() == defaultChar ? newChar : defaultChar);
+            showButton.setText(passwordField.getEchoChar() == newChar ? localHideTxt : localShowTxt);
+        });
         okBtn.addActionListener(_ -> {
             String userValue = userField.getText();
             String passValue = new String(passwordField.getPassword());
