@@ -36,7 +36,7 @@ public class LoadingScreen extends JFrame {
         textArea.setEnabled(false);
 
         JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(480, 360));
+        scrollPane.setPreferredSize(new Dimension(480, 240));
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         add(scrollPane);
 
@@ -81,6 +81,8 @@ public class LoadingScreen extends JFrame {
                 getCountdown().execute();
             } else if ("progress".equals(evt.getPropertyName())) {
                 getActualProgress().setValue(getChecker().getProgress());
+            } else if ("progressIndeterminate".equals(evt.getPropertyName())) {
+                getActualProgress().setIndeterminate((Boolean) evt.getNewValue());
             }
         }
 

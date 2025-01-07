@@ -27,10 +27,10 @@ public final class Settings {
     }
 
     public File getFile() throws FileNotFoundException {
-        String userHome = System.getenv("user.home");
+        String userHome = System.getProperty("user.home");
         if (userHome == null)
             throw new RuntimeException("user.home == null");
-        String path = userHome + File.pathSeparator + WORKING_DIR;
+        String path = userHome + File.separator + WORKING_DIR;
         File settingsFile = new File(path, SETTINGS_FILE);
         if (settingsFile.getParentFile().exists())
             return settingsFile;
@@ -42,10 +42,10 @@ public final class Settings {
     }
 
     public File createFile() throws IOException {
-        String userHome = System.getenv("user.home");
+        String userHome = System.getProperty("user.home");
         if (userHome == null)
             throw new RuntimeException("user.home == null");
-        String path = userHome + File.pathSeparator + WORKING_DIR;
+        String path = userHome + File.separator + WORKING_DIR;
         File settingsFile = new File(path, SETTINGS_FILE);
         if (!settingsFile.getParentFile().exists()) {
             if (!settingsFile.getParentFile().mkdir()) {

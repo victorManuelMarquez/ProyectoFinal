@@ -1,6 +1,7 @@
 package ar.com.elbaden.task;
 
 import ar.com.elbaden.connection.DataBank;
+import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.gui.modal.ConnectionSetUp;
 
 import javax.swing.*;
@@ -20,6 +21,7 @@ public final class AppChecker extends SwingWorker<Void, String> {
         this.root = root;
         this.publisher = publisher;
         threads = Arrays.asList(
+                new Thread(this::checkSettings),
                 new Thread(this::checkDriver),
                 new Thread(this::checkConnection)
         );
@@ -64,6 +66,24 @@ public final class AppChecker extends SwingWorker<Void, String> {
         publish(localEnd);
     }
 
+    private void checkSettings() {
+        String localLoadingSettings = "Cargando la configuración...";
+        publish(localLoadingSettings);
+        boolean loaded = Settings.loadExternal(getRoot());
+        if (loaded) {
+            String localFoundSettings = "Configuración cargada...";
+            publish(localFoundSettings);
+        } else {
+            String localFailLoadSettings = "Falló la lectura de la configuración...";
+            publish(localFailLoadSettings);
+            boolean defaults = Settings.storeExternal(getRoot());
+            if (defaults) {
+                String localLoadDefaults = "Configuración por defecto cargada...";
+                publish(localLoadDefaults);
+            }
+        }
+    }
+
     private void checkDriver() {
         if (DataBank.isDriverPresent(getRoot())) {
             String localDriverSuccess = "Driver encontrado...";
@@ -77,6 +97,8 @@ public final class AppChecker extends SwingWorker<Void, String> {
     }
 
     private void checkConnection() {
+        String set_indeterminate = "progressIndeterminate";
+        firePropertyChange(set_indeterminate, false, true);
         String localConnected = "Conexión exitosa...";
         if (DataBank.canConnect(getRoot())) {
             publish(localConnected);
@@ -101,6 +123,7 @@ public final class AppChecker extends SwingWorker<Void, String> {
                 cancel(true);
             }
         }
+        firePropertyChange(set_indeterminate, true, false);
     }
 
     public JFrame getRoot() {

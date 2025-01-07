@@ -91,6 +91,9 @@ public final class ConnectionSetUp extends JDialog {
             App.properties.setProperty(Settings.KEY_USER_DATABASE, userValue);
             App.properties.setProperty(Settings.KEY_PASSWORD_DATABASE, passValue);
             connectionSuccess = DataBank.canConnect((JFrame) getOwner());
+            if (connectionSuccess) {
+                Settings.storeExternal((JFrame) getOwner());
+            }
             dispose();
         });
         cancelBtn.addActionListener(_ -> dispose());
