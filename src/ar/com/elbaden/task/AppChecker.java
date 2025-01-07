@@ -1,8 +1,10 @@
 package ar.com.elbaden.task;
 
 import ar.com.elbaden.connection.DataBank;
+import ar.com.elbaden.gui.modal.ConnectionSetUp;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +14,7 @@ public final class AppChecker extends SwingWorker<Void, String> {
     private final JFrame root;
     private final JTextArea publisher;
     private final List<Thread> threads;
+    private final Cursor defaultCursor;
 
     public AppChecker(JFrame root, JTextArea publisher) {
         this.root = root;
@@ -20,16 +23,19 @@ public final class AppChecker extends SwingWorker<Void, String> {
                 new Thread(this::checkDriver),
                 new Thread(this::checkConnection)
         );
+        defaultCursor = root.getCursor();
     }
 
     @Override
     protected Void doInBackground() throws InterruptedException {
+        Cursor waitingCursor = new Cursor(Cursor.WAIT_CURSOR);
+        getRoot().setCursor(waitingCursor);
         String localStarting = "Iniciando comprobación...";
         publish(localStarting);
         int actualThread = 1;
-        Iterator<Thread> iterator = threads.iterator();
+        Iterator<Thread> iterator = getThreads().iterator();
         while (!isCancelled() && iterator.hasNext()) {
-            setProgress(actualThread * 100 / threads.size());
+            setProgress(actualThread * 100 / getThreads().size());
             Thread thread = iterator.next();
             thread.start();
             thread.join();
@@ -40,12 +46,12 @@ public final class AppChecker extends SwingWorker<Void, String> {
 
     @Override
     protected void process(List<String> chunks) {
-        String chunk = chunks.getLast();
-        getPublisher().append(chunk + System.lineSeparator());
+        chunks.forEach(chunk -> getPublisher().append(chunk + System.lineSeparator()));
     }
 
     @Override
     protected void done() {
+        getRoot().setCursor(getDefaultCursor());
         if (!isCancelled()) {
             String localFinished = "Comprobación finalizada.";
             publish(localFinished);
@@ -54,6 +60,8 @@ public final class AppChecker extends SwingWorker<Void, String> {
 
     private void launchCountdown() {
         firePropertyChange("countdown", "checking", "interrupt");
+        String localEnd = "Programa terminado.";
+        publish(localEnd);
     }
 
     private void checkDriver() {
@@ -69,12 +77,29 @@ public final class AppChecker extends SwingWorker<Void, String> {
     }
 
     private void checkConnection() {
+        String localConnected = "Conexión exitosa...";
         if (DataBank.canConnect(getRoot())) {
-            String localConnected = "Conexión exitosa...";
             publish(localConnected);
         } else {
-            String localNotConnected = "Conexión fallida.";
-            publish(localNotConnected);
+            int total = 3, tries = total;
+            do {
+                if (ConnectionSetUp.createAndShow(root)) {
+                    publish(localConnected);
+                    tries = -1;
+                } else {
+                    String localNotConnected = "Conexión fallida.";
+                    publish(localNotConnected);
+                    if (tries > 1) {
+                        String localRetries = "Reintentando...";
+                        publish(String.format(localRetries + "\t%d/%d", tries, total));
+                    }
+                    tries--;
+                }
+            } while (tries > 0);
+            if (tries == 0) {
+                launchCountdown();
+                cancel(true);
+            }
         }
     }
 
@@ -84,6 +109,14 @@ public final class AppChecker extends SwingWorker<Void, String> {
 
     public JTextArea getPublisher() {
         return publisher;
+    }
+
+    public List<Thread> getThreads() {
+        return threads;
+    }
+
+    public Cursor getDefaultCursor() {
+        return defaultCursor;
     }
 
 }

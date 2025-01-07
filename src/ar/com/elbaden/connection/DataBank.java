@@ -1,6 +1,8 @@
 package ar.com.elbaden.connection;
 
+import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.gui.modal.PublishError;
+import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
@@ -27,7 +29,9 @@ public final class DataBank {
 
     public static boolean canConnect(JFrame root) {
         boolean connected = false;
-        try (Connection ignore = DriverManager.getConnection("jdbc:mysql://localhost:3306", "root", "")) {
+        String user = App.properties.getProperty(Settings.KEY_USER_DATABASE);
+        String pass = App.properties.getProperty(Settings.KEY_PASSWORD_DATABASE);
+        try (Connection ignore = DriverManager.getConnection("jdbc:mysql://localhost:3306", user, pass)) {
             connected = true;
         } catch (SQLException sqlException) {
             PublishError.createAndShow(root, sqlException);
