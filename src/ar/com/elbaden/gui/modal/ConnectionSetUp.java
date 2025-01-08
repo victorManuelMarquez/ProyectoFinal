@@ -3,6 +3,7 @@ package ar.com.elbaden.gui.modal;
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.main.App;
+import ar.com.elbaden.utils.Strings;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,6 +43,7 @@ public final class ConnectionSetUp extends JDialog {
         passwordField.setMargin(fieldMargin);
 
         JButton showButton = new JButton(localShowTxt);
+        Strings.fitDynamicContent(showButton, localShowTxt, localHideTxt);
 
         JPanel inputsPanel = new JPanel(new GridBagLayout());
         add(inputsPanel);
