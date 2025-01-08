@@ -85,42 +85,44 @@ public final class AppChecker extends SwingWorker<Void, String> {
     }
 
     private void checkDriver() {
+        String localLoadingDriver = "Cargando driver de MySQL...";
+        publish(localLoadingDriver);
         if (DataBank.isDriverPresent(getRoot())) {
             String localDriverSuccess = "Driver encontrado...";
             publish(localDriverSuccess);
         } else {
             String localDriverNotFound = "Driver no encontrado.";
             publish(localDriverNotFound);
-            launchCountdown();
             cancel(true);
+            launchCountdown();
         }
     }
 
     private void checkConnection() {
+        String localConnecting = "Conectando...";
+        publish(localConnecting);
         String set_indeterminate = "progressIndeterminate";
         firePropertyChange(set_indeterminate, false, true);
         String localConnected = "Conexión exitosa...";
         if (DataBank.canConnect(getRoot())) {
             publish(localConnected);
         } else {
-            int total = 3, tries = total;
+            int total = 3, tries = 0;
             do {
-                if (ConnectionSetUp.createAndShow(root)) {
+                if (ConnectionSetUp.createAndShow(getRoot())) {
                     publish(localConnected);
-                    tries = -1;
+                    tries = 0;
                 } else {
+                    ++tries;
                     String localNotConnected = "Conexión fallida.";
                     publish(localNotConnected);
-                    if (tries > 1) {
-                        String localRetries = "Reintentando...";
-                        publish(String.format(localRetries + "\t%d/%d", tries, total));
-                    }
-                    tries--;
+                    String localRetries = "Reintentando...";
+                    publish(String.format(localRetries + "\t%d/%d", tries, total));
                 }
-            } while (tries > 0);
-            if (tries == 0) {
-                launchCountdown();
+            } while (tries > 0 && tries != total);
+            if (tries == total) {
                 cancel(true);
+                launchCountdown();
             }
         }
         firePropertyChange(set_indeterminate, true, false);
