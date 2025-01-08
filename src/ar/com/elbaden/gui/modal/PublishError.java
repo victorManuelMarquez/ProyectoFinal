@@ -3,6 +3,8 @@ package ar.com.elbaden.gui.modal;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 
 public final class PublishError extends JDialog {
@@ -23,12 +25,15 @@ public final class PublishError extends JDialog {
     private void installComponents() {
         String localMsgTitle = "Mensaje";
         String localDetailsTitle = "Detalles";
+        String localClose = "Cerrar";
+        Icon errorIcon = UIManager.getIcon("OptionPane.errorIcon");
+        JTabbedPane tabs = new JTabbedPane();
+        JButton closeBtn = new JButton(localClose);
 
         Border emptyBorder = BorderFactory.createEmptyBorder(8, 8, 8, 8);
 
         JPanel messagePanel = new JPanel(new BorderLayout());
 
-        Icon errorIcon = UIManager.getIcon("OptionPane.errorIcon");
         JLabel errorIconContainer = new JLabel(errorIcon);
         errorIconContainer.setBorder(emptyBorder);
         messagePanel.add(errorIconContainer, BorderLayout.WEST);
@@ -48,7 +53,6 @@ public final class PublishError extends JDialog {
             messagesContainer.add(new JLabel(sqlVendor));
         }
 
-        JTabbedPane tabs = new JTabbedPane();
         tabs.setBorder(emptyBorder);
         tabs.addTab(localMsgTitle, messagePanel);
         add(tabs);
@@ -63,14 +67,18 @@ public final class PublishError extends JDialog {
             publishCauses(getException().getCause(), detailsArea);
         }
 
-        String localClose = "Cerrar";
-        JButton closeBtn = new JButton(localClose);
-
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(closeBtn);
         add(buttonPanel, BorderLayout.SOUTH);
 
         closeBtn.addActionListener(_ -> dispose());
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                closeBtn.requestFocusInWindow();
+            }
+        });
     }
 
     private void publishCauses(Throwable throwable, JTextArea textArea) {
