@@ -13,6 +13,7 @@ public final class PublishError extends MasterDialog {
 
     public PublishError(Frame owner, Exception exception) {
         super(owner, exception.getClass().getSimpleName());
+        getRootPane().setWindowDecorationStyle(JRootPane.ERROR_DIALOG);
         this.exception = exception;
         installComponents();
     }
