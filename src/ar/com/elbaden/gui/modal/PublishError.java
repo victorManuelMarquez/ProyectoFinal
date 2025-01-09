@@ -7,18 +7,13 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 
-public final class PublishError extends JDialog {
+public final class PublishError extends MasterDialog {
 
     private final Exception exception;
 
     public PublishError(Frame owner, Exception exception) {
         super(owner, exception.getClass().getSimpleName());
         this.exception = exception;
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setModal(true);
-        setResizable(true);
-        getRootPane().setWindowDecorationStyle(JRootPane.ERROR_DIALOG);
-        setUndecorated(getRootPane().getWindowDecorationStyle() != JRootPane.NONE);
         installComponents();
     }
 

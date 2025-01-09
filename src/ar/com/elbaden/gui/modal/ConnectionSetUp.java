@@ -8,17 +8,13 @@ import ar.com.elbaden.utils.Strings;
 import javax.swing.*;
 import java.awt.*;
 
-public final class ConnectionSetUp extends JDialog {
+public final class ConnectionSetUp extends MasterDialog {
 
     private boolean connectionSuccess = false;
 
     private ConnectionSetUp(Frame owner, String title) {
         super(owner, title);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setModal(true);
         setResizable(false);
-        getRootPane().setWindowDecorationStyle(JRootPane.PLAIN_DIALOG);
-        setUndecorated(getRootPane().getWindowDecorationStyle() != JRootPane.NONE);
         installComponents();
     }
 
