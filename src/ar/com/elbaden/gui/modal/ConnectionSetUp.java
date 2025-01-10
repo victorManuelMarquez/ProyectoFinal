@@ -31,12 +31,24 @@ public final class ConnectionSetUp extends MasterDialog {
 
         Insets fieldMargin = UIManager.getInsets("TextPane.margin");
 
+        int minUserLength = 4;
+        int maxUserLength = 16;
         JTextField userField = new JTextField();
+        userField.setName(localUserTxt.replace(':', Character.MIN_VALUE));
         userField.setMargin(fieldMargin);
+        labelUser.setLabelFor(userField);
 
+        Strings.installDocumentFilterValidator(userField, "^(?!\\d)\\w+$", minUserLength, maxUserLength);
+
+        int minPassLength = 8;
+        int maxPassLength = 32;
         JPasswordField passwordField = new JPasswordField();
+        passwordField.setName(localPassTxt.replace(':', Character.MIN_VALUE));
         passwordField.setColumns(12);
         passwordField.setMargin(fieldMargin);
+        labelPass.setLabelFor(passwordField);
+
+        Strings.installDocumentFilterValidator(passwordField, "^\\w+$", minPassLength, maxPassLength);
 
         JButton showButton = new JButton(localShowTxt);
         Strings.fitDynamicContent(showButton, localShowTxt, localHideTxt);
@@ -85,7 +97,7 @@ public final class ConnectionSetUp extends MasterDialog {
         buttonsPanel.add(cancelBtn);
 
         showButton.addActionListener(_ -> {
-            char newChar = '\u0000';
+            char newChar = Character.MIN_VALUE;
             char defaultChar = (Character) UIManager.get("PasswordField.echoChar");
             passwordField.setEchoChar(passwordField.getEchoChar() == defaultChar ? newChar : defaultChar);
             showButton.setText(passwordField.getEchoChar() == newChar ? localHideTxt : localShowTxt);
