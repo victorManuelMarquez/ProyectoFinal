@@ -2,6 +2,7 @@ package ar.com.elbaden.task;
 
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
+import ar.com.elbaden.gui.MainFrame;
 import ar.com.elbaden.gui.modal.ConnectionSetUp;
 
 import javax.swing.*;
@@ -57,6 +58,8 @@ public final class AppChecker extends SwingWorker<Void, String> {
         if (!isCancelled()) {
             String localFinished = "Comprobación finalizada.";
             publish(localFinished);
+            MainFrame.createAndShow();
+            getRoot().dispose();
         }
     }
 
