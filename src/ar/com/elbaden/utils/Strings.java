@@ -43,10 +43,6 @@ public final class Strings {
         }
 
         AbstractDocument document = (AbstractDocument) field.getDocument();
-        document.putProperty("minLength", min);
-        document.putProperty("maxLength", max);
-        document.putProperty("minLengthMessage", String.format(localFormattedTipMin, min));
-        document.putProperty("maxLengthMessage", String.format(localFormattedTipMax, max));
 
         document.setDocumentFilter(new DocumentFilter() {
             boolean overflow = false;
