@@ -105,6 +105,20 @@ public final class ConnectionSetUp extends MasterDialog {
         okBtn.addActionListener(_ -> {
             String userValue = userField.getText();
             String passValue = new String(passwordField.getPassword());
+            if (userValue.length() < minUserLength) {
+                String localMessage = "El nombre de usuario es muy corto.";
+                String localTitle = "Atención";
+                int icon = JOptionPane.ERROR_MESSAGE;
+                PublishMessage.createAndShow(getOwner(), localMessage, localTitle, icon);
+                return;
+            }
+            if (passValue.length() < minPassLength) {
+                String localMessage = "La contraseña es muy corta.";
+                String localTitle = "Atención";
+                int icon = JOptionPane.ERROR_MESSAGE;
+                PublishMessage.createAndShow(getOwner(), localMessage, localTitle, icon);
+                return;
+            }
             App.properties.setProperty(Settings.KEY_USER_DATABASE, userValue);
             App.properties.setProperty(Settings.KEY_PASSWORD_DATABASE, passValue);
             connectionSuccess = DataBank.canConnect((JFrame) getOwner());
