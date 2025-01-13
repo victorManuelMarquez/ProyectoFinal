@@ -111,19 +111,20 @@ public final class AppChecker extends SwingWorker<Void, String> {
             publish(localConnected);
         } else {
             int total = 3, tries = 0;
+            boolean tryAgain = true;
             do {
+                ++tries;
                 if (ConnectionSetUp.createAndShow(getRoot())) {
                     publish(localConnected);
-                    tries = 0;
+                    tryAgain = false;
                 } else {
-                    ++tries;
                     String localNotConnected = "Conexión fallida.";
                     publish(localNotConnected);
                     String localRetries = "Reintentando...";
                     publish(String.format(localRetries + "\t%d/%d", tries, total));
                 }
-            } while (tries > 0 && tries != total);
-            if (tries == total) {
+            } while (tryAgain && tries != total);
+            if (tryAgain) {
                 cancel(true);
                 launchCountdown();
             }
