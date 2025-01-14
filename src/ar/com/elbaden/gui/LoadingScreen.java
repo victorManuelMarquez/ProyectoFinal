@@ -1,7 +1,6 @@
 package ar.com.elbaden.gui;
 
 import ar.com.elbaden.task.AppChecker;
-import ar.com.elbaden.task.Countdown;
 
 import javax.swing.*;
 import java.awt.*;
@@ -59,31 +58,50 @@ public class LoadingScreen extends JFrame {
         }
     }
 
-    static class LSWindowEvents extends WindowAdapter implements PropertyChangeListener {
+    static class LSWindowEvents extends WindowAdapter implements PropertyChangeListener, Runnable {
 
         private final JFrame root;
+        private final JTextArea publisher;
         private final JProgressBar actualProgress;
 
         private final AppChecker checker;
-        private final Countdown countdown;
+        private final Thread countdown;
 
         public LSWindowEvents(JTextArea contentArea, JProgressBar actualProgress) {
             root = (JFrame) SwingUtilities.getRoot(contentArea);
+            this.publisher = contentArea;
             this.actualProgress = actualProgress;
             checker = new AppChecker(root, contentArea);
             checker.addPropertyChangeListener(this);
-            countdown = new Countdown(root, actualProgress);
+            countdown = new Thread(this, "countdown");
+            countdown.setDaemon(true);
         }
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
             if ("countdown".equals(evt.getPropertyName())) {
-                getCountdown().execute();
+                getCountdown().start();
             } else if ("progress".equals(evt.getPropertyName())) {
                 getActualProgress().setValue(getChecker().getProgress());
             } else if ("progressIndeterminate".equals(evt.getPropertyName())) {
                 getActualProgress().setIndeterminate((Boolean) evt.getNewValue());
             }
+        }
+
+        @Override
+        public void run() {
+            int totalSeconds = 15;
+            String localFormattedCountdown = "El programa se cerrará en %d segundos..." + System.lineSeparator();
+            for (int second = totalSeconds; second != 0; second--) {
+                getActualProgress().setValue(second * 100 / totalSeconds);
+                getPublisher().append(String.format(localFormattedCountdown, second));
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
+            getRoot().dispose();
         }
 
         @Override
@@ -95,13 +113,17 @@ public class LoadingScreen extends JFrame {
         public void windowClosing(WindowEvent e) {
             if (!getChecker().isDone())
                 getChecker().cancel(true);
-            if (!getCountdown().isDone())
-                getCountdown().cancel(true);
+            if (getCountdown().isAlive())
+                getCountdown().interrupt();
             getRoot().dispose();
         }
 
         public JFrame getRoot() {
             return root;
+        }
+
+        public JTextArea getPublisher() {
+            return publisher;
         }
 
         public JProgressBar getActualProgress() {
@@ -112,7 +134,7 @@ public class LoadingScreen extends JFrame {
             return checker;
         }
 
-        protected Countdown getCountdown() {
+        public Thread getCountdown() {
             return countdown;
         }
 
