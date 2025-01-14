@@ -40,6 +40,7 @@ public final class AppChecker extends SwingWorker<Void, String> {
         while (!isCancelled() && iterator.hasNext()) {
             setProgress(actualThread * 100 / getThreads().size());
             Thread thread = iterator.next();
+            thread.setDaemon(true);
             thread.start();
             thread.join();
             actualThread++;
