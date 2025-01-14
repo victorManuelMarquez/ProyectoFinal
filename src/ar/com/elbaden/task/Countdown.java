@@ -3,6 +3,7 @@ package ar.com.elbaden.task;
 import javax.swing.*;
 import java.util.List;
 
+@Deprecated
 public final class Countdown extends SwingWorker<Void, String> {
 
     private final JFrame root;
@@ -20,6 +21,7 @@ public final class Countdown extends SwingWorker<Void, String> {
         });
     }
 
+    @Deprecated
     public Countdown(JFrame root, JProgressBar publisher) {
         this(root, publisher, 15);
     }
