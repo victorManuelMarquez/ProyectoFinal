@@ -24,8 +24,14 @@ public final class PublishMessage extends MasterDialog {
         switch (messageIcon) {
             case JOptionPane.INFORMATION_MESSAGE -> propertyValue = "OptionPane.informationIcon";
             case JOptionPane.QUESTION_MESSAGE -> propertyValue = "OptionPane.questionIcon";
-            case JOptionPane.WARNING_MESSAGE -> propertyValue = "OptionPane.warningIcon";
-            case JOptionPane.ERROR_MESSAGE -> propertyValue = "OptionPane.errorIcon";
+            case JOptionPane.WARNING_MESSAGE -> {
+                propertyValue = "OptionPane.warningIcon";
+                getRootPane().setWindowDecorationStyle(JRootPane.WARNING_DIALOG);
+            }
+            case JOptionPane.ERROR_MESSAGE -> {
+                propertyValue = "OptionPane.errorIcon";
+                getRootPane().setWindowDecorationStyle(JRootPane.ERROR_DIALOG);
+            }
         }
         Icon icon = UIManager.getIcon(propertyValue);
 
