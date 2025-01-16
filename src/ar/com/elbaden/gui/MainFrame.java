@@ -39,8 +39,8 @@ public class MainFrame extends JFrame {
         addWindowListener(mainEvents);
 
         itemExit.addActionListener(_ -> {
-            JFrame frame = (JFrame) SwingUtilities.getRoot(itemExit);
-            mainEvents.windowClosing(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+            JFrame root = (JFrame) SwingUtilities.getRoot(getJMenuBar());
+            mainEvents.windowClosing(new WindowEvent(root, WindowEvent.WINDOW_CLOSING));
         });
     }
 
@@ -54,7 +54,7 @@ public class MainFrame extends JFrame {
         frame.setVisible(true);
     }
 
-    static class MainEvents extends WindowAdapter {
+    static protected final class MainEvents extends WindowAdapter {
         @Override
         public void windowClosing(WindowEvent e) {
             if (e.getSource() instanceof JFrame frame)
