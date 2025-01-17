@@ -15,6 +15,8 @@ public final class Settings {
     public static final String KEY_USER_DATABASE = "database.user";
     public static final String KEY_PASSWORD_DATABASE = "database.pass";
 
+    public static final String KEY_HIDE_CLOSING_DIALOG = "application.confirmExit";
+
     private Settings() {
         // ignore
     }
@@ -22,7 +24,8 @@ public final class Settings {
     public static Map<String, String> getDefaults() {
         return Map.ofEntries(
                 Map.entry(KEY_USER_DATABASE, "root"),
-                Map.entry(KEY_PASSWORD_DATABASE, "")
+                Map.entry(KEY_PASSWORD_DATABASE, ""),
+                Map.entry(KEY_HIDE_CLOSING_DIALOG, Boolean.toString(false))
         );
     }
 
