@@ -1,10 +1,15 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.data.Settings;
+import ar.com.elbaden.gui.modal.ClosingDialog;
+import ar.com.elbaden.main.App;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.EnumSet;
 
 public class MainFrame extends JFrame {
 
@@ -55,11 +60,25 @@ public class MainFrame extends JFrame {
     }
 
     static protected final class MainEvents extends WindowAdapter {
+
         @Override
         public void windowClosing(WindowEvent e) {
-            if (e.getSource() instanceof JFrame frame)
-                frame.dispose();
+            if (e.getSource() instanceof JFrame frame) {
+                Object hide = App.properties.getProperty(Settings.KEY_HIDE_CLOSING_DIALOG);
+                if (hide != null && Boolean.parseBoolean(hide.toString())) {
+                    frame.dispose();
+                    return;
+                }
+                EnumSet<ClosingDialog.Options> flag = ClosingDialog.createAndShow(frame);
+                if (flag.contains(ClosingDialog.Options.SKIP)) {
+                    App.properties.setProperty(Settings.KEY_HIDE_CLOSING_DIALOG, Boolean.toString(true));
+                    Settings.storeExternal(frame);
+                }
+                if (flag.contains(ClosingDialog.Options.SAY_YES))
+                    frame.dispose();
+            }
         }
+
     }
 
 }
