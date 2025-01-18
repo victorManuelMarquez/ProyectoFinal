@@ -88,7 +88,7 @@ public final class ConnectionSetUp extends MasterDialog {
         add(buttonsPanel, BorderLayout.SOUTH);
 
         FlowLayout flowLayout = (FlowLayout) buttonsPanel.getLayout();
-        flowLayout.setAlignment(FlowLayout.RIGHT);
+        flowLayout.setAlignment(FlowLayout.TRAILING);
 
         JButton okBtn = new JButton(localOk);
         buttonsPanel.add(okBtn);

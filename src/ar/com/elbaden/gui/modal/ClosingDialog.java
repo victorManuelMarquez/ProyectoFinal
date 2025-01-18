@@ -28,7 +28,7 @@ public final class ClosingDialog extends MasterDialog {
         messagePanel.add(new JLabel(localMsg));
         messagePanel.add(checkBox);
 
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         buttonsPanel.add(okButton);
