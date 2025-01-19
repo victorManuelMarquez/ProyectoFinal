@@ -62,8 +62,6 @@ public final class DocumentValidator extends PlainDocument {
                 }
                 if (isValid) {
                     super.replace(fb, offset, length, text, attrs);
-                } else {
-                    System.out.println("Rechazado: \"" + str + text + "\"");
                 }
             }
         }
