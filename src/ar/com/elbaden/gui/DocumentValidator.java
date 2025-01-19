@@ -28,8 +28,6 @@ public final class DocumentValidator extends PlainDocument {
     public String getSuggestedTooltip() {
         String localFormattedMax = "Máx. %d caracteres.";
         String htmlFormat = "<HTML>";
-        System.out.print("Mín: " + getDocumentProperties().get("minLength"));
-        System.out.println(getDocumentProperties().get("canBeEmpty"));
         if (!(Boolean) getDocumentProperties().get("canBeEmpty")) {
             String localFormattedMin = "Mín. %d caracteres.";
             htmlFormat += String.format(localFormattedMin, getProperty("minLength")) + "<br>";
