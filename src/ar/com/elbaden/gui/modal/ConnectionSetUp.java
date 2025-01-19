@@ -4,7 +4,6 @@ import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.gui.ConnectionPrefab;
 import ar.com.elbaden.main.App;
-import ar.com.elbaden.utils.Strings;
 
 import javax.swing.*;
 import java.awt.*;
@@ -38,16 +37,12 @@ public final class ConnectionSetUp extends MasterDialog {
         ConnectionPrefab prefab = new ConnectionPrefab();
         getContentPane().add(prefab);
 
+        // para reemplazar próximamente
         int minUserLength = 4;
         int minPassLength = 8;
-        int maxUserLength = 16;
-        int maxPassLength = 16;
 
         JTextField userField = prefab.getUserField();
         JPasswordField passwordField = prefab.getPassField();
-
-        Strings.installDocumentFilterValidator(userField, "^(?!\\d)\\w+$", minUserLength, maxUserLength);
-        Strings.installDocumentFilterValidator(passwordField, "^\\w+$", minPassLength, maxPassLength);
 
         okBtn.addActionListener(_ -> {
             String userValue = userField.getText();

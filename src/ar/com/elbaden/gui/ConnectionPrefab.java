@@ -29,9 +29,18 @@ public final class ConnectionPrefab extends JPanel {
 
         Insets fieldMargin = UIManager.getInsets("TextPane.margin");
 
+        DocumentValidator userValidator = new DocumentValidator("^(?!\\d)\\w+$", 4, 16);
+        DocumentValidator passValidator = new DocumentValidator("^\\w+$", 32);
+
         this.userField = new JTextField();
         this.passField = new JPasswordField();
         this.showPassBtn = new JButton(localShowTxt);
+
+        userField.setName(localUserTxt.replace(':', Character.MIN_VALUE));
+        passField.setName(localPassTxt.replace(':', Character.MIN_VALUE));
+
+        installValidation(userField, userValidator);
+        installValidation(passField, passValidator);
 
         Strings.fitDynamicContent(showPassBtn, localShowTxt, localHideTxt);
 
@@ -74,6 +83,12 @@ public final class ConnectionPrefab extends JPanel {
                 getShowPassBtn().setText(localShowTxt);
             }
         });
+    }
+
+    private void installValidation(JTextField field, DocumentValidator validator) {
+        field.setDocument(validator);
+        field.getCaret().addChangeListener(validator.getChangeListener());
+        field.setToolTipText(validator.getSuggestedTooltip());
     }
 
     public GridBagConstraints getConstraints() {

@@ -24,6 +24,8 @@ public final class Strings {
         component.setPreferredSize(new Dimension(width, height));
     }
 
+    // para eliminar próximamente
+    @Deprecated
     public static void installDocumentFilterValidator(JTextField field, String regex, int min, int max) {
         String localTitle = "Este campo dice";
         String localFormattedTitle = "El campo %s ha dicho";
