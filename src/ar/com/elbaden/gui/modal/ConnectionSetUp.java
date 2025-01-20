@@ -3,6 +3,7 @@ package ar.com.elbaden.gui.modal;
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.gui.ConnectionPrefab;
+import ar.com.elbaden.gui.DocumentValidator;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -37,30 +38,14 @@ public final class ConnectionSetUp extends MasterDialog {
         ConnectionPrefab prefab = new ConnectionPrefab();
         getContentPane().add(prefab);
 
-        // para reemplazar próximamente
-        int minUserLength = 4;
-        int minPassLength = 8;
-
         JTextField userField = prefab.getUserField();
         JPasswordField passwordField = prefab.getPassField();
 
         okBtn.addActionListener(_ -> {
+            if (DocumentValidator.verificationNeeded(userField)) return;
+            if (DocumentValidator.verificationNeeded(passwordField)) return;
             String userValue = userField.getText();
             String passValue = new String(passwordField.getPassword());
-            if (userValue.length() < minUserLength) {
-                String localMessage = "El nombre de usuario es muy corto.";
-                String localTitle = "Atención";
-                int icon = JOptionPane.ERROR_MESSAGE;
-                PublishMessage.createAndShow(getOwner(), localMessage, localTitle, icon);
-                return;
-            }
-            if (passValue.length() < minPassLength) {
-                String localMessage = "La contraseña es muy corta.";
-                String localTitle = "Atención";
-                int icon = JOptionPane.ERROR_MESSAGE;
-                PublishMessage.createAndShow(getOwner(), localMessage, localTitle, icon);
-                return;
-            }
             App.properties.setProperty(Settings.KEY_USER_DATABASE, userValue);
             App.properties.setProperty(Settings.KEY_PASSWORD_DATABASE, passValue);
             connectionSuccess = DataBank.canConnect((JFrame) getOwner());

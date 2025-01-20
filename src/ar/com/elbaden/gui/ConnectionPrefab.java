@@ -4,6 +4,7 @@ import ar.com.elbaden.utils.Strings;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 
 public final class ConnectionPrefab extends JPanel {
 
@@ -15,8 +16,8 @@ public final class ConnectionPrefab extends JPanel {
     public ConnectionPrefab() {
         super(new GridBagLayout());
 
-        String localUserTxt = "Usuario:";
-        String localPassTxt = "Contraseña:";
+        String localUserTxt = "Usuario";
+        String localPassTxt = "Contraseña";
         String localShowTxt = "Mostrar";
         String localHideTxt = "Ocultar";
 
@@ -24,8 +25,8 @@ public final class ConnectionPrefab extends JPanel {
         getConstraints().weightx = 1.0;
         getConstraints().insets = new Insets(4, 4, 4, 4);
 
-        JLabel userLabel = new JLabel(localUserTxt);
-        JLabel passLabel = new JLabel(localPassTxt);
+        JLabel userLabel = new JLabel(localUserTxt + ':');
+        JLabel passLabel = new JLabel(localPassTxt + ':');
 
         Insets fieldMargin = UIManager.getInsets("TextPane.margin");
 
@@ -36,14 +37,15 @@ public final class ConnectionPrefab extends JPanel {
         this.passField = new JPasswordField();
         this.showPassBtn = new JButton(localShowTxt);
 
-        userField.setName(localUserTxt.replace(':', Character.MIN_VALUE));
-        passField.setName(localPassTxt.replace(':', Character.MIN_VALUE));
+        userField.setName(localUserTxt.toLowerCase());
+        passField.setName(localPassTxt.toLowerCase());
 
         installValidation(userField, userValidator);
         installValidation(passField, passValidator);
 
         Strings.fitDynamicContent(showPassBtn, localShowTxt, localHideTxt);
 
+        userLabel.setDisplayedMnemonic(KeyEvent.VK_U);
         userLabel.setLabelFor(userField);
         getConstraints().anchor = GridBagConstraints.LINE_END;
         add(userLabel, getConstraints());
@@ -54,6 +56,7 @@ public final class ConnectionPrefab extends JPanel {
         getConstraints().gridwidth = GridBagConstraints.REMAINDER;
         add(userField, getConstraints());
 
+        passLabel.setDisplayedMnemonic(KeyEvent.VK_S);
         passLabel.setLabelFor(passField);
         getConstraints().anchor = GridBagConstraints.LINE_END;
         getConstraints().fill = GridBagConstraints.NONE;
@@ -67,6 +70,7 @@ public final class ConnectionPrefab extends JPanel {
         getConstraints().gridwidth = GridBagConstraints.RELATIVE;
         add(passField, getConstraints());
 
+        showPassBtn.setMnemonic(KeyEvent.VK_O);
         getConstraints().fill = GridBagConstraints.NONE;
         getConstraints().weightx = 0.0;
         add(showPassBtn, getConstraints());

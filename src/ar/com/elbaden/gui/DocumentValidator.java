@@ -1,8 +1,12 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.gui.modal.PublishMessage;
+
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.*;
+import java.awt.*;
 
 public final class DocumentValidator extends PlainDocument {
 
@@ -34,6 +38,36 @@ public final class DocumentValidator extends PlainDocument {
         }
         htmlFormat += String.format(localFormattedMax, getProperty("maxLength"));
         return htmlFormat + "</HTML>";
+    }
+
+    public static boolean verificationNeeded(JTextField field) {
+        if (field == null)
+            throw new IllegalArgumentException("field == null");
+        String value = field.getText();
+        if (field instanceof JPasswordField passwordField)
+            value = new String(passwordField.getPassword());
+        DocumentValidator validator;
+        try {
+            validator = (DocumentValidator) field.getDocument();
+        } catch (ClassCastException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        boolean canBeEmpty = (Boolean) validator.getProperty("canBeEmpty");
+        if (!canBeEmpty) {
+            Component rootComponent = SwingUtilities.getRoot(field);
+            String localFormattedTitle = "El campo \"%s\" ha dicho:";
+            int min = (Integer) validator.getProperty("minLength");
+            int icon = JOptionPane.ERROR_MESSAGE;
+            if (value.length() < min) {
+                String localFormattedMsg = "Debe tener %d caracteres mínimo.";
+                String message = String.format(localFormattedMsg, min);
+                String title = String.format(localFormattedTitle, field.getName());
+                PublishMessage.createAndShow(rootComponent, message, title, icon);
+                field.requestFocusInWindow();
+                return true;
+            }
+        }
+        return false;
     }
 
     public static class FilterByRegex extends DocumentFilter implements ChangeListener {
