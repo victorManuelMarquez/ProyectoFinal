@@ -11,8 +11,8 @@ public final class PublishError extends MasterDialog {
 
     private final Exception exception;
 
-    public PublishError(Frame owner, Exception exception) {
-        super(owner, exception.getClass().getSimpleName());
+    public PublishError(Component component, Exception exception) {
+        super(component, exception.getClass().getSimpleName());
         getRootPane().setWindowDecorationStyle(JRootPane.ERROR_DIALOG);
         this.exception = exception;
         installComponents();
@@ -83,10 +83,10 @@ public final class PublishError extends MasterDialog {
         }
     }
 
-    public static void createAndShow(JFrame owner, Exception exception) {
-        PublishError publisher = new PublishError(owner, exception);
+    public static void createAndShow(Component component, Exception exception) {
+        PublishError publisher = new PublishError(component, exception);
         publisher.pack();
-        publisher.setLocationRelativeTo(owner);
+        publisher.setLocationRelativeTo(component);
         publisher.setVisible(true);
     }
 

@@ -7,8 +7,8 @@ public final class PublishMessage extends MasterDialog {
 
     private final String message;
 
-    private PublishMessage(Frame owner, String message, String title, int messageIcon) {
-        super(owner, title);
+    private PublishMessage(Component component, String message, String title, int messageIcon) {
+        super(component, title);
         this.message = message;
         installComponents(messageIcon);
     }
@@ -51,15 +51,9 @@ public final class PublishMessage extends MasterDialog {
     }
 
     public static void createAndShow(Component component, String message, String title, int messageIcon) {
-        Window window = SwingUtilities.windowForComponent(component);
-        JFrame root = null;
-        if (window instanceof JFrame)
-            root = (JFrame) window;
-        else if (window instanceof JDialog dialog)
-            root = (JFrame) dialog.getOwner();
-        PublishMessage publisher = new PublishMessage(root, message, title, messageIcon);
+        PublishMessage publisher = new PublishMessage(component, message, title, messageIcon);
         publisher.pack();
-        publisher.setLocationRelativeTo(window);
+        publisher.setLocationRelativeTo(component);
         publisher.setVisible(true);
     }
 

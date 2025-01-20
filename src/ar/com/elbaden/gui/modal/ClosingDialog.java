@@ -8,8 +8,8 @@ public final class ClosingDialog extends MasterDialog {
 
     private EnumSet<Options> flag = EnumSet.noneOf(Options.class);
 
-    private ClosingDialog(Frame owner, String title) {
-        super(owner, title);
+    private ClosingDialog(Component component, String title) {
+        super(component, title);
         String localCheckBox = "No preguntar de nuevo";
         String localMsg = "¿Está seguro que desea salir?";
         String localOk = "Aceptar";
@@ -53,11 +53,11 @@ public final class ClosingDialog extends MasterDialog {
         });
     }
 
-    public static EnumSet<Options> createAndShow(JFrame root) {
+    public static EnumSet<Options> createAndShow(Component component) {
         String localTitle = "Confirme la acción";
-        ClosingDialog dialog = new ClosingDialog(root, localTitle);
+        ClosingDialog dialog = new ClosingDialog(component, localTitle);
         dialog.pack();
-        dialog.setLocationRelativeTo(root);
+        dialog.setLocationRelativeTo(component);
         dialog.setVisible(true);
         return dialog.flag;
     }

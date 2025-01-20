@@ -13,7 +13,7 @@ public final class ConnectionSetUp extends MasterDialog {
 
     private boolean connectionSuccess = false;
 
-    private ConnectionSetUp(Frame owner, String title) {
+    private ConnectionSetUp(Component owner, String title) {
         super(owner, title);
         setResizable(false);
         installComponents();
@@ -35,7 +35,7 @@ public final class ConnectionSetUp extends MasterDialog {
         JButton cancelBtn = new JButton(localCancel);
         buttonsPanel.add(cancelBtn);
 
-        ConnectionPrefab prefab = new ConnectionPrefab();
+        ConnectionPrefab prefab = new ConnectionPrefab(this);
         getContentPane().add(prefab);
 
         JTextField userField = prefab.getUserField();
@@ -58,11 +58,11 @@ public final class ConnectionSetUp extends MasterDialog {
         cancelBtn.addActionListener(_ -> dispose());
     }
 
-    public static boolean createAndShow(JFrame owner) {
+    public static boolean createAndShow(Component component) {
         String localTitle = "Configure la conexión";
-        ConnectionSetUp setUp = new ConnectionSetUp(owner, localTitle);
+        ConnectionSetUp setUp = new ConnectionSetUp(component, localTitle);
         setUp.pack();
-        setUp.setLocationRelativeTo(owner);
+        setUp.setLocationRelativeTo(component);
         setUp.setVisible(true);
         return setUp.connectionSuccess;
     }

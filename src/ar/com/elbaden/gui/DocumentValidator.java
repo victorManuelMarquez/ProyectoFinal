@@ -70,6 +70,19 @@ public final class DocumentValidator extends PlainDocument {
         return false;
     }
 
+    public void setName(String name) {
+        if (name == null)
+            throw new IllegalArgumentException("name == null");
+        else if (name.isBlank())
+            throw new IllegalArgumentException("name == \"\"");
+        getDocumentProperties().put("fieldName", name);
+    }
+
+    public void setRoot(Window root) {
+        if (root == null) return;
+        getDocumentProperties().put("root", root);
+    }
+
     public static class FilterByRegex extends DocumentFilter implements ChangeListener {
 
         private final String regex;
@@ -96,6 +109,14 @@ public final class DocumentValidator extends PlainDocument {
                 }
                 if (isValid) {
                     super.replace(fb, offset, length, text, attrs);
+                } else {
+                    String name = fb.getDocument().getProperty("fieldName").toString();
+                    Component component = (Component) fb.getDocument().getProperty("root");
+                    String localFormattedTitle = "El campo \"%s\" ha dicho:";
+                    String localFormattedMessage = "Solo se permite %d caracteres máximo.";
+                    String title = String.format(localFormattedTitle, name);
+                    String message = String.format(localFormattedMessage, max);
+                    PublishMessage.createAndShow(component, message, title, JOptionPane.ERROR_MESSAGE);
                 }
             }
         }

@@ -13,7 +13,7 @@ public final class ConnectionPrefab extends JPanel {
     private final JPasswordField passField;
     private final JButton showPassBtn;
 
-    public ConnectionPrefab() {
+    public ConnectionPrefab(Window root) {
         super(new GridBagLayout());
 
         String localUserTxt = "Usuario";
@@ -40,8 +40,8 @@ public final class ConnectionPrefab extends JPanel {
         userField.setName(localUserTxt.toLowerCase());
         passField.setName(localPassTxt.toLowerCase());
 
-        installValidation(userField, userValidator);
-        installValidation(passField, passValidator);
+        installValidation(root, userField, userValidator);
+        installValidation(root, passField, passValidator);
 
         Strings.fitDynamicContent(showPassBtn, localShowTxt, localHideTxt);
 
@@ -89,7 +89,9 @@ public final class ConnectionPrefab extends JPanel {
         });
     }
 
-    private void installValidation(JTextField field, DocumentValidator validator) {
+    private void installValidation(Window root, JTextField field, DocumentValidator validator) {
+        validator.setName(field.getName());
+        validator.setRoot(root);
         field.setDocument(validator);
         field.getCaret().addChangeListener(validator.getChangeListener());
         field.setToolTipText(validator.getSuggestedTooltip());
