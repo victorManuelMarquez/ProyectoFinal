@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.io.*;
 import java.util.Map;
 
+@Deprecated
 public final class Settings {
 
     public static final String WORKING_DIR = ".baden";
