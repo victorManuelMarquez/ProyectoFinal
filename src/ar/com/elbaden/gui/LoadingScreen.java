@@ -78,7 +78,7 @@ public final class LoadingScreen extends JFrame {
             if (!getChecker().isDone()) {
                 getChecker().cancel(true);
             }
-            if (!getCountdown().isRunning()) {
+            if (getCountdown().isRunning()) {
                 getCountdown().stop();
             }
             getRoot().dispose();
