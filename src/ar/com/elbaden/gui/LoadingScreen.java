@@ -17,7 +17,8 @@ public final class LoadingScreen extends JFrame {
     private LoadingScreen() throws HeadlessException {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setResizable(false);
-        setUndecorated(true);
+        if (UIManager.getLookAndFeel().getSupportsWindowDecorations())
+            setUndecorated(true);
         // componentes
         Border emptyBorder = BorderFactory.createEmptyBorder(8, 8, 8, 8);
 
