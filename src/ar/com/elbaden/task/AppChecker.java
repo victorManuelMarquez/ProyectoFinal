@@ -117,7 +117,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     private void initiateMySQLDriver() {
         publish(getMessages().getString("message.loading_driver") + "...");
         try {
-            Class<?> clazz = Class.forName("com.cj.jdbc.Driver");
+            Class<?> clazz = Class.forName("com.mysql.cj.jdbc.Driver");
             clazz.getConstructor().newInstance();
             String localMessage = getMessages().getString("message.driver_loaded");
             String message = MessageFormat.format(localMessage, clazz.getName());
