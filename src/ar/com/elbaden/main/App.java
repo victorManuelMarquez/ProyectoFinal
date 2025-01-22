@@ -1,7 +1,22 @@
 package ar.com.elbaden.main;
 
-public class App {
+import ar.com.elbaden.gui.LoadingScreen;
 
-    public static void main(String[] args) {}
+import javax.swing.*;
+
+public class App implements Runnable {
+
+    private App() {
+        // ignore
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new App());
+    }
+
+    @Override
+    public void run() {
+        LoadingScreen.createAndShow();
+    }
 
 }
