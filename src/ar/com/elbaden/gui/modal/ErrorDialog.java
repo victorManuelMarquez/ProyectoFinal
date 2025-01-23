@@ -103,8 +103,6 @@ public class ErrorDialog extends MasterDialog {
 
         // eventos
         okButton.addActionListener(_ -> dispose());
-
-        SwingUtilities.invokeLater(okButton::requestFocusInWindow);
     }
 
     public static void createAndShow(Window root, Exception exception) {
