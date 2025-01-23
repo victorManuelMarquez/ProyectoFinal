@@ -1,5 +1,6 @@
 package ar.com.elbaden.task;
 
+import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -9,8 +10,8 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public final class AppChecker extends SwingWorker<Void, String> implements PropertyChangeListener {
 
@@ -21,20 +22,20 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     private final Cursor defaultCursor;
     private boolean dumpProperties;
 
-    public AppChecker(JTextArea publisher) {
+    public AppChecker(JTextArea publisher) throws ResourceBundleException {
         this.publisher = publisher;
+        try {
+            setMessages(ResourceBundle.getBundle(App.LOCALES_DIR));
+        } catch (MissingResourceException e) {
+            throw new ResourceBundleException(e);
+        }
         root = SwingUtilities.windowForComponent(publisher);
         tasks = Arrays.asList(
                 new Thread(this::tryLoadSettings),
                 new Thread(this::trySaveSettings),
+//                new Thread(this::tryConnect),
                 new Thread(this::initiateMySQLDriver)
         );
-        try {
-            setMessages(ResourceBundle.getBundle(App.LOCALES_DIR));
-        } catch (MissingResourceException e) {
-            // en teoría esto no debería pasar
-            System.exit(1);
-        }
         defaultCursor = root.getCursor();
         addPropertyChangeListener(this);
     }
@@ -130,6 +131,16 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
             cancel(true);
         }
     }
+
+//    private void tryConnect() {
+//        publish(getMessages().getString("message.connecting_database") + "...");
+//        if (DataBank.testConnection(getRoot())) {
+//            publish(getMessages().getString("message.connection_successfully"));
+//        } else {
+//            // en realidad hay que reintentar
+//            cancel(true);
+//        }
+//    }
 
     JTextArea getPublisher() {
         return publisher;

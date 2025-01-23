@@ -16,7 +16,11 @@ public class App implements Runnable {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new App());
+        try {
+            SwingUtilities.invokeLater(new App());
+        } catch (RuntimeException e) {
+            System.exit(1);
+        }
     }
 
     @Override
