@@ -11,6 +11,7 @@ public final class Settings {
     public static final String APP_DIR = ".baden";
     public static final String INI_FILE = "app.ini";
 
+    public static final String KEY_URL_CONNECT = "database.url";
     public static final String KEY_USERNAME_DB = "database.user";
     public static final String KEY_PASSWORD_DB = "database.pass";
 
@@ -25,6 +26,7 @@ public final class Settings {
 
     public Map<String, String> getDefaults() {
         return Map.ofEntries(
+                Map.entry(KEY_URL_CONNECT, "jdbc:mysql://localhost:3306"),
                 Map.entry(KEY_USERNAME_DB, "root"),
                 Map.entry(KEY_PASSWORD_DB, ""),
                 Map.entry(KEY_CONFIRM_EXIT, Boolean.toString(false))
