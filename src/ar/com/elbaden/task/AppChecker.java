@@ -34,8 +34,8 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         tasks = Arrays.asList(
                 new Thread(this::tryLoadSettings),
                 new Thread(this::trySaveSettings),
-                new Thread(this::tryConnect),
-                new Thread(this::initiateMySQLDriver)
+                new Thread(this::initiateMySQLDriver),
+                new Thread(this::tryConnect)
         );
         defaultCursor = root.getCursor();
         addPropertyChangeListener(this);
