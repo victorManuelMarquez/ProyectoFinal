@@ -31,7 +31,7 @@ public final class Settings {
         );
     }
 
-    public String getPath() {
+    String getPath() {
         String path = System.getProperty("user.home");
         if (path == null) {
             URL location = Settings.class.getProtectionDomain().getCodeSource().getLocation();
