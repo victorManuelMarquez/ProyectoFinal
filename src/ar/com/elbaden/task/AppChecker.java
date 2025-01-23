@@ -1,5 +1,6 @@
 package ar.com.elbaden.task;
 
+import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.main.App;
 
@@ -33,7 +34,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         tasks = Arrays.asList(
                 new Thread(this::tryLoadSettings),
                 new Thread(this::trySaveSettings),
-//                new Thread(this::tryConnect),
+                new Thread(this::tryConnect),
                 new Thread(this::initiateMySQLDriver)
         );
         defaultCursor = root.getCursor();
@@ -132,15 +133,18 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         }
     }
 
-//    private void tryConnect() {
-//        publish(getMessages().getString("message.connecting_database") + "...");
-//        if (DataBank.testConnection(getRoot())) {
-//            publish(getMessages().getString("message.connection_successfully"));
-//        } else {
-//            // en realidad hay que reintentar
-//            cancel(true);
-//        }
-//    }
+    private void tryConnect() {
+        publish(getMessages().getString("message.connecting_database") + "...");
+        firePropertyChange("indeterminate", false, true);
+        if (DataBank.testConnection(getRoot())) {
+            publish(getMessages().getString("message.connection_successfully"));
+            firePropertyChange("indeterminate", true, false);
+        } else {
+            // en realidad hay que reintentar
+            firePropertyChange("indeterminate", true, false);
+            cancel(true);
+        }
+    }
 
     JTextArea getPublisher() {
         return publisher;

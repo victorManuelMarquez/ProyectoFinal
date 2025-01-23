@@ -107,6 +107,8 @@ public final class LoadingScreen extends JFrame {
                 getPublishProgress().setValue(getChecker().getProgress());
             } else if ("countdown".equals(evt.getPropertyName())) {
                 getCountdown().start();
+            } else if ("indeterminate".equals(evt.getPropertyName())) {
+                getPublishProgress().setIndeterminate((Boolean) evt.getNewValue());
             }
         }
 
