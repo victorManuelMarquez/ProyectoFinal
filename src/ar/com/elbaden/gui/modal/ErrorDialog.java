@@ -6,6 +6,8 @@ import ar.com.elbaden.main.App;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
@@ -103,6 +105,13 @@ public class ErrorDialog extends MasterDialog {
 
         // eventos
         okButton.addActionListener(_ -> dispose());
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                okButton.requestFocusInWindow();
+            }
+        });
     }
 
     public static void createAndShow(Window root, Exception exception) {
