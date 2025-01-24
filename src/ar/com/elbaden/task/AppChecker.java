@@ -11,6 +11,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.text.ChoiceFormat;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.*;
@@ -141,14 +142,28 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
             publish(getMessages().getString("message.connection_successfully"));
             firePropertyChange("indeterminate", true, false);
         } else {
-            // en realidad hay que reintentar
-            if (ConnectionSetUp.createAndShow(getRoot())) {
-                publish(getMessages().getString("message.connection_successfully"));
-            } else {
-                publish(getMessages().getString("message.connection_failed"));
+            publish(getMessages().getString("message.connection_failed"));
+            int tries = 3;
+            boolean keepTrying = true;
+            do {
+                String localSingular = getMessages().getString("message.attempt_remaining");
+                String localPlural = getMessages().getString("message.attempts_remaining");
+                ChoiceFormat formatter = new ChoiceFormat(new double[]{1, 2}, new String[]{
+                        localSingular, localPlural
+                });
+                publish(MessageFormat.format(formatter.format(tries), tries));
+                tries--;
+                if (ConnectionSetUp.createAndShow(getRoot())) {
+                    publish(getMessages().getString("message.connection_successfully"));
+                    keepTrying = false;
+                } else {
+                    publish(getMessages().getString("message.connection_failed"));
+                }
+            } while (keepTrying && tries > 0);
+            if (keepTrying) {
+                cancel(true);
             }
             firePropertyChange("indeterminate", true, false);
-            cancel(true);
         }
     }
 
