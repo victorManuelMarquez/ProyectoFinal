@@ -2,6 +2,7 @@ package ar.com.elbaden.task;
 
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.error.ResourceBundleException;
+import ar.com.elbaden.gui.modal.ConnectionSetUp;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -141,6 +142,11 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
             firePropertyChange("indeterminate", true, false);
         } else {
             // en realidad hay que reintentar
+            if (ConnectionSetUp.createAndShow(getRoot())) {
+                publish(getMessages().getString("message.connection_successfully"));
+            } else {
+                publish(getMessages().getString("message.connection_failed"));
+            }
             firePropertyChange("indeterminate", true, false);
             cancel(true);
         }
