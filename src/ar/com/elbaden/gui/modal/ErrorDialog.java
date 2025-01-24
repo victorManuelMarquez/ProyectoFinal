@@ -110,6 +110,7 @@ public class ErrorDialog extends MasterDialog {
             @Override
             public void windowOpened(WindowEvent e) {
                 okButton.requestFocusInWindow();
+                setMinimumSize(getSize());
             }
         });
     }
