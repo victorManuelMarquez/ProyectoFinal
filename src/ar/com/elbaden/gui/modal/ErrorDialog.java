@@ -13,7 +13,7 @@ import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-public class ErrorDialog extends MasterDialog {
+public final class ErrorDialog extends MasterDialog {
 
     private ErrorDialog(Window owner, Exception exception) throws ResourceBundleException {
         super(owner, exception.getClass().getSimpleName());
