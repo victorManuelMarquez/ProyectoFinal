@@ -2,6 +2,8 @@ package ar.com.elbaden.gui.modal;
 
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
+import ar.com.elbaden.gui.input.FieldMargin;
+import ar.com.elbaden.gui.input.FilteredTextField;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -36,17 +38,15 @@ public final class ConnectionSetUp extends MasterDialog {
         constraints.insets = new Insets(4, 4, 4, 4);
         constraints.weightx = 1.0;
 
-        Insets textMargins = UIManager.getInsets("TextPane.margin");
-
         JLabel userLabel = new JLabel(localUser);
 
         JLabel passLabel = new JLabel(localPass);
 
-        JTextField userField = new JTextField();
-        userField.setMargin(textMargins);
+        JTextField userField = new FilteredTextField("^(?!\\d)\\w+$", 4, 16);
+        userField.setMargin(new FieldMargin());
 
         JPasswordField passwordField = new JPasswordField();
-        passwordField.setMargin(textMargins);
+        passwordField.setMargin(new FieldMargin());
         passwordField.setColumns(12);
         char defaultEcho = passwordField.getEchoChar();
 
@@ -59,6 +59,10 @@ public final class ConnectionSetUp extends MasterDialog {
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
         buttonsPanel.add(applyButton);
         buttonsPanel.add(cancelButton);
+
+        // accesibilidad
+        userLabel.setLabelFor(userField);
+        passLabel.setLabelFor(passwordField);
 
         // instalando los componentes en el dialog
         int row = 0;
