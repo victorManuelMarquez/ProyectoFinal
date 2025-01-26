@@ -1,5 +1,8 @@
 package ar.com.elbaden.gui.input;
 
+import ar.com.elbaden.gui.modal.MessageDialog;
+import ar.com.elbaden.main.App;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -7,6 +10,8 @@ import javax.swing.text.PlainDocument;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.MessageFormat;
+import java.util.ResourceBundle;
 
 public final class FilteredTextField
     extends JTextField
@@ -40,9 +45,13 @@ public final class FilteredTextField
     @Override
     public void actionPerformed(ActionEvent e) {
         if (getText().length() < minimumLength) {
-            // mensaje de prueba
+            ResourceBundle messages;
+            messages = ResourceBundle.getBundle(App.LOCALES_DIR);
+            String title = messages.getString("message_dialog.attention");
+            String message = messages.getString("message_dialog.info.min");
+            message = MessageFormat.format(message, minimumLength);
             Window window = SwingUtilities.windowForComponent(this);
-            JOptionPane.showMessageDialog(window, minimumLength + " caracteres mínimo.");
+            MessageDialog.createAndShow(window, title, message, JOptionPane.ERROR_MESSAGE);
         }
     }
 
