@@ -13,7 +13,7 @@ import java.awt.event.ActionListener;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
-public class FilteredPasswordField
+public final class FilteredPasswordField
     extends JPasswordField
         implements ActionListener, CheckMinimumLength, DocumentListener, LaunchMessages, UpdateForegroundByFiltering {
 
