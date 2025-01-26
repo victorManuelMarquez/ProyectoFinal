@@ -42,7 +42,7 @@ public final class ConnectionSetUp extends MasterDialog {
 
         JLabel passLabel = new JLabel(localPass);
 
-        JTextField userField = new FilteredTextField("^(?!\\d)\\w+$", 4, 16);
+        FilteredTextField userField = new FilteredTextField("^(?!\\d)\\w+$", 4, 16);
         userField.setMargin(new FieldMargin());
 
         JPasswordField passwordField = new JPasswordField();
@@ -103,6 +103,10 @@ public final class ConnectionSetUp extends MasterDialog {
         });
 
         applyButton.addActionListener(_ -> {
+            if (userField.needRevision()) {
+                userField.requestFocusInWindow();
+                return;
+            }
             String user = userField.getText();
             String pass = new String(passwordField.getPassword());
             Window root = SwingUtilities.windowForComponent(applyButton);

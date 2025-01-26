@@ -15,7 +15,7 @@ import java.util.ResourceBundle;
 
 public final class FilteredTextField
     extends JTextField
-        implements ActionListener, DocumentListener, UpdateForegroundByFiltering {
+        implements ActionListener, CheckMinimumLength, DocumentListener, UpdateForegroundByFiltering {
 
     private final int minimumLength;
     private final Color defaultFgColor;
@@ -34,8 +34,13 @@ public final class FilteredTextField
     }
 
     @Override
+    public boolean needRevision() {
+        return getText().length() < minimumLength;
+    }
+
+    @Override
     public void updateForeground() {
-        if (getText().length() < minimumLength) {
+        if (needRevision()) {
             setForeground(outOfBoundFgColor);
         } else {
             setForeground(defaultFgColor);
@@ -44,7 +49,7 @@ public final class FilteredTextField
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (getText().length() < minimumLength) {
+        if (needRevision()) {
             ResourceBundle messages;
             messages = ResourceBundle.getBundle(App.LOCALES_DIR);
             String title = messages.getString("message_dialog.attention");
