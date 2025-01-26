@@ -110,7 +110,6 @@ public final class ErrorDialog extends MasterDialog {
             @Override
             public void windowOpened(WindowEvent e) {
                 okButton.requestFocusInWindow();
-                setMinimumSize(getSize());
             }
         });
     }
@@ -120,6 +119,7 @@ public final class ErrorDialog extends MasterDialog {
             ErrorDialog dialog = new ErrorDialog(root, exception);
             dialog.pack();
             dialog.setLocationRelativeTo(root);
+            dialog.setMinimumSize(dialog.getSize());
             dialog.setVisible(true);
         } catch (ResourceBundleException e) {
             throw new RuntimeException(e);
