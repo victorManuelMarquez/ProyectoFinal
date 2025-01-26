@@ -5,8 +5,12 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.PlainDocument;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public final class FilteredTextField extends JTextField implements DocumentListener, UpdateForegroundByFiltering {
+public final class FilteredTextField
+    extends JTextField
+        implements ActionListener, DocumentListener, UpdateForegroundByFiltering {
 
     private final int minimumLength;
     private final Color defaultFgColor;
@@ -19,6 +23,8 @@ public final class FilteredTextField extends JTextField implements DocumentListe
         this.minimumLength = minimumLength;
         defaultFgColor = getForeground();
         ((PlainDocument) getDocument()).setDocumentFilter(new DocumentFilterByRegex(regex, maximumLength));
+        // eventos
+        addActionListener(this); // muestra un mensaje si el campo no es válido
         getDocument().addDocumentListener(this); // pinta de otro color la fuente si es válido el contenido
     }
 
@@ -28,6 +34,15 @@ public final class FilteredTextField extends JTextField implements DocumentListe
             setForeground(outOfBoundFgColor);
         } else {
             setForeground(defaultFgColor);
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (getText().length() < minimumLength) {
+            // mensaje de prueba
+            Window window = SwingUtilities.windowForComponent(this);
+            JOptionPane.showMessageDialog(window, minimumLength + " caracteres mínimo.");
         }
     }
 
