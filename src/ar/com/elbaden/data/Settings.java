@@ -106,6 +106,9 @@ public final class Settings implements PropertyChangeListener {
         if (parentDir == null) return false;
         parentDir += File.separator + APP_DIR;
         File iniFile = new File(parentDir, INI_FILE);
+        if (!iniFile.getParentFile().exists()) {
+            boolean ignore = iniFile.getParentFile().mkdir();
+        }
         try (
                 FileOutputStream outputStream = new FileOutputStream(iniFile);
                 OutputStreamWriter writer = new OutputStreamWriter(outputStream)
