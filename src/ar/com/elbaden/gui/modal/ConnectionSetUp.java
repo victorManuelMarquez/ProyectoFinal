@@ -3,6 +3,7 @@ package ar.com.elbaden.gui.modal;
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.gui.input.FieldMargin;
+import ar.com.elbaden.gui.input.FilteredPasswordField;
 import ar.com.elbaden.gui.input.FilteredTextField;
 import ar.com.elbaden.main.App;
 
@@ -44,10 +45,12 @@ public final class ConnectionSetUp extends MasterDialog {
 
         FilteredTextField userField = new FilteredTextField("^(?!\\d)\\w+$", 4, 16);
         userField.setMargin(new FieldMargin());
+        userField.setName(userLabel.getText());
 
-        JPasswordField passwordField = new JPasswordField();
-        passwordField.setMargin(new FieldMargin());
+        FilteredPasswordField passwordField = new FilteredPasswordField("^\\w+$", 8, 16);
         passwordField.setColumns(12);
+        passwordField.setMargin(new FieldMargin());
+        passwordField.setName(passLabel.getText());
         char defaultEcho = passwordField.getEchoChar();
 
         JButton showPassBtn = new JButton(localShow);
@@ -105,6 +108,12 @@ public final class ConnectionSetUp extends MasterDialog {
         applyButton.addActionListener(_ -> {
             if (userField.needRevision()) {
                 userField.requestFocusInWindow();
+                userField.showMinimumNotMet();
+                return;
+            }
+            if (passwordField.needRevision()) {
+                passwordField.requestFocusInWindow();
+                passwordField.showMinimumNotMet();
                 return;
             }
             String user = userField.getText();

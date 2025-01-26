@@ -13,14 +13,14 @@ import java.awt.event.ActionListener;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
-public final class FilteredTextField
-    extends JTextField
+public class FilteredPasswordField
+    extends JPasswordField
         implements ActionListener, CheckMinimumLength, DocumentListener, LaunchMessages, UpdateForegroundByFiltering {
 
     private final int minLength;
     private final Color defaultFgColor;
 
-    public FilteredTextField(String regex, int minLength, int maxLength) {
+    public FilteredPasswordField(String regex, int minLength, int maxLength) {
         if (regex == null) throw new IllegalArgumentException("regex == null");
         if (regex.isBlank()) throw new IllegalArgumentException("regex == \"\"");
         if (minLength > maxLength) throw new IllegalArgumentException("min > max");
@@ -35,7 +35,7 @@ public final class FilteredTextField
 
     @Override
     public boolean needRevision() {
-        return getText().length() < minLength;
+        return getPassword().length < minLength;
     }
 
     @Override
