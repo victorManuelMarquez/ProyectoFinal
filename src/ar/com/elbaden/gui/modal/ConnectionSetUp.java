@@ -2,6 +2,7 @@ package ar.com.elbaden.gui.modal;
 
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
+import ar.com.elbaden.gui.button.AdaptableButton;
 import ar.com.elbaden.gui.input.FieldMargin;
 import ar.com.elbaden.gui.input.FilteredPasswordField;
 import ar.com.elbaden.gui.input.FilteredTextField;
@@ -53,7 +54,7 @@ public final class ConnectionSetUp extends MasterDialog {
         passwordField.setName(passLabel.getText());
         char defaultEcho = passwordField.getEchoChar();
 
-        JButton showPassBtn = new JButton(localShow);
+        AdaptableButton showPassBtn = new AdaptableButton(localShow, localHide);
 
         JButton applyButton = new JButton(localApply);
 
