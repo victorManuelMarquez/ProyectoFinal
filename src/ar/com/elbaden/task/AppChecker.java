@@ -2,6 +2,7 @@ package ar.com.elbaden.task;
 
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.error.ResourceBundleException;
+import ar.com.elbaden.gui.MainFrame;
 import ar.com.elbaden.gui.modal.ConnectionSetUp;
 import ar.com.elbaden.main.App;
 
@@ -72,6 +73,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         getRoot().setCursor(defaultCursor);
         if (!isCancelled()) {
             getRoot().dispose();
+            MainFrame.createAndShow();
         } else {
             firePropertyChange("countdown", false, true);
         }
