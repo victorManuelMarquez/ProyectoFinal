@@ -16,8 +16,8 @@ public class MainFrame extends JFrame {
         }
     }
 
-    public static void createAndShow() {
-        MainFrame frame = new MainFrame("Demo");
+    public static void createAndShow(String title) {
+        MainFrame frame = new MainFrame(title);
         frame.pack();
         frame.setMinimumSize(frame.getSize());
         frame.setLocationRelativeTo(null);

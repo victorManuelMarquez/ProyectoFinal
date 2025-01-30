@@ -73,7 +73,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         getRoot().setCursor(defaultCursor);
         if (!isCancelled()) {
             getRoot().dispose();
-            MainFrame.createAndShow();
+            MainFrame.createAndShow(getMessages().getString("main_frame.title"));
         } else {
             firePropertyChange("countdown", false, true);
         }
