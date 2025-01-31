@@ -24,7 +24,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     private final List<Thread> tasks;
     private ResourceBundle messages;
     private final Cursor defaultCursor;
-    private boolean dumpProperties;
+    private boolean dumpProperties = true;
 
     public AppChecker(JTextArea publisher) throws ResourceBundleException {
         this.publisher = publisher;
