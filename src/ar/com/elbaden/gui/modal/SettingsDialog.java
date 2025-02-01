@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui.modal;
 
 import ar.com.elbaden.error.ResourceBundleException;
+import ar.com.elbaden.gui.prefab.ConnectionForm;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -27,9 +28,14 @@ public class SettingsDialog extends MasterDialog {
 
         // componentes
 
-        // ***********************
-        // agregar componentes faltantes....
-        // ***********************
+        JScrollPane scrollMainContent = new JScrollPane();
+
+        JPanel mainContent = new JPanel(null);
+        mainContent.setLayout(new BoxLayout(mainContent, BoxLayout.Y_AXIS));
+        scrollMainContent.setViewportView(mainContent);
+
+        ConnectionForm connectionForm = new ConnectionForm(true);
+        mainContent.add(connectionForm);
 
         JButton btnApply = new JButton(localApply);
 
@@ -43,6 +49,7 @@ public class SettingsDialog extends MasterDialog {
         buttonsPanel.add(btnCancel);
 
         // instalando los componentes en el dialog
+        getContentPane().add(scrollMainContent);
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
