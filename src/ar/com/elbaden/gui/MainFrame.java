@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui;
 
 import ar.com.elbaden.error.ResourceBundleException;
+import ar.com.elbaden.gui.modal.SettingsDialog;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -32,6 +33,7 @@ public class MainFrame extends JFrame {
         }
 
         // contenido local
+        String localSettings = messages.getString("menu.settings");
         String localFile = messages.getString("menu.file");
         String localExit = messages.getString("menu.exit");
 
@@ -41,6 +43,9 @@ public class MainFrame extends JFrame {
         JMenu fileMenu = new JMenu(localFile);
         getJMenuBar().add(fileMenu);
 
+        JMenuItem settingsOption = new JMenuItem(localSettings + "...");
+        fileMenu.add(settingsOption);
+
         fileMenu.addSeparator();
 
         JMenuItem exitOption = new JMenuItem(localExit);
@@ -49,6 +54,8 @@ public class MainFrame extends JFrame {
         // eventos
         WindowEvents events = new WindowEvents();
         addWindowListener(events);
+
+        settingsOption.addActionListener(_ -> SettingsDialog.createAndShow(this, localSettings));
 
         exitOption.addActionListener(_ -> events.windowClosing(new WindowEvent(this, WINDOW_CLOSING)));
     }
