@@ -14,6 +14,9 @@ import java.util.ResourceBundle;
 
 public class ConnectionForm extends JPanel {
 
+    private final FilteredTextField userField;
+    private final FilteredPasswordField passwordField;
+
     public ConnectionForm(Boolean titled) throws MissingResourceException {
         super(new GridBagLayout());
 
@@ -50,11 +53,11 @@ public class ConnectionForm extends JPanel {
 
         JLabel passLabel = new JLabel(localPass);
 
-        FilteredTextField userField = new FilteredTextField("^(?!\\d)\\w+$", 4, 16);
+        userField = new FilteredTextField("^(?!\\d)\\w+$", 4, 16);
         userField.setMargin(new FieldMargin());
         userField.setName(userLabel.getText());
 
-        FilteredPasswordField passwordField = new FilteredPasswordField("^\\w+$", 8, 16);
+        passwordField = new FilteredPasswordField("^\\w+$", 8, 16);
         passwordField.setColumns(12);
         passwordField.setMargin(new FieldMargin());
         passwordField.setName(passLabel.getText());
@@ -82,6 +85,10 @@ public class ConnectionForm extends JPanel {
 
         add(showPassBtn, constraints);
 
+        // accesibilidad
+        userLabel.setLabelFor(userField);
+        passLabel.setLabelFor(passwordField);
+
         // eventos
         showPassBtn.addActionListener(_ -> {
             if (passwordField.getEchoChar() == defaultEcho) {
@@ -92,6 +99,14 @@ public class ConnectionForm extends JPanel {
                 showPassBtn.setText(localShow);
             }
         });
+    }
+
+    public FilteredTextField getUserField() {
+        return userField;
+    }
+
+    public FilteredPasswordField getPasswordField() {
+        return passwordField;
     }
 
 }

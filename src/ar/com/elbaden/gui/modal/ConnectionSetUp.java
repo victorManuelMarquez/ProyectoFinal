@@ -2,10 +2,9 @@ package ar.com.elbaden.gui.modal;
 
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
-import ar.com.elbaden.gui.button.AdaptableButton;
-import ar.com.elbaden.gui.input.FieldMargin;
 import ar.com.elbaden.gui.input.FilteredPasswordField;
 import ar.com.elbaden.gui.input.FilteredTextField;
+import ar.com.elbaden.gui.prefab.ConnectionForm;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -19,7 +18,6 @@ public final class ConnectionSetUp extends MasterDialog {
 
     private ConnectionSetUp(Window owner, String title) {
         super(owner, title);
-        setLayout(new GridBagLayout());
         setResizable(false);
         ResourceBundle messages;
         try {
@@ -28,33 +26,11 @@ public final class ConnectionSetUp extends MasterDialog {
             throw new RuntimeException(e);
         }
         // contenido local
-        String localUser = messages.getString("label.user_database");
-        String localPass = messages.getString("label.password_database");
-        String localShow = messages.getString("button.show");
-        String localHide = messages.getString("button.hide");
         String localApply  = messages.getString("button.apply");
         String localCancel = messages.getString("button.cancel");
 
         // componentes
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(4, 4, 4, 4);
-        constraints.weightx = 1.0;
-
-        JLabel userLabel = new JLabel(localUser);
-
-        JLabel passLabel = new JLabel(localPass);
-
-        FilteredTextField userField = new FilteredTextField("^(?!\\d)\\w+$", 4, 16);
-        userField.setMargin(new FieldMargin());
-        userField.setName(userLabel.getText());
-
-        FilteredPasswordField passwordField = new FilteredPasswordField("^\\w+$", 8, 16);
-        passwordField.setColumns(12);
-        passwordField.setMargin(new FieldMargin());
-        passwordField.setName(passLabel.getText());
-        char defaultEcho = passwordField.getEchoChar();
-
-        AdaptableButton showPassBtn = new AdaptableButton(localShow, localHide);
+        ConnectionForm connectionForm = new ConnectionForm(false);
 
         JButton applyButton = new JButton(localApply);
 
@@ -64,47 +40,13 @@ public final class ConnectionSetUp extends MasterDialog {
         buttonsPanel.add(applyButton);
         buttonsPanel.add(cancelButton);
 
-        // accesibilidad
-        userLabel.setLabelFor(userField);
-        passLabel.setLabelFor(passwordField);
-
         // instalando los componentes en el dialog
-        int row = 0;
-        constraints.anchor = GridBagConstraints.LINE_END;
-        add(userLabel, constraints);
-
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.gridwidth = GridBagConstraints.REMAINDER;
-        add(userField, constraints);
-
-        row++;
-        constraints.anchor = GridBagConstraints.LINE_END;
-        constraints.fill = GridBagConstraints.NONE;
-        constraints.gridwidth = 1;
-        constraints.gridy = row;
-        add(passLabel, constraints);
-
-        constraints.anchor = GridBagConstraints.CENTER;
-        add(passwordField, constraints);
-
-        add(showPassBtn, constraints);
-
-        row++;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.gridwidth = GridBagConstraints.REMAINDER;
-        constraints.gridy = row;
-        add(buttonsPanel, constraints);
+        getContentPane().add(connectionForm);
+        getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
-        showPassBtn.addActionListener(_ -> {
-            if (passwordField.getEchoChar() == defaultEcho) {
-                passwordField.setEchoChar(Character.MIN_VALUE);
-                showPassBtn.setText(localHide);
-            } else {
-                passwordField.setEchoChar(defaultEcho);
-                showPassBtn.setText(localShow);
-            }
-        });
+        FilteredTextField userField = connectionForm.getUserField();
+        FilteredPasswordField passwordField = connectionForm.getPasswordField();
 
         applyButton.addActionListener(_ -> {
             if (userField.needRevision()) {
