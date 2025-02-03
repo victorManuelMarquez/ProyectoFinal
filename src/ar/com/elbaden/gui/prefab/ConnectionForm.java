@@ -1,5 +1,7 @@
 package ar.com.elbaden.gui.prefab;
 
+import ar.com.elbaden.connection.DataBank;
+import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.gui.button.AdaptableButton;
 import ar.com.elbaden.gui.input.FieldMargin;
 import ar.com.elbaden.gui.input.FilteredPasswordField;
@@ -9,27 +11,33 @@ import ar.com.elbaden.main.App;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-public class ConnectionForm extends JPanel {
+public class ConnectionForm extends JPanel implements ActionListener {
 
     private final FilteredTextField userField;
     private final FilteredPasswordField passwordField;
 
+    private boolean success = false;
+    private final String comments;
+
     public ConnectionForm(Boolean titled) throws MissingResourceException {
         super(new GridBagLayout());
 
-        ResourceBundle message;
-        message = ResourceBundle.getBundle(App.LOCALES_DIR);
+        ResourceBundle messages;
+        messages = ResourceBundle.getBundle(App.LOCALES_DIR);
 
         // contenido local
-        String localUser = message.getString("label.user_database");
-        String localPass = message.getString("label.password_database");
-        String localShow = message.getString("button.show");
-        String localHide = message.getString("button.hide");
+        String localUser = messages.getString("label.user_database");
+        String localPass = messages.getString("label.password_database");
+        String localShow = messages.getString("button.show");
+        String localHide = messages.getString("button.hide");
+        comments = messages.getString("ini.comments");
 
-        setName(message.getString("literal.connection"));
+        setName(messages.getString("literal.connection"));
 
         // variables
         final int space = 8, margin = 4;
@@ -101,12 +109,42 @@ public class ConnectionForm extends JPanel {
         });
     }
 
-    public FilteredTextField getUserField() {
-        return userField;
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Window source = SwingUtilities.windowForComponent(this);
+        if ("apply".equals(e.getActionCommand())) {
+            apply(source);
+        } else if ("apply&close".equals(e.getActionCommand())) {
+            apply(source);
+            source.dispose();
+        }
     }
 
-    public FilteredPasswordField getPasswordField() {
-        return passwordField;
+    private void apply(Window source) {
+        if (userField.needRevision()) {
+            userField.requestFocusInWindow();
+            userField.showMinimumNotMet();
+            return;
+        }
+        if (passwordField.needRevision()) {
+            passwordField.requestFocusInWindow();
+            passwordField.showMinimumNotMet();
+            return;
+        }
+        String user = userField.getText();
+        String pass = new String(passwordField.getPassword());
+        App.settings.getProperties().setProperty(Settings.KEY_USERNAME_DB, user);
+        App.settings.getProperties().setProperty(Settings.KEY_PASSWORD_DB, pass);
+        success = DataBank.testConnection(source);
+        if (success) {
+            App.settings.applyChanges(source, comments);
+        } else {
+            App.settings.discardChanges();
+        }
+    }
+
+    public boolean isConnectionSet() {
+        return success;
     }
 
 }

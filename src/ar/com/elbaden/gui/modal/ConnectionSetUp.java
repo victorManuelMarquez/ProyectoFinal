@@ -1,16 +1,15 @@
 package ar.com.elbaden.gui.modal;
 
-import ar.com.elbaden.connection.DataBank;
-import ar.com.elbaden.data.Settings;
-import ar.com.elbaden.gui.input.FilteredPasswordField;
-import ar.com.elbaden.gui.input.FilteredTextField;
 import ar.com.elbaden.gui.prefab.ConnectionForm;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+
+import static java.awt.event.ActionEvent.ACTION_PERFORMED;
 
 public final class ConnectionSetUp extends MasterDialog {
 
@@ -45,32 +44,9 @@ public final class ConnectionSetUp extends MasterDialog {
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
-        FilteredTextField userField = connectionForm.getUserField();
-        FilteredPasswordField passwordField = connectionForm.getPasswordField();
-
-        applyButton.addActionListener(_ -> {
-            if (userField.needRevision()) {
-                userField.requestFocusInWindow();
-                userField.showMinimumNotMet();
-                return;
-            }
-            if (passwordField.needRevision()) {
-                passwordField.requestFocusInWindow();
-                passwordField.showMinimumNotMet();
-                return;
-            }
-            String user = userField.getText();
-            String pass = new String(passwordField.getPassword());
-            Window root = SwingUtilities.windowForComponent(applyButton);
-            App.settings.getProperties().setProperty(Settings.KEY_USERNAME_DB, user);
-            App.settings.getProperties().setProperty(Settings.KEY_PASSWORD_DB, pass);
-            success = DataBank.testConnection(root);
-            if (success) {
-                String comments = messages.getString("ini.comments");
-                App.settings.applyChanges(root, comments);
-            } else {
-                App.settings.discardChanges();
-            }
+        applyButton.addActionListener(evt -> {
+            connectionForm.actionPerformed(new ActionEvent(evt.getSource(), ACTION_PERFORMED, "apply"));
+            success = connectionForm.isConnectionSet();
             dispose();
         });
 
