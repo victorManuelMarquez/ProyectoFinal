@@ -116,7 +116,9 @@ public class ConnectionForm extends JPanel implements ActionListener {
             apply(source);
         } else if ("apply&close".equals(e.getActionCommand())) {
             apply(source);
-            source.dispose();
+            if (isConnectionSet()) {
+                source.dispose();
+            }
         }
     }
 
