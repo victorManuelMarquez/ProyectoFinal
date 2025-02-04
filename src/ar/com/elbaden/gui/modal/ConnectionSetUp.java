@@ -45,7 +45,7 @@ public final class ConnectionSetUp extends MasterDialog {
 
         // eventos
         applyButton.addActionListener(evt -> {
-            connectionForm.actionPerformed(new ActionEvent(evt.getSource(), ACTION_PERFORMED, "apply"));
+            connectionForm.actionPerformed(new ActionEvent(evt, ACTION_PERFORMED, "apply"));
             success = connectionForm.isConnectionSet();
             dispose();
         });
