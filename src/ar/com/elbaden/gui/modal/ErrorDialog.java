@@ -2,6 +2,7 @@ package ar.com.elbaden.gui.modal;
 
 import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.main.App;
+import ar.com.elbaden.utils.Strings;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -35,8 +36,6 @@ public final class ErrorDialog extends MasterDialog {
 
         // componentes
         Border emptyBorder = BorderFactory.createEmptyBorder(8, 8, 8, 8);
-        Dimension preferredSize = new Dimension(360, 240);
-        Dimension maximumSize = new Dimension(640, 480);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setBorder(emptyBorder);
@@ -53,7 +52,6 @@ public final class ErrorDialog extends MasterDialog {
 
         JScrollPane messageScrollPane = new JScrollPane(messagesPanel);
         messageScrollPane.setBorder(BorderFactory.createEmptyBorder());
-        messageScrollPane.setMaximumSize(maximumSize);
         messageTab.add(messageScrollPane);
 
         JLabel messageLabel = new JLabel();
@@ -71,9 +69,10 @@ public final class ErrorDialog extends MasterDialog {
 
             JTextArea details = new JTextArea();
             details.setEditable(false);
+            details.setLineWrap(true);
+            details.setWrapStyleWord(true);
 
             JScrollPane detailsScrollPane = new JScrollPane(details);
-            detailsScrollPane.setPreferredSize(preferredSize);
 
             // instalando los componentes
             detailsTab.add(detailsScrollPane);
@@ -90,8 +89,10 @@ public final class ErrorDialog extends MasterDialog {
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
         // agrego el mensaje del error
+        String message = exception.getMessage();
+        String formattedString = Strings.convertToHTML(message);
         if (exception instanceof SQLException sqlError) {
-            messageLabel.setText(sqlError.getLocalizedMessage());
+            messageLabel.setText(formattedString);
             String localSQLState = messages.getString("error_dialog.sql_state");
             String localSQLVendor = messages.getString("error_dialog.sql_vendor");
             String sqlState = MessageFormat.format(localSQLState, sqlError.getSQLState());
@@ -100,7 +101,7 @@ public final class ErrorDialog extends MasterDialog {
             messagesPanel.add(new JLabel(sqlState));
             messagesPanel.add(new JLabel(sqlVendor));
         } else {
-            messageLabel.setText(exception.getLocalizedMessage());
+            messageLabel.setText(formattedString);
         }
 
         // eventos
