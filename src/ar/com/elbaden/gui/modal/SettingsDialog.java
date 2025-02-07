@@ -6,7 +6,6 @@ import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -16,17 +15,17 @@ public class SettingsDialog extends MasterDialog {
         super(owner, title);
         setResizable(false);
 
-        ResourceBundle message;
+        ResourceBundle messages;
         try {
-            message = ResourceBundle.getBundle(App.LOCALES_DIR);
+            messages = ResourceBundle.getBundle(App.LOCALES_DIR);
         } catch (MissingResourceException e) {
             throw new ResourceBundleException(e);
         }
 
         // contenido local
-        String localApply = message.getString("button.apply");
-        String localApplyClose = message.getString("button.apply_close");
-        String localCancel = message.getString("button.cancel");
+        String localApply = messages.getString("button.apply");
+        String localApplyClose = messages.getString("button.apply_close");
+        String localCancel = messages.getString("button.cancel");
 
         // componentes
         JScrollPane scrollMainContent = new JScrollPane();
@@ -39,8 +38,10 @@ public class SettingsDialog extends MasterDialog {
         mainContent.add(connectionForm);
 
         JButton btnApply = new JButton(localApply);
+        btnApply.setActionCommand("apply");
 
         JButton btnApplyClose = new JButton(localApplyClose);
+        btnApplyClose.setActionCommand("apply&close");
 
         JButton btnCancel = new JButton(localCancel);
 
@@ -54,17 +55,9 @@ public class SettingsDialog extends MasterDialog {
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
-        btnApply.addActionListener(evt -> {
-            ActionEvent applyEvent;
-            applyEvent = new ActionEvent(evt, ActionEvent.ACTION_PERFORMED, "apply");
-            connectionForm.actionPerformed(applyEvent);
-        });
+        btnApply.addActionListener(connectionForm);
 
-        btnApplyClose.addActionListener(evt -> {
-            ActionEvent applyEvent;
-            applyEvent = new ActionEvent(evt, ActionEvent.ACTION_PERFORMED, "apply&close");
-            connectionForm.actionPerformed(applyEvent);
-        });
+        btnApplyClose.addActionListener(connectionForm);
 
         btnCancel.addActionListener(_ -> dispose());
     }
