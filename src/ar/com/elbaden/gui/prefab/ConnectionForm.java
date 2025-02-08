@@ -24,7 +24,7 @@ public class ConnectionForm extends JPanel implements ActionListener {
     private boolean success = false;
     private final String comments;
 
-    public ConnectionForm(Boolean titled) throws MissingResourceException {
+    public ConnectionForm(Boolean isModule) throws MissingResourceException {
         super(new GridBagLayout());
 
         ResourceBundle messages;
@@ -45,13 +45,6 @@ public class ConnectionForm extends JPanel implements ActionListener {
 
         // componentes
         Border emptyBorder = BorderFactory.createEmptyBorder(space, space, space, space);
-
-        if (titled) {
-            Border titledBorder = BorderFactory.createTitledBorder(getName());
-            setBorder(BorderFactory.createCompoundBorder(titledBorder, emptyBorder));
-        } else {
-            setBorder(emptyBorder);
-        }
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.insets = new Insets(margin, margin, margin, margin);
@@ -92,6 +85,39 @@ public class ConnectionForm extends JPanel implements ActionListener {
         add(passwordField, constraints);
 
         add(showPassBtn, constraints);
+
+        if (isModule) {
+            // local
+            String localEdit = messages.getString("checkbox.enable_edition");
+
+            // borde especial
+            Border titledBorder = BorderFactory.createTitledBorder(getName());
+            setBorder(BorderFactory.createCompoundBorder(titledBorder, emptyBorder));
+
+            // contenido y comportamiento
+            userField.setText(App.settings.getProperties().getProperty(Settings.KEY_USERNAME_DB));
+            passwordField.setText(App.settings.getProperties().getProperty(Settings.KEY_PASSWORD_DB));
+            userField.setEnabled(false);
+            passwordField.setEnabled(false);
+            showPassBtn.setEnabled(false);
+
+            // instalación
+            row++;
+            JCheckBox editBtn = new JCheckBox(localEdit);
+            constraints.anchor    = GridBagConstraints.LINE_START;
+            constraints.gridwidth = GridBagConstraints.REMAINDER;
+            constraints.gridy     = row;
+            add(editBtn, constraints);
+
+            // eventos
+            editBtn.addActionListener(_ -> {
+                userField.setEnabled(!userField.isEnabled());
+                passwordField.setEnabled(!passwordField.isEnabled());
+                showPassBtn.setEnabled(!showPassBtn.isEnabled());
+            });
+        } else {
+            setBorder(emptyBorder);
+        }
 
         // accesibilidad
         userLabel.setLabelFor(userField);
