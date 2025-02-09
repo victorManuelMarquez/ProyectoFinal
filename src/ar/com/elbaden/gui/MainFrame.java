@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui;
 
 import ar.com.elbaden.error.ResourceBundleException;
+import ar.com.elbaden.gui.modal.ClosingDialog;
 import ar.com.elbaden.gui.modal.SettingsDialog;
 import ar.com.elbaden.main.App;
 
@@ -17,10 +18,13 @@ public class MainFrame extends JFrame {
 
     private MainFrame(String title) throws HeadlessException, ResourceBundleException {
         super(title);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
         if (UIManager.getLookAndFeel().getSupportsWindowDecorations()) {
             setUndecorated(true);
             getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
         }
+
         if (Toolkit.getDefaultToolkit().isFrameStateSupported(MAXIMIZED_BOTH)) {
             setExtendedState(MAXIMIZED_BOTH);
         }
@@ -76,8 +80,10 @@ public class MainFrame extends JFrame {
 
         @Override
         public void windowClosing(WindowEvent e) {
-            // aquí tengo que poner un diálogo para confirmar el cierre
-            e.getWindow().dispose();
+            int option = ClosingDialog.createAndShow(e.getWindow());
+            if (option == JOptionPane.OK_OPTION) {
+                e.getWindow().dispose();
+            }
         }
 
     }
