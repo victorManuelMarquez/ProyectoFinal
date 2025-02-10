@@ -1,11 +1,14 @@
 package ar.com.elbaden.gui.modal;
 
+import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -34,7 +37,6 @@ public final class ClosingDialog extends MasterDialog {
         // componentes
         int margin = 8;
 
-
         Icon questionIcon = UIManager.getIcon("OptionPane.questionIcon");
 
         JLabel questionLabel = new JLabel(questionIcon);
@@ -47,15 +49,14 @@ public final class ClosingDialog extends MasterDialog {
         messageLabel.setBorder(emptyBorder);
 
         // pendiente de funcionalidad
-        JCheckBox doNotAskAgain = new JCheckBox(localDoNotAsk);
-        doNotAskAgain.setEnabled(false);
+        JCheckBox disableConfirmation = new JCheckBox(localDoNotAsk);
 
         JPanel contentPanel = new JPanel(null);
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.PAGE_AXIS));
         emptyBorder = BorderFactory.createEmptyBorder(margin, margin, margin, margin);
         contentPanel.setBorder(emptyBorder);
         contentPanel.add(messageLabel);
-        contentPanel.add(doNotAskAgain);
+        contentPanel.add(disableConfirmation);
 
         JButton exitButton = new JButton(localExit);
 
@@ -71,12 +72,30 @@ public final class ClosingDialog extends MasterDialog {
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                exitButton.requestFocusInWindow();
+            }
+        });
+
+        disableConfirmation.addActionListener(_ -> {
+            String value = Boolean.toString(!disableConfirmation.isSelected());
+            App.settings.getProperties().setProperty(Settings.KEY_ASK_FOR_CLOSING, value);
+        });
+
         exitButton.addActionListener(_ -> {
+            Window root = SwingUtilities.windowForComponent(exitButton);
+            String comments = messages.getString("ini.comments");
+            App.settings.applyChanges(root, comments);
             legacyOption = JOptionPane.OK_OPTION;
             dispose();
         });
 
-        cancelButton.addActionListener(_ -> dispose());
+        cancelButton.addActionListener(_ -> {
+            App.settings.discardChanges();
+            dispose();
+        });
     }
 
     public static int createAndShow(Window root) {

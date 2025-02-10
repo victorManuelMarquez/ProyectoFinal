@@ -20,9 +20,10 @@ public final class Settings implements PropertyChangeListener {
     public static final String APP_DIR = ".baden";
     public static final String INI_FILE = "app.ini";
 
-    public static final String KEY_URL_CONNECT = "database.url";
-    public static final String KEY_USERNAME_DB = "database.user";
-    public static final String KEY_PASSWORD_DB = "database.pass";
+    public static final String KEY_URL_CONNECT     = "database.url";
+    public static final String KEY_USERNAME_DB     = "database.user";
+    public static final String KEY_PASSWORD_DB     = "database.pass";
+    public static final String KEY_ASK_FOR_CLOSING = "app.confirm_to_exit";
 
     private final Properties properties;
     private final PropertyChangeSupport changeSupport;
@@ -205,7 +206,8 @@ public final class Settings implements PropertyChangeListener {
             return Map.ofEntries(
                     Map.entry(KEY_URL_CONNECT, "jdbc:mysql://localhost:3306"),
                     Map.entry(KEY_USERNAME_DB, "root"),
-                    Map.entry(KEY_PASSWORD_DB, "")
+                    Map.entry(KEY_PASSWORD_DB, ""),
+                    Map.entry(KEY_ASK_FOR_CLOSING, Boolean.toString(true))
             );
         }
 
