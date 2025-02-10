@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.gui.modal.ClosingDialog;
 import ar.com.elbaden.gui.modal.SettingsDialog;
@@ -80,8 +81,14 @@ public class MainFrame extends JFrame {
 
         @Override
         public void windowClosing(WindowEvent e) {
-            int option = ClosingDialog.createAndShow(e.getWindow());
-            if (option == JOptionPane.OK_OPTION) {
+            String askForClosing = App.settings.getProperties().getProperty(Settings.KEY_ASK_FOR_CLOSING);
+            boolean showDialog = Boolean.parseBoolean(askForClosing);
+            if (showDialog) {
+                int option = ClosingDialog.createAndShow(e.getWindow());
+                if (option == JOptionPane.OK_OPTION) {
+                    e.getWindow().dispose();
+                }
+            } else {
                 e.getWindow().dispose();
             }
         }
