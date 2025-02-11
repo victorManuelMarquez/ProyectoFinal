@@ -1,7 +1,8 @@
 package ar.com.elbaden.gui.modal;
 
 import ar.com.elbaden.error.ResourceBundleException;
-import ar.com.elbaden.gui.prefab.ConnectionForm;
+import ar.com.elbaden.gui.panel.ConnectionForm;
+import ar.com.elbaden.gui.panel.GeneralSettings;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -26,6 +27,7 @@ public class SettingsDialog extends MasterDialog {
         String localApply = messages.getString("button.apply");
         String localApplyClose = messages.getString("button.apply_close");
         String localCancel = messages.getString("button.cancel");
+        String comments = messages.getString("ini.comments");
 
         // componentes
         JScrollPane scrollMainContent = new JScrollPane();
@@ -33,6 +35,9 @@ public class SettingsDialog extends MasterDialog {
         JPanel mainContent = new JPanel(null);
         mainContent.setLayout(new BoxLayout(mainContent, BoxLayout.Y_AXIS));
         scrollMainContent.setViewportView(mainContent);
+
+        GeneralSettings generalSettings = new GeneralSettings();
+        mainContent.add(generalSettings);
 
         ConnectionForm connectionForm = new ConnectionForm(true);
         mainContent.add(connectionForm);
@@ -55,9 +60,19 @@ public class SettingsDialog extends MasterDialog {
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
+        btnApply.addActionListener(generalSettings);
         btnApply.addActionListener(connectionForm);
+        btnApply.addActionListener(_ -> {
+            Window root = SwingUtilities.windowForComponent(btnApply);
+            App.settings.applyChanges(root, comments);
+        });
 
+        btnApplyClose.addActionListener(generalSettings);
         btnApplyClose.addActionListener(connectionForm);
+        btnApplyClose.addActionListener(_ -> {
+            App.settings.applyChanges(SwingUtilities.windowForComponent(btnApplyClose), comments);
+            dispose();
+        });
 
         btnCancel.addActionListener(_ -> dispose());
     }

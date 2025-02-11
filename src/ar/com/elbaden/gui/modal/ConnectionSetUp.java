@@ -1,6 +1,6 @@
 package ar.com.elbaden.gui.modal;
 
-import ar.com.elbaden.gui.prefab.ConnectionForm;
+import ar.com.elbaden.gui.panel.ConnectionForm;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -27,6 +27,7 @@ public final class ConnectionSetUp extends MasterDialog {
         // contenido local
         String localApply  = messages.getString("button.apply");
         String localCancel = messages.getString("button.cancel");
+        String comments = messages.getString("ini.comments");
 
         // componentes
         ConnectionForm connectionForm = new ConnectionForm(false);
@@ -47,6 +48,7 @@ public final class ConnectionSetUp extends MasterDialog {
         applyButton.addActionListener(evt -> {
             connectionForm.actionPerformed(new ActionEvent(evt, ACTION_PERFORMED, "apply"));
             success = connectionForm.isConnectionSet();
+            App.settings.applyChanges(SwingUtilities.windowForComponent(applyButton), comments);
             dispose();
         });
 

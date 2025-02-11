@@ -1,4 +1,4 @@
-package ar.com.elbaden.gui.prefab;
+package ar.com.elbaden.gui.panel;
 
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
@@ -22,7 +22,6 @@ public class ConnectionForm extends JPanel implements ActionListener {
     private final FilteredPasswordField passwordField;
 
     private boolean success = false;
-    private final String comments;
 
     public ConnectionForm(Boolean isModule) throws MissingResourceException {
         super(new GridBagLayout());
@@ -35,7 +34,6 @@ public class ConnectionForm extends JPanel implements ActionListener {
         String localPass = messages.getString("label.password_database");
         String localShow = messages.getString("button.show");
         String localHide = messages.getString("button.hide");
-        comments = messages.getString("ini.comments");
 
         setName(messages.getString("literal.connection"));
 
@@ -138,13 +136,8 @@ public class ConnectionForm extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         Window source = SwingUtilities.windowForComponent(this);
-        if ("apply".equals(e.getActionCommand())) {
+        if ("apply".equals(e.getActionCommand()) || "apply&close".equals(e.getActionCommand())) {
             apply(source);
-        } else if ("apply&close".equals(e.getActionCommand())) {
-            apply(source);
-            if (isConnectionSet()) {
-                source.dispose();
-            }
         }
     }
 
@@ -164,11 +157,6 @@ public class ConnectionForm extends JPanel implements ActionListener {
         App.settings.getProperties().setProperty(Settings.KEY_USERNAME_DB, user);
         App.settings.getProperties().setProperty(Settings.KEY_PASSWORD_DB, pass);
         success = DataBank.testConnection(source);
-        if (success) {
-            App.settings.applyChanges(source, comments);
-        } else {
-            App.settings.discardChanges();
-        }
     }
 
     public boolean isConnectionSet() {
