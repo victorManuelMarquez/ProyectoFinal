@@ -24,8 +24,10 @@ public final class LoadingScreen extends JFrame {
         Border emptyBorder = BorderFactory.createEmptyBorder(8, 8, 8, 8);
 
         JTextArea infoArea = new JTextArea();
-        infoArea.setBackground(getBackground());
-        infoArea.setEnabled(false);
+        infoArea.setBackground(new Color(255, 255, 255, 0));
+        infoArea.setOpaque(false);
+        infoArea.setEditable(false);
+        infoArea.setFocusable(false);
         infoArea.setDisabledTextColor(UIManager.getColor("TextArea.foreground"));
 
         JScrollPane scrollPane = new JScrollPane(infoArea);

@@ -6,6 +6,7 @@ import ar.com.elbaden.gui.panel.GeneralSettings;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -31,6 +32,8 @@ public class SettingsDialog extends MasterDialog {
 
         // componentes
         JScrollPane scrollMainContent = new JScrollPane();
+        Border emptyBorder = BorderFactory.createEmptyBorder(4, 4, 0, 4);
+        scrollMainContent.setBorder(emptyBorder);
 
         JPanel mainContent = new JPanel(null);
         mainContent.setLayout(new BoxLayout(mainContent, BoxLayout.Y_AXIS));
