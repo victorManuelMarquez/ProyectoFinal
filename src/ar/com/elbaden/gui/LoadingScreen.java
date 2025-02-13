@@ -21,7 +21,7 @@ public final class LoadingScreen extends JFrame {
         if (UIManager.getLookAndFeel().getSupportsWindowDecorations())
             setUndecorated(true);
         // componentes
-        Border emptyBorder = BorderFactory.createEmptyBorder(8, 8, 8, 8);
+        Border emptyBorder = BorderFactory.createEmptyBorder(4, 8, 4, 8);
 
         JTextArea infoArea = new JTextArea();
         infoArea.setBackground(new Color(255, 255, 255, 0));
