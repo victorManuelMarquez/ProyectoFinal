@@ -1,6 +1,5 @@
 package ar.com.elbaden.gui.modal;
 
-import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.main.App;
 import ar.com.elbaden.utils.Strings;
 
@@ -16,18 +15,14 @@ import java.util.ResourceBundle;
 
 public final class ErrorDialog extends MasterDialog {
 
-    private ErrorDialog(Window owner, Exception exception) throws ResourceBundleException {
+    private ErrorDialog(Window owner, Exception exception) throws MissingResourceException {
         super(owner, exception.getClass().getSimpleName());
         // nuevos ajustes
         if (UIManager.getLookAndFeel().getSupportsWindowDecorations()) {
             getRootPane().setWindowDecorationStyle(JRootPane.ERROR_DIALOG);
         }
         ResourceBundle messages;
-        try {
-            messages = ResourceBundle.getBundle(App.LOCALES_DIR);
-        } catch (MissingResourceException e) {
-            throw new ResourceBundleException(e);
-        }
+        messages = ResourceBundle.getBundle(App.LOCALES_DIR);
 
         // contenido local
         String localBtnOk = messages.getString("button.ok");
@@ -116,15 +111,11 @@ public final class ErrorDialog extends MasterDialog {
     }
 
     public static void createAndShow(Window root, Exception exception) {
-        try {
-            ErrorDialog dialog = new ErrorDialog(root, exception);
-            dialog.pack();
-            dialog.setLocationRelativeTo(root);
-            dialog.setMinimumSize(dialog.getSize());
-            dialog.setVisible(true);
-        } catch (ResourceBundleException e) {
-            throw new RuntimeException(e);
-        }
+        ErrorDialog dialog = new ErrorDialog(root, exception);
+        dialog.pack();
+        dialog.setLocationRelativeTo(root);
+        dialog.setMinimumSize(dialog.getSize());
+        dialog.setVisible(true);
     }
 
 }

@@ -1,6 +1,5 @@
 package ar.com.elbaden.gui.modal;
 
-import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.gui.panel.ConnectionForm;
 import ar.com.elbaden.gui.panel.GeneralSettings;
 import ar.com.elbaden.main.App;
@@ -13,16 +12,12 @@ import java.util.ResourceBundle;
 
 public class SettingsDialog extends MasterDialog {
 
-    public SettingsDialog(Window owner, String title) throws ResourceBundleException {
+    public SettingsDialog(Window owner, String title) throws MissingResourceException {
         super(owner, title);
         setResizable(false);
 
         ResourceBundle messages;
-        try {
-            messages = ResourceBundle.getBundle(App.LOCALES_DIR);
-        } catch (MissingResourceException e) {
-            throw new ResourceBundleException(e);
-        }
+        messages = ResourceBundle.getBundle(App.LOCALES_DIR);
 
         // contenido local
         String localApply = messages.getString("button.apply");
@@ -91,16 +86,12 @@ public class SettingsDialog extends MasterDialog {
     }
 
     public static void createAndShow(Window window, String title) {
-        try {
-            SettingsDialog dialog = new SettingsDialog(window, title);
-            dialog.pack();
-            dialog.recalculateDimensions();
-            dialog.setLocationRelativeTo(window);
-            dialog.setMinimumSize(dialog.getSize());
-            dialog.setVisible(true);
-        } catch (ResourceBundleException e) {
-            throw new RuntimeException(e);
-        }
+        SettingsDialog dialog = new SettingsDialog(window, title);
+        dialog.pack();
+        dialog.recalculateDimensions();
+        dialog.setLocationRelativeTo(window);
+        dialog.setMinimumSize(dialog.getSize());
+        dialog.setVisible(true);
     }
 
 }

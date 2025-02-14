@@ -1,7 +1,6 @@
 package ar.com.elbaden.gui.modal;
 
 import ar.com.elbaden.data.Settings;
-import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -16,14 +15,10 @@ public final class ClosingDialog extends MasterDialog {
 
     private int legacyOption = JOptionPane.CANCEL_OPTION;
 
-    private ClosingDialog(Window owner) throws ResourceBundleException {
+    private ClosingDialog(Window owner) throws MissingResourceException {
         super(owner, null);
         ResourceBundle messages;
-        try {
-            messages = ResourceBundle.getBundle(App.LOCALES_DIR);
-        } catch (MissingResourceException e) {
-            throw new ResourceBundleException(e);
-        }
+        messages = ResourceBundle.getBundle(App.LOCALES_DIR);
 
         // contenido local
         String localTitle = messages.getString("closing_dialog.title");
@@ -99,17 +94,13 @@ public final class ClosingDialog extends MasterDialog {
     }
 
     public static int createAndShow(Window root) {
-        try {
-            ClosingDialog dialog = new ClosingDialog(root);
-            dialog.pack();
-            dialog.setLocationRelativeTo(root);
-            dialog.setMinimumSize(dialog.getSize());
-            dialog.setResizable(false);
-            dialog.setVisible(true);
-            return dialog.legacyOption;
-        } catch (ResourceBundleException e) {
-            return -1;
-        }
+        ClosingDialog dialog = new ClosingDialog(root);
+        dialog.pack();
+        dialog.setLocationRelativeTo(root);
+        dialog.setMinimumSize(dialog.getSize());
+        dialog.setResizable(false);
+        dialog.setVisible(true);
+        return dialog.legacyOption;
     }
 
 }

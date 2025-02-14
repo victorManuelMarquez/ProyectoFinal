@@ -15,15 +15,13 @@ public final class ConnectionSetUp extends MasterDialog {
 
     private boolean success;
 
-    private ConnectionSetUp(Window owner, String title) {
+    private ConnectionSetUp(Window owner, String title) throws MissingResourceException {
         super(owner, title);
         setResizable(false);
+
         ResourceBundle messages;
-        try {
-            messages = ResourceBundle.getBundle(App.LOCALES_DIR);
-        } catch (MissingResourceException e) {
-            throw new RuntimeException(e);
-        }
+        messages = ResourceBundle.getBundle(App.LOCALES_DIR);
+
         // contenido local
         String localApply  = messages.getString("button.apply");
         String localCancel = messages.getString("button.cancel");
@@ -56,16 +54,12 @@ public final class ConnectionSetUp extends MasterDialog {
     }
 
     public static boolean createAndShow(Window owner) {
-        try {
-            ResourceBundle locale = ResourceBundle.getBundle(App.LOCALES_DIR);
-            ConnectionSetUp setUp = new ConnectionSetUp(owner, locale.getString("connection_setup.title"));
-            setUp.pack();
-            setUp.setLocationRelativeTo(owner);
-            setUp.setVisible(true);
-            return setUp.success;
-        } catch (MissingResourceException e) {
-            throw new RuntimeException(e);
-        }
+        ResourceBundle locale = ResourceBundle.getBundle(App.LOCALES_DIR);
+        ConnectionSetUp setUp = new ConnectionSetUp(owner, locale.getString("connection_setup.title"));
+        setUp.pack();
+        setUp.setLocationRelativeTo(owner);
+        setUp.setVisible(true);
+        return setUp.success;
     }
 
 }

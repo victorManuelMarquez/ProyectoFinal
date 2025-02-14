@@ -1,7 +1,6 @@
 package ar.com.elbaden.gui;
 
 import ar.com.elbaden.data.Settings;
-import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.gui.menu.FileMenu;
 import ar.com.elbaden.gui.modal.ClosingDialog;
 import ar.com.elbaden.main.App;
@@ -10,7 +9,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.MissingResourceException;
 
 public class MainFrame extends JFrame {
 
@@ -38,16 +36,12 @@ public class MainFrame extends JFrame {
         addWindowListener(events);
     }
 
-    public static void createAndShow(String title) throws ResourceBundleException {
-        try {
-            MainFrame frame = new MainFrame(title);
-            frame.pack();
-            frame.setMinimumSize(frame.getSize());
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-        } catch (MissingResourceException e) {
-            throw new ResourceBundleException(e);
-        }
+    public static void createAndShow(String title) {
+        MainFrame frame = new MainFrame(title);
+        frame.pack();
+        frame.setMinimumSize(frame.getSize());
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 
     static class WindowEvents extends WindowAdapter {

@@ -1,6 +1,5 @@
 package ar.com.elbaden.gui.modal;
 
-import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -11,14 +10,10 @@ import java.util.ResourceBundle;
 
 public final class MessageDialog extends MasterMessageDialog {
 
-    private MessageDialog(Window owner, String title, String message, int legacyIcon) throws ResourceBundleException {
+    private MessageDialog(Window owner, String title, String message, int legacyIcon) throws MissingResourceException {
         super(owner, title, legacyIcon);
         ResourceBundle messages;
-        try {
-            messages = ResourceBundle.getBundle(App.LOCALES_DIR);
-        } catch (MissingResourceException e) {
-            throw new ResourceBundleException(e);
-        }
+        messages = ResourceBundle.getBundle(App.LOCALES_DIR);
 
         // contenido local
         String localOk = messages.getString("button.ok");
@@ -52,15 +47,11 @@ public final class MessageDialog extends MasterMessageDialog {
     }
 
     public static void createAndShow(Window root, String title, String message, int legacyIcon) {
-        try {
-            MessageDialog dialog = new MessageDialog(root, title, message, legacyIcon);
-            dialog.pack();
-            dialog.setLocationRelativeTo(root);
-            dialog.setMinimumSize(dialog.getSize());
-            dialog.setVisible(true);
-        } catch (ResourceBundleException e) {
-            throw new RuntimeException(e);
-        }
+        MessageDialog dialog = new MessageDialog(root, title, message, legacyIcon);
+        dialog.pack();
+        dialog.setLocationRelativeTo(root);
+        dialog.setMinimumSize(dialog.getSize());
+        dialog.setVisible(true);
     }
 
 }
