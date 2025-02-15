@@ -3,9 +3,9 @@ package ar.com.elbaden.gui.panel;
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.gui.button.AdaptableButton;
-import ar.com.elbaden.gui.input.FieldMargin;
-import ar.com.elbaden.gui.input.FilteredPasswordField;
-import ar.com.elbaden.gui.input.FilteredTextField;
+import ar.com.elbaden.gui.field.FieldMargin;
+import ar.com.elbaden.gui.field.FilteredPasswordField;
+import ar.com.elbaden.gui.field.FilteredTextField;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;

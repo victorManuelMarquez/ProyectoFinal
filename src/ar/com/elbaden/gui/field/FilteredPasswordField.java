@@ -1,4 +1,4 @@
-package ar.com.elbaden.gui.input;
+package ar.com.elbaden.gui.field;
 
 import ar.com.elbaden.gui.modal.MessageDialog;
 import ar.com.elbaden.main.App;

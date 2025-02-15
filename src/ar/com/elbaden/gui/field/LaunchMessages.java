@@ -1,4 +1,4 @@
-package ar.com.elbaden.gui.input;
+package ar.com.elbaden.gui.field;
 
 interface LaunchMessages {
 
