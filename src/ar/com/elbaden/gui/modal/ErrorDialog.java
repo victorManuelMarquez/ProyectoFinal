@@ -1,10 +1,11 @@
 package ar.com.elbaden.gui.modal;
 
 import ar.com.elbaden.main.App;
-import ar.com.elbaden.utils.Strings;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -44,13 +45,13 @@ public final class ErrorDialog extends MasterDialog {
 
         JPanel messagesPanel = new JPanel(null);
         messagesPanel.setLayout(new BoxLayout(messagesPanel, BoxLayout.Y_AXIS));
+        messageTab.add(messagesPanel);
 
-        JScrollPane messageScrollPane = new JScrollPane(messagesPanel);
-        messageScrollPane.setBorder(BorderFactory.createEmptyBorder());
-        messageTab.add(messageScrollPane);
-
-        JLabel messageLabel = new JLabel();
-        messagesPanel.add(messageLabel);
+        JTextArea messageArea = new JTextArea();
+        messageArea.setLineWrap(true);
+        messageArea.setWrapStyleWord(true);
+        JScrollPane messageScrollPane = new JScrollPane(messageArea);
+        messagesPanel.add(messageScrollPane);
 
         JButton okButton = new JButton(localBtnOk);
 
@@ -83,20 +84,45 @@ public final class ErrorDialog extends MasterDialog {
         getContentPane().add(tabbedPane);
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
+        // evento para ajustar el texto
+        messageArea.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                String[] strings = messageArea.getText().split("(\r\n|\n)");
+                int avgWidth = 0;
+                int lines = 0;
+                for (String str : strings) {
+                    if (!str.isBlank()) {
+                        avgWidth += messageArea.getFontMetrics(messageArea.getFont()).stringWidth(str);
+                        lines++;
+                    }
+                }
+                avgWidth = (avgWidth / lines) + UIManager.getInt("ScrollBar.width");
+                int stringsHeight = messageArea.getFontMetrics(messageArea.getFont()).getHeight() * lines;
+                messageScrollPane.setPreferredSize(new Dimension(avgWidth, stringsHeight));
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {}
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {}
+        });
+
         // agrego el mensaje del error
         String message = exception.getMessage();
-        String formattedString = Strings.convertToHTML(message);
+
         if (exception instanceof SQLException sqlError) {
-            messageLabel.setText(formattedString);
+            messageArea.setText(message + System.lineSeparator());
             String localSQLState = messages.getString("error_dialog.sql_state");
             String localSQLVendor = messages.getString("error_dialog.sql_vendor");
             String sqlState = MessageFormat.format(localSQLState, sqlError.getSQLState());
             String sqlVendor = MessageFormat.format(localSQLVendor, Integer.toString(sqlError.getErrorCode()));
-            // nuevos componentes para estos atributos
-            messagesPanel.add(new JLabel(sqlState));
-            messagesPanel.add(new JLabel(sqlVendor));
+            // agrego los detalles
+            messageArea.append(sqlState + System.lineSeparator());
+            messageArea.append(sqlVendor);
         } else {
-            messageLabel.setText(formattedString);
+            messageArea.setText(message);
         }
 
         // eventos
