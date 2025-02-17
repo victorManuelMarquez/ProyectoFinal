@@ -5,8 +5,6 @@ import java.awt.*;
 
 abstract class MasterDialog extends JDialog {
 
-    public final Dimension preferredMaxDimensions = new Dimension(640, 480);
-
     public MasterDialog(Window owner, String title) {
         super(owner, title);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);

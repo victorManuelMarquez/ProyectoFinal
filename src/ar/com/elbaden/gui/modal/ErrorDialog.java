@@ -1,11 +1,10 @@
 package ar.com.elbaden.gui.modal;
 
+import ar.com.elbaden.gui.area.MessageArea;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -47,10 +46,9 @@ public final class ErrorDialog extends MasterDialog {
         messagesPanel.setLayout(new BoxLayout(messagesPanel, BoxLayout.Y_AXIS));
         messageTab.add(messagesPanel);
 
-        JTextArea messageArea = new JTextArea();
-        messageArea.setLineWrap(true);
-        messageArea.setWrapStyleWord(true);
+        MessageArea messageArea = new MessageArea();
         JScrollPane messageScrollPane = new JScrollPane(messageArea);
+        messageScrollPane.setBorder(null);
         messagesPanel.add(messageScrollPane);
 
         JButton okButton = new JButton(localBtnOk);
@@ -84,31 +82,6 @@ public final class ErrorDialog extends MasterDialog {
         getContentPane().add(tabbedPane);
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
-        // evento para ajustar el texto
-        messageArea.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                String[] strings = messageArea.getText().split("(\r\n|\n)");
-                int avgWidth = 0;
-                int lines = 0;
-                for (String str : strings) {
-                    if (!str.isBlank()) {
-                        avgWidth += messageArea.getFontMetrics(messageArea.getFont()).stringWidth(str);
-                        lines++;
-                    }
-                }
-                avgWidth = (avgWidth / lines) + UIManager.getInt("ScrollBar.width");
-                int stringsHeight = messageArea.getFontMetrics(messageArea.getFont()).getHeight() * lines;
-                messageScrollPane.setPreferredSize(new Dimension(avgWidth, stringsHeight));
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {}
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-        });
-
         // agrego el mensaje del error
         String message = exception.getMessage();
 
@@ -124,6 +97,8 @@ public final class ErrorDialog extends MasterDialog {
         } else {
             messageArea.setText(message);
         }
+
+        messageScrollPane.getViewport().setPreferredSize(messageArea.getMinimumSize());
 
         // eventos
         okButton.addActionListener(_ -> dispose());

@@ -78,10 +78,8 @@ public class SettingsDialog extends MasterDialog {
     public void recalculateDimensions() {
         int actualWidth = getWidth() + UIManager.getInt("ScrollBar.width");
         int actualHeight = getHeight();
-        int maxWidth = preferredMaxDimensions.width;
-        int maxHeight = preferredMaxDimensions.height;
-        int preferredWidth = Math.min(actualWidth, maxWidth);
-        int preferredHeight = Math.min(actualHeight, maxHeight);
+        int preferredWidth = Math.min(actualWidth, 640);
+        int preferredHeight = Math.min(actualHeight, 360);
         setSize(new Dimension(preferredWidth, preferredHeight));
     }
 
