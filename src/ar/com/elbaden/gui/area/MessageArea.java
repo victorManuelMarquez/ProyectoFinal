@@ -12,6 +12,8 @@ public final class MessageArea extends JTextArea implements DocumentListener {
     public MessageArea() {
         setEditable(false);
         setFocusable(false);
+        setFont(UIManager.getFont("Label.font"));
+        setDoubleBuffered(true);
         setOpaque(false);
         setLineWrap(true);
         setWrapStyleWord(true);
@@ -34,6 +36,8 @@ public final class MessageArea extends JTextArea implements DocumentListener {
             }
             width = width / lines;
             width += UIManager.getInt("ScrollBar.width");
+            width = Math.min(width, 640);
+            height = Math.min(height, 480);
         }
     }
 

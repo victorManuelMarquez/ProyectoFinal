@@ -62,6 +62,7 @@ public final class ErrorDialog extends MasterDialog {
             JPanel detailsTab = new JPanel(new BorderLayout());
 
             JTextArea details = new JTextArea();
+            details.setMargin(UIManager.getInsets("TextPane.margin"));
             details.setEditable(false);
             details.setLineWrap(true);
             details.setWrapStyleWord(true);
