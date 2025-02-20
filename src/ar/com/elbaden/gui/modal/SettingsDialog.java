@@ -10,7 +10,7 @@ import java.awt.*;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-public class SettingsDialog extends MasterDialog {
+public final class SettingsDialog extends MasterDialog {
 
     public SettingsDialog(Window owner, String title) throws MissingResourceException {
         super(owner, title);
