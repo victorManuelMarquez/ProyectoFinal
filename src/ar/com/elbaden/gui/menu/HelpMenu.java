@@ -1,8 +1,10 @@
 package ar.com.elbaden.gui.menu;
 
+import ar.com.elbaden.gui.modal.AboutDialog;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -26,8 +28,8 @@ public class HelpMenu extends JMenu {
 
         // eventos
         aboutItem.addActionListener(_ -> {
-            // agregar un nuevo dialogo
-            System.out.println("mostrar un dialogo de acerca del programa.");
+            Window root = SwingUtilities.windowForComponent(this);
+            AboutDialog.createAndShow(root, localAbout);
         });
     }
 
