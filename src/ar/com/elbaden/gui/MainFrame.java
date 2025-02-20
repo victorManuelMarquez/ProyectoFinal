@@ -2,6 +2,7 @@ package ar.com.elbaden.gui;
 
 import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.gui.menu.FileMenu;
+import ar.com.elbaden.gui.menu.HelpMenu;
 import ar.com.elbaden.gui.modal.ClosingDialog;
 import ar.com.elbaden.main.App;
 
@@ -30,6 +31,9 @@ public class MainFrame extends JFrame {
 
         FileMenu fileMenu = new FileMenu();
         getJMenuBar().add(fileMenu);
+
+        HelpMenu helpMenu = new HelpMenu();
+        getJMenuBar().add(helpMenu);
 
         // eventos
         WindowEvents events = new WindowEvents();
