@@ -16,7 +16,7 @@ public final class AboutDialog extends MasterDialog {
     private AboutDialog(Window owner, String title) {
         super(owner, title);
         setLayout(new GridBagLayout());
-        //setResizable(false);
+        setResizable(false);
 
         ResourceBundle messages;
         messages = ResourceBundle.getBundle(App.LOCALES_DIR);
