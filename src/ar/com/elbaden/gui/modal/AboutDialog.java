@@ -4,8 +4,10 @@ import ar.com.elbaden.gui.area.MessageArea;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -13,7 +15,8 @@ public final class AboutDialog extends MasterDialog {
 
     private AboutDialog(Window owner, String title) {
         super(owner, title);
-        setResizable(false);
+        setLayout(new GridBagLayout());
+        //setResizable(false);
 
         ResourceBundle messages;
         messages = ResourceBundle.getBundle(App.LOCALES_DIR);
@@ -21,8 +24,12 @@ public final class AboutDialog extends MasterDialog {
         // contenido local
         String localClose = messages.getString("button.close");
         String localAbout = messages.getString("app.about");
+        String localInfo = messages.getString("java_logo.info");
 
         // componentes
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.weightx = 1.0;
+
         ImageIcon javaIcon = null;
         URL urlJavaIcon = getClass().getResource("/images/java_logo.png");
         if (urlJavaIcon != null) {
@@ -33,23 +40,58 @@ public final class AboutDialog extends MasterDialog {
         messageArea.setText(localAbout);
 
         JScrollPane messageScrollPane = new JScrollPane(messageArea);
-        Border emptyBorder = BorderFactory.createEmptyBorder(16, 8, 16, 8);
-        messageScrollPane.setBorder(emptyBorder);
+        messageScrollPane.setBorder(BorderFactory.createEmptyBorder());
         messageScrollPane.getViewport().setPreferredSize(messageArea.getMinimumSize());
 
         JButton closeButton = new JButton(localClose);
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(closeButton);
-
         // instalando los componentes en el dialog
+        int col = 0;
+
         if (javaIcon != null) {
-            JLabel javaLabel = new JLabel(javaIcon);
-            javaLabel.setBorder(emptyBorder);
-            getContentPane().add(javaLabel, BorderLayout.WEST);
+            String url = "https://www.flaticon.com/free-icons/java";
+
+            JButton urlIconWebSite = new JButton(javaIcon);
+            urlIconWebSite.setBorderPainted(false);
+            urlIconWebSite.setContentAreaFilled(false);
+            urlIconWebSite.setFocusPainted(false);
+            urlIconWebSite.setFocusable(false);
+            urlIconWebSite.setToolTipText("<HTML>" + localInfo + "<br>" + url + "</HTML>");
+
+            constraints.gridheight = 2;
+            constraints.gridx = col;
+            constraints.insets = new Insets(16, 8, 16, 8);
+            getContentPane().add(urlIconWebSite, constraints);
+            col += 1;
+
+            urlIconWebSite.addActionListener(_ -> {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop desktop = Desktop.getDesktop();
+                    try {
+                        URI webSite = new URI(url);
+                        desktop.browse(webSite);
+                    } catch (URISyntaxException | IOException exception) {
+                        ErrorDialog.createAndShow(getOwner(), exception);
+                    } catch (UnsupportedOperationException e) {
+                        MessageDialog.createAndShow(getOwner(), localInfo, url, JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            });
         }
-        getContentPane().add(messageScrollPane);
-        getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridheight = 1;
+        constraints.gridwidth = GridBagConstraints.REMAINDER;
+        constraints.gridx = col;
+        constraints.weighty = 1.0;
+        getContentPane().add(messageScrollPane, constraints);
+
+        constraints.anchor = GridBagConstraints.LINE_END;
+        constraints.fill = GridBagConstraints.NONE;
+        constraints.gridx = col;
+        constraints.insets = new Insets(8, 16, 8, 16);
+        constraints.weighty = .0;
+        getContentPane().add(closeButton, constraints);
 
         // eventos
         closeButton.addActionListener(_ -> dispose());
