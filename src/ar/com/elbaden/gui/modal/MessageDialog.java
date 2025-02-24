@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui.modal;
 
+import ar.com.elbaden.gui.area.MessageArea;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -24,10 +25,8 @@ public final class MessageDialog extends MasterMessageDialog {
         JLabel iconLabel = new JLabel(getMessageIcon());
         iconLabel.setBorder(emptyBorder);
 
-        JTextArea messageArea = new JTextArea(message);
-        messageArea.setBackground(getBackground());
-        messageArea.setEnabled(false);
-        messageArea.setDisabledTextColor(messageArea.getForeground());
+        MessageArea messageArea = new MessageArea();
+        messageArea.setText(message);
 
         JScrollPane messageScrollPane = new JScrollPane(messageArea);
         messageScrollPane.setBorder(emptyBorder);

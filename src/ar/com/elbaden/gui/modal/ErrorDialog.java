@@ -79,10 +79,6 @@ public final class ErrorDialog extends MasterDialog {
             }
         }
 
-        // instalando los componentes en el dialog
-        getContentPane().add(tabbedPane);
-        getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-
         // agrego el mensaje del error
         String message = exception.getMessage();
 
@@ -99,7 +95,9 @@ public final class ErrorDialog extends MasterDialog {
             messageArea.setText(message);
         }
 
-        messageScrollPane.getViewport().setPreferredSize(messageArea.getMinimumSize());
+        // instalando los componentes en el dialog
+        getContentPane().add(tabbedPane);
+        getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
         // eventos
         okButton.addActionListener(_ -> dispose());

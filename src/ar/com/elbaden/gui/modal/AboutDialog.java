@@ -41,7 +41,6 @@ public final class AboutDialog extends MasterDialog {
 
         JScrollPane messageScrollPane = new JScrollPane(messageArea);
         messageScrollPane.setBorder(BorderFactory.createEmptyBorder());
-        messageScrollPane.getViewport().setPreferredSize(messageArea.getMinimumSize());
 
         JButton closeButton = new JButton(localClose);
 
