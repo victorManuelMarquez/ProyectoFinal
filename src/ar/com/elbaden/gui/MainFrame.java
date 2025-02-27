@@ -36,6 +36,7 @@ public class MainFrame extends JFrame {
         getJMenuBar().add(helpMenu);
 
         MnemonicFinder.findMnemonics(getJMenuBar());
+        MnemonicFinder.findMnemonics(fileMenu);
 
         // eventos
         WindowEvents events = new WindowEvents();
