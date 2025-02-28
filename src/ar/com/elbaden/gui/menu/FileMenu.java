@@ -5,9 +5,15 @@ import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+
+import static java.awt.event.InputEvent.ALT_DOWN_MASK;
+import static java.awt.event.InputEvent.CTRL_DOWN_MASK;
+import static java.awt.event.KeyEvent.VK_F4;
+import static java.awt.event.KeyEvent.VK_S;
 
 public class FileMenu extends JMenu {
 
@@ -32,15 +38,39 @@ public class FileMenu extends JMenu {
         add(exitItem);
 
         // eventos
-        settingsItem.addActionListener(_ -> {
-            Window root = SwingUtilities.windowForComponent(this);
-            SettingsDialog.createAndShow(root, localSettings);
-        });
+        KeyStroke settingsKeyStroke;
+        settingsKeyStroke = KeyStroke.getKeyStroke(VK_S, CTRL_DOWN_MASK | ALT_DOWN_MASK);
+        settingsItem.setAccelerator(settingsKeyStroke);
 
-        exitItem.addActionListener(_ -> {
-            Window root = SwingUtilities.windowForComponent(this);
-            root.dispatchEvent(new WindowEvent(root, WindowEvent.WINDOW_CLOSING));
-        });
+        AbstractAction showSettingsDialog = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Window root = SwingUtilities.windowForComponent(getParent());
+                SettingsDialog.createAndShow(root, localSettings);
+            }
+        };
+
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(settingsKeyStroke, localSettings);
+        getActionMap().put(localSettings, showSettingsDialog);
+
+        settingsItem.addActionListener(showSettingsDialog);
+
+        KeyStroke exitKeyStroke;
+        exitKeyStroke = KeyStroke.getKeyStroke(VK_F4, ALT_DOWN_MASK);
+        exitItem.setAccelerator(exitKeyStroke);
+
+        AbstractAction showExitDialog = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Window root = SwingUtilities.windowForComponent(getParent());
+                root.dispatchEvent(new WindowEvent(root, WindowEvent.WINDOW_CLOSING));
+            }
+        };
+
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(exitKeyStroke, localExit);
+        getActionMap().put(localExit, showExitDialog);
+
+        exitItem.addActionListener(showExitDialog);
     }
 
 }
