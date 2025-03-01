@@ -23,7 +23,7 @@ public final class SettingsDialog extends MasterDialog {
         String localApply = messages.getString("button.apply");
         String localApplyClose = messages.getString("button.apply_close");
         String localCancel = messages.getString("button.cancel");
-        String comments = messages.getString("ini.comments");
+        //String comments = messages.getString("ini.comments");
 
         // componentes
         JScrollPane scrollMainContent = new JScrollPane();
@@ -58,21 +58,7 @@ public final class SettingsDialog extends MasterDialog {
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
-        btnApply.addActionListener(generalSettings);
-        btnApply.addActionListener(connectionForm);
-        btnApply.addActionListener(_ -> {
-            Window root = SwingUtilities.windowForComponent(btnApply);
-            App.settings.applyChanges(root, comments);
-        });
-
-        btnApplyClose.addActionListener(generalSettings);
-        btnApplyClose.addActionListener(connectionForm);
-        btnApplyClose.addActionListener(_ -> {
-            App.settings.applyChanges(SwingUtilities.windowForComponent(btnApplyClose), comments);
-            dispose();
-        });
-
-        btnCancel.addActionListener(_ -> dispose());
+        // Todo: hay un bug con la configuración, se replanteará de nuevo
     }
 
     public void recalculateDimensions() {
