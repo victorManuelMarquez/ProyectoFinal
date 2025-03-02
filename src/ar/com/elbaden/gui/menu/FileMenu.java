@@ -1,6 +1,5 @@
 package ar.com.elbaden.gui.menu;
 
-import ar.com.elbaden.gui.modal.SettingsDialog;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -45,8 +44,8 @@ public class FileMenu extends JMenu {
         AbstractAction showSettingsDialog = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Window root = SwingUtilities.windowForComponent(getParent());
-                SettingsDialog.createAndShow(root, localSettings);
+                // Fixme: replantear toda la lógica ante las fallas descubiertas
+                System.out.println("Se muestra el dialogo de configuración");
             }
         };
 

@@ -10,6 +10,8 @@ import java.awt.*;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+// Fixme: replantear la validación y la ejecución de las acciones
+@Deprecated
 public final class SettingsDialog extends MasterDialog {
 
     public SettingsDialog(Window owner, String title) throws MissingResourceException {
@@ -58,7 +60,6 @@ public final class SettingsDialog extends MasterDialog {
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
-        // Todo: hay un bug con la configuración, se replanteará de nuevo
     }
 
     public void recalculateDimensions() {
