@@ -26,6 +26,7 @@ public final class ClosingDialog extends MasterDialog {
         String localDoNotAsk = messages.getString("checkbox.do_not_ask_again");
         String localExit = messages.getString("button.exit");
         String localCancel = messages.getString("button.cancel");
+        String localComments = messages.getString("ini.comments");
 
         setTitle(localTitle);
 
@@ -77,20 +78,15 @@ public final class ClosingDialog extends MasterDialog {
         disableConfirmation.addActionListener(_ -> {
             String value = Boolean.toString(!disableConfirmation.isSelected());
             App.settings.getProperties().setProperty(Settings.KEY_ASK_FOR_CLOSING, value);
+            App.settings.applyChanges(this, localComments);
         });
 
         exitButton.addActionListener(_ -> {
-            Window root = SwingUtilities.windowForComponent(exitButton);
-            String comments = messages.getString("ini.comments");
-            App.settings.applyChanges(root, comments);
             legacyOption = JOptionPane.OK_OPTION;
             dispose();
         });
 
-        cancelButton.addActionListener(_ -> {
-            App.settings.discardChanges();
-            dispose();
-        });
+        cancelButton.addActionListener(_ -> dispose());
     }
 
     public static int createAndShow(Window root) {
