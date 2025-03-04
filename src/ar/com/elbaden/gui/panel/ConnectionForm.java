@@ -22,6 +22,7 @@ public class ConnectionForm extends JPanel implements ActionListener {
     private final FilteredPasswordField passwordField;
 
     private boolean success = false;
+    private boolean ignore = false;
 
     public ConnectionForm(Boolean isModule) throws MissingResourceException {
         super(new GridBagLayout());
@@ -85,6 +86,8 @@ public class ConnectionForm extends JPanel implements ActionListener {
         add(showPassBtn, constraints);
 
         if (isModule) {
+            ignore = true;
+
             // local
             String localEdit = messages.getString("checkbox.enable_edition");
 
@@ -109,6 +112,7 @@ public class ConnectionForm extends JPanel implements ActionListener {
 
             // eventos
             editBtn.addActionListener(_ -> {
+                ignore = !editBtn.isSelected();
                 userField.setEnabled(!userField.isEnabled());
                 passwordField.setEnabled(!passwordField.isEnabled());
                 showPassBtn.setEnabled(!showPassBtn.isEnabled());
@@ -135,9 +139,11 @@ public class ConnectionForm extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Window source = SwingUtilities.windowForComponent(this);
-        if ("apply".equals(e.getActionCommand()) || "apply&close".equals(e.getActionCommand())) {
-            apply(source);
+        if (!ignore) {
+            Window source = SwingUtilities.windowForComponent(this);
+            if ("apply".equals(e.getActionCommand()) || "apply&close".equals(e.getActionCommand())) {
+                apply(source);
+            }
         }
     }
 
