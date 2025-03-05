@@ -7,11 +7,10 @@ import ar.com.elbaden.main.App;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-// Fixme: replantear la validación y la ejecución de las acciones
-@Deprecated
 public final class SettingsDialog extends MasterDialog {
 
     public SettingsDialog(Window owner, String title) throws MissingResourceException {
@@ -25,7 +24,7 @@ public final class SettingsDialog extends MasterDialog {
         String localApply = messages.getString("button.apply");
         String localApplyClose = messages.getString("button.apply_close");
         String localCancel = messages.getString("button.cancel");
-        //String comments = messages.getString("ini.comments");
+        String localComments = messages.getString("ini.comments");
 
         // componentes
         JScrollPane scrollMainContent = new JScrollPane();
@@ -60,6 +59,22 @@ public final class SettingsDialog extends MasterDialog {
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
+        AbstractAction applyChanges = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if ("apply".equals(e.getActionCommand()) || "apply&close".equals(e.getActionCommand())) {
+                    App.settings.applyChanges(getOwner(), localComments);
+                }
+            }
+        };
+
+        btnApply.addActionListener(generalSettings);
+        btnApply.addActionListener(connectionForm);
+        btnApply.addActionListener(applyChanges);
+
+        btnApplyClose.addActionListener(generalSettings);
+        btnApplyClose.addActionListener(connectionForm);
+        btnApplyClose.addActionListener(applyChanges);
     }
 
     public void recalculateDimensions() {
