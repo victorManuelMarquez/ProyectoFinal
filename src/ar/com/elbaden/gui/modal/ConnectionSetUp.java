@@ -5,11 +5,8 @@ import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-
-import static java.awt.event.ActionEvent.ACTION_PERFORMED;
 
 public final class ConnectionSetUp extends MasterDialog {
 
@@ -31,6 +28,7 @@ public final class ConnectionSetUp extends MasterDialog {
         ConnectionForm connectionForm = new ConnectionForm(false);
 
         JButton applyButton = new JButton(localApply);
+        applyButton.setActionCommand("apply");
 
         JButton cancelButton = new JButton(localCancel);
 
@@ -43,8 +41,8 @@ public final class ConnectionSetUp extends MasterDialog {
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
-        applyButton.addActionListener(evt -> {
-            connectionForm.actionPerformed(new ActionEvent(evt, ACTION_PERFORMED, "apply"));
+        applyButton.addActionListener(connectionForm);
+        applyButton.addActionListener(_ -> {
             success = connectionForm.isConnectionSet();
             App.settings.applyChanges(SwingUtilities.windowForComponent(applyButton), comments);
             dispose();
