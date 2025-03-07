@@ -75,6 +75,11 @@ public final class SettingsDialog extends MasterDialog {
         btnApplyClose.addActionListener(generalSettings);
         btnApplyClose.addActionListener(connectionForm);
         btnApplyClose.addActionListener(applyChanges);
+
+        btnCancel.addActionListener(_ -> {
+            App.settings.discardChanges();
+            dispose();
+        });
     }
 
     public void recalculateDimensions() {
