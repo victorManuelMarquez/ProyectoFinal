@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui.modal;
 
+import ar.com.elbaden.gui.MnemonicFinder;
 import ar.com.elbaden.gui.panel.ConnectionForm;
 import ar.com.elbaden.gui.panel.GeneralSettings;
 import ar.com.elbaden.main.App;
@@ -53,6 +54,8 @@ public final class SettingsDialog extends MasterDialog {
         buttonsPanel.add(btnApply);
         buttonsPanel.add(btnApplyClose);
         buttonsPanel.add(btnCancel);
+
+        MnemonicFinder.findMnemonics(buttonsPanel);
 
         // instalando los componentes en el dialog
         getContentPane().add(scrollMainContent);
