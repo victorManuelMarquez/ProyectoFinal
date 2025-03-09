@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui.modal;
 
 import ar.com.elbaden.data.Settings;
+import ar.com.elbaden.gui.MnemonicFinder;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -66,6 +67,8 @@ public final class ClosingDialog extends MasterDialog {
         getContentPane().add(questionLabel, BorderLayout.WEST);
         getContentPane().add(contentPanel);
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
+
+        MnemonicFinder.findMnemonics(buttonsPanel);
 
         // eventos
         addWindowListener(new WindowAdapter() {
