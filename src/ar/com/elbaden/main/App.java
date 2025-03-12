@@ -4,6 +4,7 @@ import ar.com.elbaden.data.Settings;
 import ar.com.elbaden.gui.LoadingScreen;
 
 import javax.swing.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -33,7 +34,8 @@ public class App implements Runnable {
             System.exit(1);
         }
         try {
-            FileHandler txtHandler = new FileHandler("%t/java_log.txt", false);
+            String pattern = "%t" + File.separator + "java_log.txt";
+            FileHandler txtHandler = new FileHandler(pattern, false);
             txtHandler.setFormatter(new SimpleFormatter());
             LOGGER.addHandler(txtHandler);
             LOGGER.setLevel(Level.ALL);
