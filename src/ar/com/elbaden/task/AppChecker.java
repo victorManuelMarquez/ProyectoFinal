@@ -1,7 +1,6 @@
 package ar.com.elbaden.task;
 
 import ar.com.elbaden.connection.DataBank;
-import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.gui.MainFrame;
 import ar.com.elbaden.gui.modal.ConnectionSetUp;
 import ar.com.elbaden.main.App;
@@ -14,8 +13,10 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.ChoiceFormat;
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
-import java.util.*;
+import java.util.ResourceBundle;
 
 public final class AppChecker extends SwingWorker<Void, String> implements PropertyChangeListener {
 
@@ -26,13 +27,9 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     private final Cursor defaultCursor;
     private boolean dumpProperties = true;
 
-    public AppChecker(JTextArea publisher) throws ResourceBundleException {
+    public AppChecker(JTextArea publisher) {
         this.publisher = publisher;
-        try {
-            setMessages(ResourceBundle.getBundle(App.LOCALES_DIR));
-        } catch (MissingResourceException e) {
-            throw new ResourceBundleException(e);
-        }
+        setMessages(ResourceBundle.getBundle(App.LOCALES_DIR));
         root = SwingUtilities.windowForComponent(publisher);
         tasks = Arrays.asList(
                 new Thread(this::tryLoadSettings),

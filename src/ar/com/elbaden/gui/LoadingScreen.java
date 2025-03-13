@@ -1,6 +1,5 @@
 package ar.com.elbaden.gui;
 
-import ar.com.elbaden.error.ResourceBundleException;
 import ar.com.elbaden.task.AppChecker;
 
 import javax.swing.*;
@@ -66,12 +65,7 @@ public final class LoadingScreen extends JFrame {
         private WindowEvents(JTextArea publisher, JProgressBar publishProgress) {
             this.publishProgress = publishProgress;
             root = SwingUtilities.windowForComponent(publisher);
-            try {
-                checker = new AppChecker(publisher);
-            } catch (ResourceBundleException e) {
-                root.dispose();
-                throw new RuntimeException(e);
-            }
+            checker = new AppChecker(publisher);
             checker.addPropertyChangeListener(this);
             countdown = new Timer(1000, this);
         }
