@@ -6,12 +6,8 @@ import ar.com.elbaden.gui.LoadingScreen;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+import java.util.logging.*;
 
 public class App implements Runnable {
 
@@ -21,29 +17,27 @@ public class App implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(App.class.getName());
 
+    private final ResourceBundle bundle;
+
     private App() {
         settings = new Settings();
-    }
-
-    public static void main(String[] args) {
-        ResourceBundle bundle = null;
+        bundle = ResourceBundle.getBundle(LOCALES_DIR);
         try {
-            bundle = ResourceBundle.getBundle(LOCALES_DIR);
-        } catch (MissingResourceException e) {
-            LOGGER.severe(e.getLocalizedMessage());
-            System.exit(1);
-        }
-        try {
+            // Este handler debe estar disponible para las demás clases
             String pattern = "%t" + File.separator + "java_log.txt";
             FileHandler txtHandler = new FileHandler(pattern, false);
             txtHandler.setFormatter(new SimpleFormatter());
-            LOGGER.addHandler(txtHandler);
-            LOGGER.setLevel(Level.ALL);
+            txtHandler.setLevel(Level.ALL);
+            LOGGER.addHandler(txtHandler); // agregar en otros loggers
+            LOGGER.setLevel(Level.INFO);
+            LOGGER.info("prueba...");
         } catch (IOException e) {
             LOGGER.severe(bundle.getString("log.cannotSetFileHandler"));
         }
+    }
+
+    public static void main(String[] args) {
         try {
-            LOGGER.info(bundle.getString("log.startingApp"));
             SwingUtilities.invokeLater(new App());
         } catch (RuntimeException e) {
             LOGGER.severe(e.getLocalizedMessage());
@@ -53,6 +47,7 @@ public class App implements Runnable {
 
     @Override
     public void run() {
+        LOGGER.info(bundle.getString("log.startingApp"));
         LoadingScreen.createAndShow();
     }
 
