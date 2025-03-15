@@ -70,7 +70,6 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         getRoot().setCursor(defaultCursor);
         if (!isCancelled()) {
             getRoot().dispose();
-            // TODO: reportar un error en tiempo de ejecución
             String localTitle = getMessages().getString("main_frame.title");
             MainFrame.createAndShow(localTitle);
         } else {
