@@ -8,7 +8,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.logging.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
+import static java.util.logging.Level.ALL;
 
 public class App implements Runnable {
 
@@ -46,11 +51,26 @@ public class App implements Runnable {
     }
 
     public static Optional<FileHandler> createFileHandler() {
+        SimpleFormatter simpleFormatter = new SimpleFormatter();
         try {
-            String pattern = "%t" + File.separator + "java_log.txt";
+            File appFolder = Settings.getAppFolder();
+            if (appFolder.exists()) {
+                // directorio predefinido del programa
+                String pattern = appFolder + File.separator + "log.txt";
+                FileHandler fileHandler = new FileHandler(pattern, false);
+                fileHandler.setFormatter(simpleFormatter);
+                fileHandler.setLevel(ALL);
+                return Optional.of(fileHandler);
+            }
+        } catch (IOException e) {
+            LOGGER.severe(e.getLocalizedMessage());
+        }
+        try {
+            // directorio temporal del sistema operativo
+            String pattern = "%t" + File.separator + "java.log";
             FileHandler fileHandler = new FileHandler(pattern, false);
-            fileHandler.setFormatter(new SimpleFormatter());
-            fileHandler.setLevel(Level.ALL);
+            fileHandler.setFormatter(simpleFormatter);
+            fileHandler.setLevel(ALL);
             return Optional.of(fileHandler);
         } catch (IOException e) {
             LOGGER.severe(e.getLocalizedMessage());

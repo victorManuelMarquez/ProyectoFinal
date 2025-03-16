@@ -10,6 +10,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -74,7 +75,7 @@ public final class Settings implements PropertyChangeListener {
         addPropertyChangeListener(this);
     }
 
-    String getPath() {
+    static Optional<String> getWorkingDir() {
         String path = System.getProperty("user.home");
         if (path == null) {
             URL location = Settings.class.getProtectionDomain().getCodeSource().getLocation();
@@ -82,16 +83,22 @@ public final class Settings implements PropertyChangeListener {
                 File sourceFile = new File(location.toURI());
                 path = sourceFile.getParentFile().getPath();
             } catch (URISyntaxException e) {
-                // ignore
+                return Optional.empty();
             }
         }
-        return path;
+        return Optional.of(path);
+    }
+
+    public static File getAppFolder() throws FileNotFoundException {
+        if (getWorkingDir().isPresent()) {
+            return new File(getWorkingDir().get(), APP_DIR);
+        } else {
+            throw new FileNotFoundException(APP_DIR + " == null");
+        }
     }
 
     public boolean loadIni() throws IOException {
-        String parentDir = getPath();
-        if (parentDir == null) return false;
-        parentDir += File.separator + APP_DIR;
+        File parentDir = getAppFolder();
         File iniFile = new File(parentDir, INI_FILE);
         try (
                 FileInputStream inputStream = new FileInputStream(iniFile);
@@ -103,9 +110,7 @@ public final class Settings implements PropertyChangeListener {
     }
 
     public boolean saveIni(String comments) throws IOException {
-        String parentDir = getPath();
-        if (parentDir == null) return false;
-        parentDir += File.separator + APP_DIR;
+        File parentDir = getAppFolder();
         File iniFile = new File(parentDir, INI_FILE);
         if (!iniFile.getParentFile().exists()) {
             boolean ignore = iniFile.getParentFile().mkdir();
