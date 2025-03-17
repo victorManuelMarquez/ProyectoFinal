@@ -41,8 +41,8 @@ public final class ConnectionSetUp extends MasterDialog {
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
 
         // eventos
-        applyButton.addActionListener(connectionForm);
-        applyButton.addActionListener(_ -> {
+        applyButton.addActionListener(e -> {
+            connectionForm.actionPerformed(e);
             success = connectionForm.isConnectionSet();
             App.settings.applyChanges(SwingUtilities.windowForComponent(applyButton), comments);
             dispose();
