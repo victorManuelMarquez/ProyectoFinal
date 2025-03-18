@@ -7,7 +7,6 @@ import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,11 +22,8 @@ public class App implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(App.class.getName());
 
-    private final ResourceBundle bundle;
-
     private App() {
         settings = new Settings();
-        bundle = ResourceBundle.getBundle(LOCALES_DIR);
     }
 
     public static void main(String[] args) {
@@ -46,7 +42,6 @@ public class App implements Runnable {
 
     @Override
     public void run() {
-        LOGGER.info(bundle.getString("log.startingApp"));
         LoadingScreen.createAndShow();
     }
 

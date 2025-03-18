@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public final class AppChecker extends SwingWorker<Void, String> implements PropertyChangeListener {
 
@@ -26,6 +27,8 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     private ResourceBundle messages;
     private final Cursor defaultCursor;
     private boolean dumpProperties = true;
+
+    private static final Logger LOGGER = Logger.getLogger(AppChecker.class.getName());
 
     public AppChecker(JTextArea publisher) {
         this.publisher = publisher;
@@ -39,6 +42,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         );
         defaultCursor = root.getCursor();
         addPropertyChangeListener(this);
+        App.createFileHandler().ifPresent(LOGGER::addHandler);
     }
 
     @Override
@@ -61,7 +65,9 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     @Override
     protected void process(List<String> chunks) {
         for (String chunk : chunks) {
-            getPublisher().append(chunk + System.lineSeparator());
+            String output = chunk + System.lineSeparator();
+            getPublisher().append(output);
+            LOGGER.info(output);
         }
     }
 
