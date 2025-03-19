@@ -28,7 +28,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     private final Cursor defaultCursor;
     private boolean dumpProperties = true;
 
-    private static final Logger LOGGER = Logger.getLogger(AppChecker.class.getName());
+    private final static Logger GLOBAL_LOGGER = Logger.getGlobal();
 
     public AppChecker(JTextArea publisher) {
         this.publisher = publisher;
@@ -42,7 +42,6 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         );
         defaultCursor = root.getCursor();
         addPropertyChangeListener(this);
-        App.createFileHandler().ifPresent(LOGGER::addHandler);
     }
 
     @Override
@@ -67,7 +66,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         for (String chunk : chunks) {
             String output = chunk + System.lineSeparator();
             getPublisher().append(output);
-            LOGGER.info(output);
+            GLOBAL_LOGGER.info(output);
         }
     }
 

@@ -20,22 +20,20 @@ public class App implements Runnable {
 
     public static String LOCALES_DIR = "locales/strings";
 
-    private static final Logger LOGGER = Logger.getLogger(App.class.getName());
+    private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
     private App() {
         settings = new Settings();
+        GLOBAL_LOGGER.setLevel(Level.INFO);
     }
 
     public static void main(String[] args) {
         Optional<FileHandler> fileHandler = createFileHandler();
-        if (fileHandler.isPresent()) {
-            LOGGER.addHandler(fileHandler.get());
-            LOGGER.setLevel(Level.INFO);
-        }
+        fileHandler.ifPresent(GLOBAL_LOGGER::addHandler);
         try {
             SwingUtilities.invokeLater(new App());
         } catch (RuntimeException e) {
-            LOGGER.severe(e.getLocalizedMessage());
+            GLOBAL_LOGGER.severe(e.getLocalizedMessage());
             System.exit(1);
         }
     }
@@ -58,7 +56,7 @@ public class App implements Runnable {
                 return Optional.of(fileHandler);
             }
         } catch (IOException e) {
-            LOGGER.severe(e.getLocalizedMessage());
+            GLOBAL_LOGGER.severe(e.getLocalizedMessage());
         }
         try {
             // directorio temporal del sistema operativo
@@ -68,7 +66,7 @@ public class App implements Runnable {
             fileHandler.setLevel(ALL);
             return Optional.of(fileHandler);
         } catch (IOException e) {
-            LOGGER.severe(e.getLocalizedMessage());
+            GLOBAL_LOGGER.severe(e.getLocalizedMessage());
             return Optional.empty();
         }
     }
