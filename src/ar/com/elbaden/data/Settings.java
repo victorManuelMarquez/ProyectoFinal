@@ -15,6 +15,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 public final class Settings implements PropertyChangeListener {
 
@@ -29,6 +30,8 @@ public final class Settings implements PropertyChangeListener {
     private final Properties properties;
     private final PropertyChangeSupport changeSupport;
     private final ConcurrentHashMap<String, String> backup;
+
+    private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
     public Settings() {
         changeSupport = new PropertyChangeSupport(this);
@@ -60,6 +63,7 @@ public final class Settings implements PropertyChangeListener {
                 saveIni(comments);
                 backup.clear();
             } catch (IOException ioException) {
+                GLOBAL_LOGGER.severe(ioException.getLocalizedMessage());
                 ErrorDialog.createAndShow(origin, ioException);
                 discardChanges();
             }
