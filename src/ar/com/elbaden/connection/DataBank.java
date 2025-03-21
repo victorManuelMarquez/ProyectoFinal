@@ -8,8 +8,11 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 public final class DataBank {
+
+    private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
     public static boolean testConnection(Window root) {
         boolean success = false;
@@ -19,6 +22,7 @@ public final class DataBank {
         try (Connection ignore = DriverManager.getConnection(url, user, pass)) {
             success = true;
         } catch (SQLException sqlException) {
+            GLOBAL_LOGGER.severe(sqlException.getLocalizedMessage());
             ErrorDialog.createAndShow(root, sqlException);
         }
         return success;
