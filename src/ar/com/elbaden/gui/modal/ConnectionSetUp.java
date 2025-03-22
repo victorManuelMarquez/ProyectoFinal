@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui.modal;
 
+import ar.com.elbaden.gui.MnemonicFinder;
 import ar.com.elbaden.gui.panel.ConnectionForm;
 import ar.com.elbaden.main.App;
 
@@ -39,6 +40,9 @@ public final class ConnectionSetUp extends MasterDialog {
         // instalando los componentes en el dialog
         getContentPane().add(connectionForm);
         getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
+
+        // mnemonics
+        MnemonicFinder.findMnemonics(buttonsPanel);
 
         // eventos
         applyButton.addActionListener(e -> {
