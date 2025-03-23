@@ -41,12 +41,16 @@ public class MnemonicFinder {
         MnemonicFinder finder = new MnemonicFinder();
         StringBuilder letters = new StringBuilder();
         if (origin instanceof JMenu menu) {
-            for (Component component : menu.getMenuComponents()) {
+            Component[] components = menu.getMenuComponents();
+            if (components.length <= 1) return;
+            for (Component component : components) {
                 if (component instanceof AbstractButton button) {
                     finder.setMnemonic(letters, button);
                 }
             }
         } else {
+            Component[] components = origin.getComponents();
+            if (components.length <= 1) return;
             for (Component component : origin.getComponents()) {
                 if (component instanceof AbstractButton button) {
                     finder.setMnemonic(letters, button);
