@@ -10,8 +10,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public final class AboutDialog extends MasterDialog {
+
+    private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
     private AboutDialog(Window owner, String title) {
         super(owner, title);
@@ -70,8 +73,10 @@ public final class AboutDialog extends MasterDialog {
                         URI webSite = new URI(url);
                         desktop.browse(webSite);
                     } catch (URISyntaxException | IOException exception) {
+                        GLOBAL_LOGGER.severe(exception.getLocalizedMessage());
                         ErrorDialog.createAndShow(getOwner(), exception);
                     } catch (UnsupportedOperationException e) {
+                        GLOBAL_LOGGER.severe(e.getLocalizedMessage());
                         MessageDialog.createAndShow(getOwner(), localInfo, url, JOptionPane.INFORMATION_MESSAGE);
                     }
                 }
