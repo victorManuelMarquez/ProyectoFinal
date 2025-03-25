@@ -10,6 +10,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public class MainFrame extends JFrame {
 
@@ -52,6 +54,14 @@ public class MainFrame extends JFrame {
     }
 
     static class WindowEvents extends WindowAdapter {
+
+        private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
+
+        @Override
+        public void windowOpened(WindowEvent e) {
+            ResourceBundle messages = ResourceBundle.getBundle(App.LOCALES_DIR);
+            GLOBAL_LOGGER.fine(messages.getString("fine.open_main_window"));
+        }
 
         @Override
         public void windowClosing(WindowEvent e) {
