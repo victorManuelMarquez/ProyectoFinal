@@ -56,10 +56,10 @@ public class MainFrame extends JFrame {
     static class WindowEvents extends WindowAdapter {
 
         private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
+        private final ResourceBundle messages = ResourceBundle.getBundle(App.LOCALES_DIR);
 
         @Override
         public void windowOpened(WindowEvent e) {
-            ResourceBundle messages = ResourceBundle.getBundle(App.LOCALES_DIR);
             GLOBAL_LOGGER.fine(messages.getString("fine.open_main_window"));
         }
 
@@ -70,9 +70,11 @@ public class MainFrame extends JFrame {
             if (showDialog) {
                 int option = ClosingDialog.createAndShow(e.getWindow());
                 if (option == JOptionPane.OK_OPTION) {
+                    GLOBAL_LOGGER.fine(messages.getString("fine.close_main_window"));
                     e.getWindow().dispose();
                 }
             } else {
+                GLOBAL_LOGGER.fine(messages.getString("fine.close_main_window"));
                 e.getWindow().dispose();
             }
         }
