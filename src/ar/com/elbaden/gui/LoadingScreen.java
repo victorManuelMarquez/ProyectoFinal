@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
 import ar.com.elbaden.task.AppChecker;
 
 import javax.swing.*;
@@ -11,6 +12,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 public final class LoadingScreen extends JFrame {
 
@@ -62,16 +65,21 @@ public final class LoadingScreen extends JFrame {
         private final int seconds = 15;
         private int counter = seconds;
 
+        private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
+        private final ResourceBundle messages;
+
         private WindowEvents(JTextArea publisher, JProgressBar publishProgress) {
             this.publishProgress = publishProgress;
             root = SwingUtilities.windowForComponent(publisher);
             checker = new AppChecker(publisher);
             checker.addPropertyChangeListener(this);
             countdown = new Timer(1000, this);
+            messages = ResourceBundle.getBundle(App.LOCALES_DIR);
         }
 
         @Override
         public void windowOpened(WindowEvent e) {
+            GLOBAL_LOGGER.fine(messages.getString("fine.show_loading_screen"));
             getChecker().execute();
         }
 
@@ -83,6 +91,7 @@ public final class LoadingScreen extends JFrame {
             if (getCountdown().isRunning()) {
                 getCountdown().stop();
             }
+            GLOBAL_LOGGER.info(messages.getString("info.user_closing_loading_screen"));
             getRoot().dispose();
         }
 
@@ -90,6 +99,7 @@ public final class LoadingScreen extends JFrame {
         public void actionPerformed(ActionEvent e) {
             getPublishProgress().setValue(counter * 100 / seconds);
             if (counter < 0) {
+                GLOBAL_LOGGER.fine(messages.getString("fine.close_loading_screen"));
                 getCountdown().stop();
                 getRoot().dispose();
             } else {
