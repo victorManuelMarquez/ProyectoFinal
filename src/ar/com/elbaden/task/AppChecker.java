@@ -101,6 +101,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
                 return;
             }
         } catch (IOException e) {
+            GLOBAL_LOGGER.severe(e.getLocalizedMessage());
             String localMessage = getMessages().getString("message.properties.load_failed");
             String message = MessageFormat.format(localMessage, e.getLocalizedMessage());
             publish(message);
