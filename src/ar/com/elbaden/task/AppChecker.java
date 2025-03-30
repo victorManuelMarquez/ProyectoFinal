@@ -135,6 +135,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
             publish(message);
         } catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
                  IllegalAccessException | NoSuchMethodException e) {
+            GLOBAL_LOGGER.severe(e.getLocalizedMessage());
             String localMessage = getMessages().getString("message.driver_not_loaded");
             String message = MessageFormat.format(localMessage, e.getLocalizedMessage());
             publish(message);
