@@ -34,7 +34,6 @@ public class App implements Runnable {
             SwingUtilities.invokeLater(new App());
         } catch (RuntimeException e) {
             GLOBAL_LOGGER.severe(e.getLocalizedMessage());
-            System.exit(1);
         }
     }
 
