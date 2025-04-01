@@ -1,5 +1,6 @@
 package ar.com.elbaden.task;
 
+import ar.com.elbaden.connection.CreateDatabase;
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.gui.MainFrame;
 import ar.com.elbaden.gui.modal.ConnectionSetUp;
@@ -38,7 +39,8 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
                 new Thread(this::tryLoadSettings),
                 new Thread(this::trySaveSettings),
                 new Thread(this::initiateMySQLDriver),
-                new Thread(this::tryConnect)
+                new Thread(this::tryConnect),
+                new Thread(this::checkDataBank)
         );
         defaultCursor = root.getCursor();
         addPropertyChangeListener(this);
@@ -172,6 +174,17 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
                 cancel(true);
             }
             firePropertyChange("indeterminate", true, false);
+        }
+    }
+
+    private void checkDataBank() {
+        int result = DataBank.executeDML(new CreateDatabase(), getRoot());
+        if (result > 0) {
+            System.out.println("Bases de datos creada.");
+        } else if (result == 0) {
+            System.out.println("Bases de datos ya existe.");
+        } else {
+            System.out.println("Bases de datos no existe.");
         }
     }
 

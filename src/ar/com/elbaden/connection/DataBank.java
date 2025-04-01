@@ -8,11 +8,14 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.logging.Logger;
 
 public final class DataBank {
 
     private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
+
+    static final String DATABASE_NAME = "el_baden";
 
     public static boolean testConnection(Window root) {
         boolean success = false;
@@ -26,6 +29,21 @@ public final class DataBank {
             ErrorDialog.createAndShow(root, sqlException);
         }
         return success;
+    }
+
+    public static int executeDML(StringQuery query, Window origin) {
+        String url = App.settings.getProperties().getProperty(Settings.KEY_URL_CONNECT);
+        String user = App.settings.getProperties().getProperty(Settings.KEY_USERNAME_DB);
+        String pass = App.settings.getProperties().getProperty(Settings.KEY_PASSWORD_DB);
+        try (
+                Connection connection = DriverManager.getConnection(url, user, pass);
+                Statement statement = connection.createStatement()
+        ) {
+            return statement.executeUpdate(query.sql());
+        } catch (SQLException e) {
+            ErrorDialog.createAndShow(origin, e);
+            return -1;
+        }
     }
 
 }
