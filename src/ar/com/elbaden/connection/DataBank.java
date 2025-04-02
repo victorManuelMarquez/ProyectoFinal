@@ -15,7 +15,7 @@ public final class DataBank {
 
     private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
-    static final String DATABASE_NAME = "el_baden";
+    public static final String DATABASE_NAME = "el_baden";
 
     public static boolean testConnection(Window root) {
         boolean success = false;
