@@ -180,11 +180,11 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     private void checkDataBank() {
         int result = DataBank.executeDML(new CreateDatabase(), getRoot());
         if (result > 0) {
-            System.out.println("Bases de datos creada.");
+            System.out.println(getMessages().getString("message.database_created"));
         } else if (result == 0) {
-            System.out.println("Bases de datos ya existe.");
+            System.out.println(getMessages().getString("message.database_found"));
         } else {
-            System.out.println("Bases de datos no existe.");
+            System.out.println(getMessages().getString("message.database_not_found"));
         }
     }
 
