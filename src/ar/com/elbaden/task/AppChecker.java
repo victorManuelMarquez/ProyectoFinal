@@ -178,13 +178,22 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     }
 
     private void checkDataBank() {
+        // se ejecuta la creación de la base de datos
+        // dicha consulta debe incluir "IF EXISTS" para evitar cancelar la carga del programa
         int result = DataBank.executeDML(new CreateDatabase(), getRoot());
         if (result > 0) {
-            System.out.println(getMessages().getString("message.database_created"));
+            String databaseCreated = getMessages().getString("message.database_created");
+            GLOBAL_LOGGER.info(databaseCreated);
+            publish(databaseCreated);
         } else if (result == 0) {
-            System.out.println(getMessages().getString("message.database_found"));
+            String databaseExists = getMessages().getString("message.database_found");
+            GLOBAL_LOGGER.fine(databaseExists);
+            publish(databaseExists);
         } else {
-            System.out.println(getMessages().getString("message.database_not_found"));
+            String databaseNotExists = getMessages().getString("message.database_not_found");
+            GLOBAL_LOGGER.severe(databaseNotExists);
+            publish(databaseNotExists);
+            cancel(true);
         }
     }
 
