@@ -28,6 +28,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     private ResourceBundle messages;
     private final Cursor defaultCursor;
     private boolean dumpProperties = true;
+    private boolean firstRun = false;
 
     private final static Logger GLOBAL_LOGGER = Logger.getGlobal();
 
@@ -40,7 +41,8 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
                 new Thread(this::trySaveSettings),
                 new Thread(this::initiateMySQLDriver),
                 new Thread(this::tryConnect),
-                new Thread(this::checkDataBank)
+                new Thread(this::checkDataBank),
+                new Thread(this::checkUsersTable)
         );
         defaultCursor = root.getCursor();
         addPropertyChangeListener(this);
@@ -182,6 +184,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         // dicha consulta debe incluir "IF EXISTS" para evitar cancelar la carga del programa
         int result = DataBank.executeDML(new CreateDatabase(), getRoot());
         if (result > 0) {
+            firstRun = true;
             String databaseCreated = getMessages().getString("message.database_created");
             GLOBAL_LOGGER.info(databaseCreated);
             publish(databaseCreated);
@@ -194,6 +197,14 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
             GLOBAL_LOGGER.severe(databaseNotExists);
             publish(databaseNotExists);
             cancel(true);
+        }
+    }
+
+    private void checkUsersTable() {
+        if (firstRun) {
+            System.out.println("Se creará una tabla para registrar al usuario.");
+        } else {
+            System.out.println("Se habilitará un login pronto...");
         }
     }
 
