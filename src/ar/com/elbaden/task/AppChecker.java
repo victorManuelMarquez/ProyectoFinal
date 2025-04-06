@@ -1,6 +1,7 @@
 package ar.com.elbaden.task;
 
 import ar.com.elbaden.connection.CreateDatabase;
+import ar.com.elbaden.connection.CreateTableUsuarios;
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.gui.MainFrame;
 import ar.com.elbaden.gui.modal.ConnectionSetUp;
@@ -28,7 +29,6 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     private ResourceBundle messages;
     private final Cursor defaultCursor;
     private boolean dumpProperties = true;
-    private boolean firstRun = false;
 
     private final static Logger GLOBAL_LOGGER = Logger.getGlobal();
 
@@ -184,7 +184,6 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
         // dicha consulta debe incluir "IF EXISTS" para evitar cancelar la carga del programa
         int result = DataBank.executeDML(new CreateDatabase(), getRoot());
         if (result > 0) {
-            firstRun = true;
             String databaseCreated = getMessages().getString("message.database_created");
             GLOBAL_LOGGER.info(databaseCreated);
             publish(databaseCreated);
@@ -201,10 +200,20 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
     }
 
     private void checkUsersTable() {
-        if (firstRun) {
-            System.out.println("Se creará una tabla para registrar al usuario.");
+        int result = DataBank.executeDML(new CreateTableUsuarios(), getRoot());
+        if (result > 0) {
+            String usersCreated = getMessages().getString("message.database.table_users_created");
+            GLOBAL_LOGGER.info(usersCreated);
+            publish(usersCreated);
+        } else if (result == 0) {
+            String usersFound = getMessages().getString("message.database.table_users_found");
+            GLOBAL_LOGGER.fine(usersFound);
+            publish(usersFound);
         } else {
-            System.out.println("Se habilitará un login pronto...");
+            String usersNotExists = getMessages().getString("message.database.table_users_not_found");
+            GLOBAL_LOGGER.severe(usersNotExists);
+            publish(usersNotExists);
+            cancel(true);
         }
     }
 

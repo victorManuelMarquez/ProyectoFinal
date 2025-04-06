@@ -17,6 +17,8 @@ public final class DataBank {
 
     public static final String DATABASE_NAME = "el_baden";
 
+    static final String USERS_TABLE_NAME = "USUARIOS";
+
     public static boolean testConnection(Window root) {
         boolean success = false;
         String url = App.settings.getProperties().getProperty(Settings.KEY_URL_CONNECT);
