@@ -1,5 +1,6 @@
 package ar.com.elbaden.connection;
 
+@Deprecated
 public final class CreateTableUsuarios implements StringQuery {
 
     @Override
