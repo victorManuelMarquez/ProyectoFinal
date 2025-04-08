@@ -1,7 +1,5 @@
 package ar.com.elbaden.task;
 
-import ar.com.elbaden.connection.CreateDatabase;
-import ar.com.elbaden.connection.CreateTableUsuarios;
 import ar.com.elbaden.connection.DataBank;
 import ar.com.elbaden.gui.MainFrame;
 import ar.com.elbaden.gui.modal.ConnectionSetUp;
@@ -40,9 +38,7 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
                 new Thread(this::tryLoadSettings),
                 new Thread(this::trySaveSettings),
                 new Thread(this::initiateMySQLDriver),
-                new Thread(this::tryConnect),
-                new Thread(this::checkDataBank),
-                new Thread(this::checkUsersTable)
+                new Thread(this::tryConnect)
         );
         defaultCursor = root.getCursor();
         addPropertyChangeListener(this);
@@ -176,44 +172,6 @@ public final class AppChecker extends SwingWorker<Void, String> implements Prope
                 cancel(true);
             }
             firePropertyChange("indeterminate", true, false);
-        }
-    }
-
-    private void checkDataBank() {
-        // se ejecuta la creación de la base de datos
-        // dicha consulta debe incluir "IF EXISTS" para evitar cancelar la carga del programa
-        int result = DataBank.executeDML(new CreateDatabase(), getRoot());
-        if (result > 0) {
-            String databaseCreated = getMessages().getString("message.database_created");
-            GLOBAL_LOGGER.info(databaseCreated);
-            publish(databaseCreated);
-        } else if (result == 0) {
-            String databaseExists = getMessages().getString("message.database_found");
-            GLOBAL_LOGGER.fine(databaseExists);
-            publish(databaseExists);
-        } else {
-            String databaseNotExists = getMessages().getString("message.database_not_found");
-            GLOBAL_LOGGER.severe(databaseNotExists);
-            publish(databaseNotExists);
-            cancel(true);
-        }
-    }
-
-    private void checkUsersTable() {
-        int result = DataBank.executeDML(new CreateTableUsuarios(), getRoot());
-        if (result > 0) {
-            String usersCreated = getMessages().getString("message.database.table_users_created");
-            GLOBAL_LOGGER.info(usersCreated);
-            publish(usersCreated);
-        } else if (result == 0) {
-            String usersFound = getMessages().getString("message.database.table_users_found");
-            GLOBAL_LOGGER.fine(usersFound);
-            publish(usersFound);
-        } else {
-            String usersNotExists = getMessages().getString("message.database.table_users_not_found");
-            GLOBAL_LOGGER.severe(usersNotExists);
-            publish(usersNotExists);
-            cancel(true);
         }
     }
 
