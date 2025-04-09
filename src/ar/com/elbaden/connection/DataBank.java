@@ -14,8 +14,6 @@ public final class DataBank {
 
     private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
-    public static final String DATABASE_NAME = "el_baden";
-
     public static boolean testConnection(Window root) {
         boolean success = false;
         String url = App.settings.getProperties().getProperty(Settings.KEY_URL_CONNECT);
