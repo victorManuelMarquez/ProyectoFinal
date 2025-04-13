@@ -3,7 +3,9 @@ package ar.com.elbaden.main;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.MissingResourceException;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,6 +14,7 @@ import java.util.logging.SimpleFormatter;
 public class App {
 
     static public final String FOLDER_NAME = ".baden";
+    static public final String LANG = "localization/strings";
 
     static private final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
@@ -21,8 +24,21 @@ public class App {
 
     public static void main(String[] args) {
         App app = new App();
-        app.getFileHandler().ifPresent(GLOBAL_LOGGER::addHandler);
-        GLOBAL_LOGGER.info("✓ Archivo log.txt");
+        Optional<FileHandler> fileHandler = app.getFileHandler();
+        fileHandler.ifPresent(GLOBAL_LOGGER::addHandler);
+        if (fileHandler.isEmpty()) {
+            System.exit(1);
+        }
+        try {
+            ResourceBundle messages = ResourceBundle.getBundle(LANG);
+            GLOBAL_LOGGER.info(messages.getString("log.info.app.start"));
+            GLOBAL_LOGGER.info(messages.getString("log.info.app.finished"));
+        } catch (MissingResourceException resourceException) {
+            GLOBAL_LOGGER.severe(resourceException.getLocalizedMessage());
+            System.exit(1);
+        } catch (RuntimeException exception) {
+            GLOBAL_LOGGER.warning(exception.getLocalizedMessage());
+        }
     }
 
     public Optional<FileHandler> getFileHandler() {
