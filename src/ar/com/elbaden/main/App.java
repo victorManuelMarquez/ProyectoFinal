@@ -1,5 +1,7 @@
 package ar.com.elbaden.main;
 
+import ar.com.elbaden.background.StartupWorker;
+
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-public class App {
+public class App implements Runnable {
 
     static public final String FOLDER_NAME = ".baden";
     static public final String LANG = "localization/strings";
@@ -30,15 +32,23 @@ public class App {
             System.exit(1);
         }
         try {
+            // cargo el idioma del programa
             ResourceBundle messages = ResourceBundle.getBundle(LANG);
             GLOBAL_LOGGER.info(messages.getString("log.info.app.start"));
-            GLOBAL_LOGGER.info(messages.getString("log.info.app.finished"));
+            SwingUtilities.invokeLater(app);
         } catch (MissingResourceException resourceException) {
             GLOBAL_LOGGER.severe(resourceException.getLocalizedMessage());
             System.exit(1);
         } catch (RuntimeException exception) {
             GLOBAL_LOGGER.warning(exception.getLocalizedMessage());
         }
+    }
+
+    @Override
+    public void run() {
+        // arranco la rutina de inicio aquí mientras no tengo GUI
+        StartupWorker worker = new StartupWorker();
+        worker.execute();
     }
 
     public Optional<FileHandler> getFileHandler() {
