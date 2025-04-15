@@ -1,10 +1,12 @@
 package ar.com.elbaden.background;
 
+import ar.com.elbaden.background.task.CheckWorkspaceDir;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 public final class StartupWorker extends SwingWorker<Void, String> {
@@ -19,7 +21,18 @@ public final class StartupWorker extends SwingWorker<Void, String> {
 
     @Override
     protected Void doInBackground() {
-        publish("procesando...");
+        List<Callable<String>> tasksList = List.of(new CheckWorkspaceDir());
+        try (ExecutorService service = Executors.newSingleThreadExecutor()) {
+            for (Callable<String> task : tasksList) {
+                Future<String> result = service.submit(task);
+                try {
+                    publish(result.get());
+                } catch (InterruptedException | ExecutionException e) {
+                    service.shutdownNow();
+                    throw new RuntimeException(e);
+                }
+            }
+        }
         return null;
     }
 

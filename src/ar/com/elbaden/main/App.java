@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.MissingResourceException;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +42,9 @@ public class App implements Runnable {
             System.exit(1);
         } catch (RuntimeException exception) {
             GLOBAL_LOGGER.warning(exception.getLocalizedMessage());
+        } catch (Exception e) {
+            GLOBAL_LOGGER.severe(e.getLocalizedMessage());
+            System.exit(1);
         }
     }
 
@@ -48,6 +52,15 @@ public class App implements Runnable {
     public void run() {
         // arranco la rutina de inicio aquí mientras no tengo GUI
         StartupWorker worker = new StartupWorker();
+        worker.addPropertyChangeListener(evt -> {
+            if ("state".equals(evt.getPropertyName()) && SwingWorker.StateValue.DONE == evt.getNewValue()) {
+                try {
+                    worker.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
         worker.execute();
     }
 
