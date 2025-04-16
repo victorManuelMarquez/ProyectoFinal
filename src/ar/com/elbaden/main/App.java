@@ -1,6 +1,6 @@
 package ar.com.elbaden.main;
 
-import ar.com.elbaden.background.BootstrapWorker;
+import ar.com.elbaden.gui.LauncherFrame;
 
 import javax.swing.*;
 import java.util.logging.Level;
@@ -23,8 +23,7 @@ public class App implements Runnable {
 
     @Override
     public void run() {
-        BootstrapWorker worker = new BootstrapWorker();
-        worker.execute();
+        LauncherFrame.createAndShow();
     }
 
 }
