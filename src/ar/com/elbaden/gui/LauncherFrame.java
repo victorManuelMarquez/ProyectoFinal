@@ -23,7 +23,7 @@ public class LauncherFrame extends JFrame implements PropertyChangeListener {
             setUndecorated(true);
         }
         // localización
-        ResourceBundle messages = ResourceBundle.getBundle(App.RESOURCE_BUNDLE_BASE_NAME);
+        ResourceBundle messages = ResourceBundle.getBundle(App.MESSAGES);
         setTitle(messages.getString("app.launcher.title"));
         // componentes
         outputTextPane = new JTextPane();

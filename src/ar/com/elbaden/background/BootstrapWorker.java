@@ -20,15 +20,15 @@ import java.util.logging.Logger;
 public class BootstrapWorker extends SwingWorker<Void, String> implements WindowListener {
 
     private final Cursor cursor, waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
-    private final StyledDocument document;
+    private final JTextPane textPane;
     private final ResourceBundle messages;
 
     private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
     public BootstrapWorker(JTextPane textPane) {
         cursor = textPane.getCursor();
-        document = textPane.getStyledDocument();
-        messages = ResourceBundle.getBundle(App.RESOURCE_BUNDLE_BASE_NAME);
+        this.textPane = textPane;
+        messages = ResourceBundle.getBundle(App.MESSAGES);
     }
 
     @Override
@@ -49,8 +49,8 @@ public class BootstrapWorker extends SwingWorker<Void, String> implements Window
                     publish(result.get());
                     setProgress(item * 100 / total);
                 } catch (InterruptedException | ExecutionException e) {
-                    GLOBAL_LOGGER.severe(e.getLocalizedMessage());
                     service.shutdownNow();
+                    throw e;
                 }
             }
         } catch (Exception e) {
@@ -62,10 +62,11 @@ public class BootstrapWorker extends SwingWorker<Void, String> implements Window
 
     @Override
     protected void process(List<String> chunks) {
+        StyledDocument styledDocument = getTextPane().getStyledDocument();
         for (String chunk : chunks) {
             try {
                 chunk = (chunk.endsWith(System.lineSeparator()) ? chunk : chunk.concat(System.lineSeparator()));
-                getDocument().insertString(getDocument().getLength(), chunk, null);
+                styledDocument.insertString(styledDocument.getLength(), chunk, null);
             } catch (BadLocationException e) {
                 GLOBAL_LOGGER.warning(e.getLocalizedMessage());
             }
@@ -75,6 +76,10 @@ public class BootstrapWorker extends SwingWorker<Void, String> implements Window
     @Override
     protected void done() {
         firePropertyChange("cursor", waitCursor, cursor);
+        if (isCancelled()) {
+            Window windowAncestor = SwingUtilities.getWindowAncestor(getTextPane());
+            windowClosing(new WindowEvent(windowAncestor, WindowEvent.WINDOW_CLOSING));
+        }
     }
 
     @Override
@@ -92,6 +97,12 @@ public class BootstrapWorker extends SwingWorker<Void, String> implements Window
     @Override
     public void windowClosed(WindowEvent e) {
         try {
+            if (isCancelled()) {
+                GLOBAL_LOGGER.info(getMessages().getString("log.info.worker.cancelled"));
+            } else {
+                GLOBAL_LOGGER.finest(getMessages().getString("log.finest.worker.done"));
+            }
+            // fin del programa
             GLOBAL_LOGGER.info(getMessages().getString("log.info.app.finished"));
         } catch (RuntimeException error) {
             GLOBAL_LOGGER.severe(error.getLocalizedMessage());
@@ -110,8 +121,8 @@ public class BootstrapWorker extends SwingWorker<Void, String> implements Window
     @Override
     public void windowDeactivated(WindowEvent e) {}
 
-    public StyledDocument getDocument() {
-        return document;
+    public JTextPane getTextPane() {
+        return textPane;
     }
 
     public ResourceBundle getMessages() {

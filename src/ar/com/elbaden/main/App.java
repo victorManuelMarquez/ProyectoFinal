@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 public class App implements Runnable {
 
     public static final String FOLDER_NAME = ".baden";
-    public static final String RESOURCE_BUNDLE_BASE_NAME = "i18n/strings";
+    public static final String MESSAGES = "i18n/messages";
 
     private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
