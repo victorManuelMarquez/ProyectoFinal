@@ -5,8 +5,7 @@ import ar.com.elbaden.background.task.CheckTempDir;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.StyledDocument;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -22,6 +21,9 @@ public class BootstrapWorker extends SwingWorker<Void, String> implements Window
     private final Cursor cursor, waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
     private final JTextPane textPane;
     private final ResourceBundle messages;
+    private boolean isCheckSymbol = false;
+
+    private static final String CHECK_SYMBOL = "✓", FAIL_SYMBOL = "✗";
 
     private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
@@ -46,15 +48,19 @@ public class BootstrapWorker extends SwingWorker<Void, String> implements Window
                 item++;
                 Future<String> result = service.submit(checkpoint);
                 try {
-                    publish(result.get());
+                    String value = result.get();
+                    isCheckSymbol = true;
+                    publish(value);
                     setProgress(item * 100 / total);
                 } catch (InterruptedException | ExecutionException e) {
                     service.shutdownNow();
+                    isCheckSymbol = false;
                     throw e;
                 }
             }
         } catch (Exception e) {
             GLOBAL_LOGGER.severe(e.getLocalizedMessage());
+            // se cancela de momento
             cancel(true);
         }
         return null;
@@ -63,10 +69,22 @@ public class BootstrapWorker extends SwingWorker<Void, String> implements Window
     @Override
     protected void process(List<String> chunks) {
         StyledDocument styledDocument = getTextPane().getStyledDocument();
+        AttributeSet defaultStyle = styledDocument.getStyle(StyleContext.DEFAULT_STYLE);
+        StyleContext context = StyleContext.getDefaultStyleContext();
+        int offset;
         for (String chunk : chunks) {
             try {
+                offset = styledDocument.getLength();
+                AttributeSet style;
+                if (isCheckSymbol) {
+                    style = context.addAttribute(defaultStyle, StyleConstants.Foreground, Color.GREEN);
+                    styledDocument.insertString(offset, CHECK_SYMBOL + " ", style);
+                } else {
+                    style = context.addAttribute(defaultStyle, StyleConstants.Foreground, Color.RED);
+                    styledDocument.insertString(offset, FAIL_SYMBOL + " ", style);
+                }
                 chunk = (chunk.endsWith(System.lineSeparator()) ? chunk : chunk.concat(System.lineSeparator()));
-                styledDocument.insertString(styledDocument.getLength(), chunk, null);
+                styledDocument.insertString(styledDocument.getLength(), chunk, defaultStyle);
             } catch (BadLocationException e) {
                 GLOBAL_LOGGER.warning(e.getLocalizedMessage());
             }

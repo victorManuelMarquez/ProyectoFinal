@@ -18,7 +18,7 @@ public class CheckFileHandler implements Callable<String> {
     @Override
     public String call() throws Exception {
         if (Thread.interrupted()) {
-            throw new InterruptedException("creación del manejador de registro de eventos [cancelado]");
+            throw new InterruptedException("creación del manejador de registro de eventos cancelado");
         }
         try {
             File tempDir = new File(Settings.temporalDirPath());
@@ -30,7 +30,7 @@ public class CheckFileHandler implements Callable<String> {
                     fileHandler.setFormatter(simpleFormatter);
                     fileHandler.setLevel(Level.ALL);
                     GLOBAL_LOGGER.addHandler(fileHandler);
-                    return "[ ✓ ] registro de eventos";
+                    return "registro de eventos";
                 } catch (IOException e) {
                     throw new ExecutionException(e);
                 }
