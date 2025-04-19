@@ -1,6 +1,8 @@
 package ar.com.elbaden.background;
 
+import ar.com.elbaden.background.task.CheckApplyingRoboto;
 import ar.com.elbaden.background.task.CheckFileHandler;
+import ar.com.elbaden.background.task.CheckRobotoFont;
 import ar.com.elbaden.background.task.CheckTempDir;
 import ar.com.elbaden.main.App;
 
@@ -38,6 +40,8 @@ public class BootstrapWorker extends SwingWorker<Void, String> implements Window
         firePropertyChange("cursor", cursor, waitCursor);
         try (ExecutorService service = Executors.newSingleThreadExecutor()) {
             List<Callable<String>> checkpointsList = new ArrayList<>();
+            checkpointsList.add(new CheckRobotoFont(getMessages()));
+            checkpointsList.add(new CheckApplyingRoboto(getMessages(), getTextPane()));
             checkpointsList.add(new CheckTempDir());
             checkpointsList.add(new CheckFileHandler());
             Iterator<Callable<String>> checkpointIterator = checkpointsList.iterator();
