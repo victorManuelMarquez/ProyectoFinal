@@ -96,8 +96,9 @@ class FontWorker extends SwingWorker<java.util.List<Font>, Font> {
         FontRenderContext newContext = newMetrics.getFontRenderContext();
 
         // calculo el ancho en píxeles que ocuparía con una palabra, en este caso el nombre de la fuente original
-        double newFontWidth = newFont.getStringBounds(defaultFontFamily, newContext).getWidth();
-        double newFontHeight = newFont.getStringBounds(defaultFontFamily, newContext).getHeight();
+        Rectangle2D newBounds = newFont.getStringBounds(defaultFontFamily, newContext);
+        double newFontWidth = newBounds.getWidth();
+        double newFontHeight = newBounds.getHeight();
 
         // se omiten fuentes en blanco tales como 'Adobe Blank' por ejemplo
         if (newFontWidth == 0 || newFontHeight == 0) {
@@ -121,11 +122,11 @@ class FontWorker extends SwingWorker<java.util.List<Font>, Font> {
         }
 
         // ahora como el cálcula anterior fue para descartar fuentes demasiado anchas, en este caso se
-        // va a calcular el ancho para contener el nombre propio de la fuente y usarlo para ajustar el
+        // va a actualizar el ancho para contener el nombre propio de la fuente y usarlo para ajustar el
         // ancho de la lista.
-        Rectangle2D newRectangle2D = newFont.getStringBounds(newFont.getFamily(), newContext);
-        newFontWidth = newRectangle2D.getWidth();
-        newFontHeight = newRectangle2D.getHeight();
+        newBounds = newFont.getStringBounds(newFont.getFamily(), newContext);
+        newFontWidth = newBounds.getWidth();
+        newFontHeight = newBounds.getHeight();
 
         // con los datos actualizados se compara y asigna el que será el ancho y alto predefinido para
         // todos los ítems de la lista

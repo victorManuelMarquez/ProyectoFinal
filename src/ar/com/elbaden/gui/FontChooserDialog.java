@@ -1,9 +1,12 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
 import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ResourceBundle;
 
 public class FontChooserDialog extends JDialog implements PropertyChangeListener {
 
@@ -16,6 +19,10 @@ public class FontChooserDialog extends JDialog implements PropertyChangeListener
         // ajustes
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setModal(true);
+
+        // localización
+        ResourceBundle messages = ResourceBundle.getBundle(App.MESSAGES);
+        setTitle(messages.getString("dialog.fontChooser.title"));
 
         // componentes
         availableFontList = new JList<>(new DefaultListModel<>());
