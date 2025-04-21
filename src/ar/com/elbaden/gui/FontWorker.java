@@ -1,7 +1,6 @@
 package ar.com.elbaden.gui;
 
 import javax.swing.*;
-import javax.swing.plaf.ListUI;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
@@ -14,21 +13,17 @@ class FontWorker extends SwingWorker<java.util.List<Font>, Font> {
 
     private static final Logger GLOBAL_LOGGER = Logger.getGlobal();
 
-    private final Cursor defaultCursor;
     private final JList<Font> fontList;
-    private final ListUI listUI;
+    private final Window windowAncestor;
     private int maxHeight, maxWidth = 0;
 
     public FontWorker(JList<Font> fontList) {
-        this.defaultCursor = fontList.getCursor();
         this.fontList = fontList;
-        this.listUI = fontList.getUI();
-        this.fontList.setUI(null);
+        this.windowAncestor = SwingUtilities.getWindowAncestor(fontList);
     }
 
     @Override
     protected java.util.List<Font> doInBackground() {
-        getFontList().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         java.util.List<Font> filteredFontList = new ArrayList<>();
         Font defaultFont = new Font("Dialog", Font.PLAIN, 12); // fuente de referencia
         try {
@@ -42,6 +37,9 @@ class FontWorker extends SwingWorker<java.util.List<Font>, Font> {
             int item = 0;
             for (String family : familiesNames) {
                 item++;
+                if (isCancelled()) {
+                    break;
+                }
                 Font newFont = new Font(family, Font.PLAIN, 12);
                 if (isRecommended(newFont, defaultMetrics)) {
                     filteredFontList.add(newFont);
@@ -58,7 +56,9 @@ class FontWorker extends SwingWorker<java.util.List<Font>, Font> {
 
     @Override
     protected void done() {
-        getFontList().setUI(listUI);
+        if (isCancelled()) {
+            return; // evito CancellationException
+        }
         try {
             List<Font> fonts = get();
             DefaultListModel<Font> model = new DefaultListModel<>();
@@ -70,15 +70,20 @@ class FontWorker extends SwingWorker<java.util.List<Font>, Font> {
                     index = model.indexOf(font);
                 }
             }
+            fonts.clear();
             getFontList().setFixedCellWidth(maxWidth + 17); // añado el margen del scroll
             getFontList().setFixedCellHeight(maxHeight + 4); // añado un padding
             getFontList().setModel(model);
             Font selection = model.getElementAt(index); // debe ser un valor contenido en el modelo
             getFontList().setSelectedValue(selection, true);
+            SwingUtilities.invokeLater(() -> {
+                windowAncestor.pack();
+                windowAncestor.setLocationRelativeTo(windowAncestor.getOwner());
+            });
         } catch (Exception e) {
+            e.printStackTrace(System.err);
             GLOBAL_LOGGER.severe(e.getLocalizedMessage());
         }
-        getFontList().setCursor(defaultCursor);
     }
 
     public boolean isRecommended(Font newFont, FontMetrics defaultMetrics) {
