@@ -5,13 +5,25 @@ import java.awt.*;
 
 class ListFontRenderer extends DefaultListCellRenderer {
 
+    private final boolean applyFonts;
+
+    public ListFontRenderer(boolean applyFonts) {
+        this.applyFonts = applyFonts;
+    }
+
+    public ListFontRenderer() {
+        this(false);
+    }
+
     @Override
     public Component getListCellRendererComponent(
             JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
         Component render = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         if (value instanceof Font font) {
             setText(font.getName());
-            setFont(font);
+            if (applyFonts) {
+                setFont(font);
+            }
             // caso especial
             if (UIManager.getLookAndFeel().getName().equals("Nimbus")) {
                 // estilo celdas aplicado a este render
