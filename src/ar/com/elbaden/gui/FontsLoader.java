@@ -25,7 +25,7 @@ public class FontsLoader extends SwingWorker<List<Font>, Font> implements Window
             GraphicsEnvironment graphicsEnvironment;
             graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
             if (graphicsEnvironment == null) {
-                throw new RuntimeException("no hay gráficos.");
+                throw new RuntimeException(GraphicsEnvironment.class.getSimpleName() + "==null");
             }
             String[] families = graphicsEnvironment.getAvailableFontFamilyNames(Locale.getDefault());
             int item = 0;
