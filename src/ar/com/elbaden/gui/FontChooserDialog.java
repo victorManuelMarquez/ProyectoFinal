@@ -38,15 +38,13 @@ public class FontChooserDialog extends JDialog {
 
         GridBagConstraints gbc = new GridBagConstraints();
         int row = 0;
-        gbc.anchor = GridBagConstraints.NORTH;
-        gbc.insets = new Insets(2, 2, 2, 2);
+        gbc.insets = new Insets(3, 3, 2, 2); // sup + inf | izq + der = 5px
         getContentPane().add(searchLabel, gbc);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.weightx = 1.0;
         getContentPane().add(searchField, gbc);
         row++;
-        gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridy = row;
         gbc.weighty = 1.0;

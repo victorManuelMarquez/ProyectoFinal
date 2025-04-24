@@ -7,6 +7,16 @@ import javax.swing.*;
 public class App implements Runnable {
 
     public static void main(String[] args) {
+        // aplico el tema Nimbus para probar el rendimiento y aspecto visual de mi programa.
+        try {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
         SwingUtilities.invokeLater(new App());
     }
 
