@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeListener;
 import java.util.List;
+import java.util.function.Function;
 
 public class FontChooserDialog extends JDialog {
 
@@ -20,16 +21,19 @@ public class FontChooserDialog extends JDialog {
 
         // componentes
         JLabel searchLabel = new JLabel("Buscar");
-        JTextField searchField = new JTextField();
+        JTextField searchField = new JTextField(20); // se recomienda establecer un valor
         fontJList = new JList<>();
         fontJList.setCellRenderer(new ListFontRenderer());
         fontJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane fontListScrollPane = new JScrollPane();
+        JLabel fontSizeLabel = new JLabel("Tamaño de fuente");
+        JSpinner fontSize = new JSpinner(new SpinnerNumberModel(12, 8, 36, 2));
         JTextArea previewTextArea = new JTextArea("El veloz murciélago hindú comía feliz cardillo y kiwi.");
         previewTextArea.setLineWrap(true);
         previewTextArea.setWrapStyleWord(true);
         JScrollPane previewAreaScrollPane = new JScrollPane();
 
+        // amplío el alto de previsualización
         previewTextArea.setText(previewTextArea.getText() + String.valueOf(System.lineSeparator()).repeat(5));
 
         // instalando componentes
@@ -50,17 +54,41 @@ public class FontChooserDialog extends JDialog {
         gbc.weighty = 1.0;
         getContentPane().add(fontListScrollPane, gbc);
         row++;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridwidth = 2;
         gbc.gridy = row;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        getContentPane().add(fontSizeLabel, gbc);
+        gbc.gridwidth = GridBagConstraints.RELATIVE;
+        getContentPane().add(fontSize, gbc);
+        row++;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.gridy = row;
+        gbc.weightx = 1.0;
         gbc.weighty = 0.5;
         getContentPane().add(previewAreaScrollPane, gbc);
 
         // eventos
+        Function<Font, Font> deriveFontSize = f -> f.deriveFont(Float.parseFloat(fontSize.getValue().toString()));
+
         fontJList.addListSelectionListener(_ -> {
             Font value = fontJList.getSelectedValue();
             if (value != null) {
+                value = deriveFontSize.apply(value);
                 previewTextArea.setFont(value);
             }
         });
+
+        fontSize.addChangeListener(_ -> {
+            Font previewFont = previewTextArea.getFont();
+            previewFont = deriveFontSize.apply(previewFont);
+            previewTextArea.setFont(previewFont);
+        });
+
         PropertyChangeListener previewListener = _ -> selectedFont = previewTextArea.getFont();
         previewTextArea.addPropertyChangeListener("font", previewListener);
 
