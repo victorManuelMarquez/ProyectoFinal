@@ -8,43 +8,47 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Arrays;
+import java.util.List;
 
 public class AutoComboBox {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             String[] families = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-            JFrame frame = new JFrame("AutoCombo");
+            JFrame frame = new JFrame("Demo ComboBox con autocompletado");
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-            DefaultComboBoxModel<String> defaultModel = new DefaultComboBoxModel<>(families);
-            JComboBox<String> comboBox = new JComboBox<>(defaultModel);
-            SearchComboEditor editor = new SearchComboEditor(comboBox, families);
+            JComboBox<String> comboBox = new JComboBox<>(families);
+            Editor editor = new Editor(comboBox, families);
             comboBox.setEditable(true);
             comboBox.setEditor(editor);
             frame.add(comboBox);
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
-            editor.getDocument().addDocumentListener(editor);
-            comboBox.addActionListener(editor);
+            editor.getDocument().addDocumentListener(editor); // debo mejorar esta lógica que quedo rara
             comboBox.addItemListener(editor);
+            comboBox.addActionListener(editor);
         });
     }
 
-    static class SearchComboEditor extends JTextField
-            implements ComboBoxEditor, DocumentListener, ActionListener, ItemListener {
+    static class Editor extends JTextField
+            implements ComboBoxEditor, DocumentListener, ItemListener, ActionListener {
 
         private final JComboBox<String> comboBox;
         private final ComboBoxModel<String> defaultModel;
-        private final String[] families;
-        private boolean scrolling = false;
+        private final String[] fontFamilies;
+        private String editingValue;
+        private String typedValue;
+        private String selectedValue;
+        private boolean searchDisabled = false;
         private int caretPosition = 0;
-        private String previousValue;
 
-        public SearchComboEditor(JComboBox<String> comboBox, String[] families) {
+        public Editor(JComboBox<String> comboBox, String[] fontFamilies) {
             this.comboBox = comboBox;
-            this.families = families;
-            this.defaultModel = comboBox.getModel();
+            this.fontFamilies = fontFamilies;
+            defaultModel = comboBox.getModel();
+            editingValue = fontFamilies[0];
         }
 
         @Override
@@ -53,17 +57,18 @@ public class AutoComboBox {
         }
 
         @Override
-        public void setItem(Object anObject) {}
+        public void setItem(Object anObject) {
+            // deja esto vacío o se arruina toda la estrategía
+        }
 
         @Override
         public Object getItem() {
-            System.out.println("getItem: " + getText());
             return getText();
         }
 
         @Override
         public void insertUpdate(DocumentEvent e) {
-            if (scrolling) {
+            if (searchDisabled) {
                 return;
             }
             caretPosition = getCaretPosition() + 1;
@@ -72,7 +77,7 @@ public class AutoComboBox {
 
         @Override
         public void removeUpdate(DocumentEvent e) {
-            if (scrolling) {
+            if (searchDisabled) {
                 return;
             }
             caretPosition = getCaretPosition() - 1;
@@ -81,39 +86,45 @@ public class AutoComboBox {
 
         @Override
         public void changedUpdate(DocumentEvent e) {
-            search(getText());
+        }
+
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            searchDisabled = true;
+            selectedValue = e.getItem().toString();
+            setText(selectedValue);
+            if (getText().startsWith(typedValue == null ? "" : typedValue)) {
+                select(caretPosition, selectedValue.length());
+            }
+            searchDisabled = false;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             if ("comboBoxEdited".equals(e.getActionCommand())) {
-                setCaretPosition(getText().length());
+                List<String> list = Arrays.asList(fontFamilies);
+                if (!list.contains(selectedValue)) {
+                    searchDisabled = true;
+                    setText(editingValue);
+                    searchDisabled = false;
+                }
             }
-        }
-
-        @Override
-        public void itemStateChanged(ItemEvent e) {
-            scrolling = true;
-            String selectedValue = e.getItem().toString();
-            setText(selectedValue);
-            if (getText().startsWith(previousValue)) {
-                select(caretPosition, selectedValue.length());
-            }
-            scrolling = false;
         }
 
         public void search(String value) {
-            previousValue = value;
+            typedValue = value;
             if (value.isBlank()) {
+                editingValue = defaultModel.getElementAt(0);
                 comboBox.setModel(defaultModel);
                 return;
             }
             DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-            for (String family : families) {
+            for (String family : fontFamilies) {
                 if (family.matches("(?i).*" + value + ".*")) {
                     model.addElement(family);
                 }
             }
+            editingValue = model.getElementAt(0);
             comboBox.setModel(model);
             comboBox.showPopup();
         }
