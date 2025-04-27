@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 public class FontChooserDialog extends JDialog {
 
-    private final JList<Font> fontJList;
+    private final JList<Font> fontList;
     private Font selectedFont;
 
     public FontChooserDialog(Window owner) {
@@ -22,9 +22,9 @@ public class FontChooserDialog extends JDialog {
         // componentes
         JLabel searchLabel = new JLabel("Buscar");
         JTextField searchField = new JTextField(20); // se recomienda establecer un valor
-        fontJList = new JList<>();
-        fontJList.setCellRenderer(new ListFontRenderer());
-        fontJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        fontList = new JList<>();
+        fontList.setCellRenderer(new ListFontRenderer());
+        fontList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane fontListScrollPane = new JScrollPane();
         JLabel fontSizeLabel = new JLabel("Tamaño de fuente");
         JSpinner fontSize = new JSpinner(new SpinnerNumberModel(12, 8, 36, 2));
@@ -37,7 +37,7 @@ public class FontChooserDialog extends JDialog {
         previewTextArea.setText(previewTextArea.getText() + String.valueOf(System.lineSeparator()).repeat(5));
 
         // instalando componentes
-        fontListScrollPane.getViewport().setView(fontJList);
+        fontListScrollPane.getViewport().setView(fontList);
         previewAreaScrollPane.getViewport().setView(previewTextArea);
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -75,8 +75,8 @@ public class FontChooserDialog extends JDialog {
         // eventos
         Function<Font, Font> deriveFontSize = f -> f.deriveFont(Float.parseFloat(fontSize.getValue().toString()));
 
-        fontJList.addListSelectionListener(_ -> {
-            Font value = fontJList.getSelectedValue();
+        fontList.addListSelectionListener(_ -> {
+            Font value = fontList.getSelectedValue();
             if (value != null) {
                 value = deriveFontSize.apply(value);
                 previewTextArea.setFont(value);
@@ -119,21 +119,21 @@ public class FontChooserDialog extends JDialog {
         return dialog.getResults();
     }
 
-    private void loadFonts(List<Font> fontList) {
-        if (fontList == null) {
+    private void loadFonts(List<Font> results) {
+        if (results == null) {
             // cierro este diálogo cuando se haga visible
             SwingUtilities.invokeLater(this::dispose);
             return;
         }
         DefaultListModel<Font> listModel = new DefaultListModel<>();
-        for (Font font : fontList) {
+        for (Font font : results) {
             listModel.addElement(font);
-            if (font.getFamily().equals(fontJList.getFont().getFamily())) {
+            if (font.getFamily().equals(fontList.getFont().getFamily())) {
                 selectedFont = font; // asigno esta fuente que será la "seleccionada" por defecto
             }
         }
-        fontJList.setModel(listModel);
-        fontJList.setSelectedValue(selectedFont, true);
+        fontList.setModel(listModel);
+        fontList.setSelectedValue(selectedFont, true);
     }
 
 }
