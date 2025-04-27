@@ -16,6 +16,8 @@ public class FontsLoader extends SwingWorker<List<Font>, Font> implements Window
 
     public FontsLoader(LoadingFontsDialog loadingFontsDialog) {
         this.loadingFontsDialog = loadingFontsDialog;
+        addPropertyChangeListener(loadingFontsDialog);
+        loadingFontsDialog.addWindowListener(this);
     }
 
     @Override
@@ -48,7 +50,7 @@ public class FontsLoader extends SwingWorker<List<Font>, Font> implements Window
     protected void done() {
         try {
             List<Font> fontList = get();
-            getLoadingDataDialog().setFontList(fontList);
+            getLoadingDataDialog().setResults(fontList);
         } catch (Exception e) {
             GLOBAL_LOGGER.severe(e.getLocalizedMessage());
         }

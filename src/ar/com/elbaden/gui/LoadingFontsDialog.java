@@ -11,13 +11,13 @@ public class LoadingFontsDialog extends JDialog implements PropertyChangeListene
 
     private final JProgressBar progressBar;
     private final Cursor defaultCursor;
-    private List<Font> fontList;
+    private List<Font> results;
 
     public LoadingFontsDialog(Window owner, String title) {
         super(owner, title);
         // ajustes
         setModal(true);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setResizable(false);
         defaultCursor = getCursor();
         if (UIManager.getLookAndFeel().getSupportsWindowDecorations()) {
@@ -49,12 +49,12 @@ public class LoadingFontsDialog extends JDialog implements PropertyChangeListene
         return progressBar;
     }
 
-    public List<Font> getFontList() {
-        return fontList;
+    public List<Font> getResults() {
+        return results;
     }
 
-    protected void setFontList(List<Font> fontList) {
-        this.fontList = fontList;
+    protected void setResults(List<Font> results) {
+        this.results = results;
     }
 
 }

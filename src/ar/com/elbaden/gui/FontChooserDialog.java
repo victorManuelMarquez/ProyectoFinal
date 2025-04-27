@@ -97,28 +97,32 @@ public class FontChooserDialog extends JDialog {
     }
 
     public static Font createAndShow(Window owner) {
-        // creo los diálogos
         FontChooserDialog dialog = new FontChooserDialog(owner);
-        LoadingFontsDialog loadingFontsDialog = new LoadingFontsDialog(dialog, "Cargando...");
-        // preparo el cargador para el trabajo pesado
-        FontsLoader loader = new FontsLoader(loadingFontsDialog);
-        loader.addPropertyChangeListener(loadingFontsDialog);
-        // preparo el diálogo de carga
-        loadingFontsDialog.pack();
-        loadingFontsDialog.setLocationRelativeTo(dialog);
-        loader.execute();
-        loadingFontsDialog.setVisible(true);
-        // cuando finalice recolecto los resultados obtenidos y muestro el diálogo principal
-        dialog.loadFonts(loadingFontsDialog.getFontList());
+        // recolecto los resultados obtenidos y muestro el diálogo principal
+        List<Font> results = createLoadingDialog(dialog);
+        dialog.loadFonts(results); // necesito los componentes cargados para mostrarlos correctamente en pantalla
         dialog.pack();
         dialog.setLocationRelativeTo(owner);
         dialog.setVisible(true);
         return dialog.selectedFont;
     }
 
+    private static List<Font> createLoadingDialog(FontChooserDialog owner) {
+        LoadingFontsDialog dialog = new LoadingFontsDialog(owner, "Cargando...");
+        // preparo el cargador para el trabajo pesado
+        FontsLoader loader = new FontsLoader(dialog);
+        // preparo el diálogo de carga
+        dialog.pack();
+        dialog.setLocationRelativeTo(owner);
+        loader.execute();
+        dialog.setVisible(true);
+        return dialog.getResults();
+    }
+
     private void loadFonts(List<Font> fontList) {
         if (fontList == null) {
-            dispose(); // cierro inmediatamente este diálogo
+            // cierro este diálogo cuando se haga visible
+            SwingUtilities.invokeLater(this::dispose);
             return;
         }
         DefaultListModel<Font> listModel = new DefaultListModel<>();
