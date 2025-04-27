@@ -8,8 +8,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class AutoComboBox {
 
@@ -26,7 +27,6 @@ public class AutoComboBox {
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
-            editor.getDocument().addDocumentListener(editor); // debo mejorar esta lógica que quedo rara
             comboBox.addItemListener(editor);
             comboBox.addActionListener(editor);
         });
@@ -43,12 +43,15 @@ public class AutoComboBox {
         private String selectedValue;
         private boolean searchDisabled = false;
         private int caretPosition = 0;
+        private List<String> list;
 
         public Editor(JComboBox<String> comboBox, String[] fontFamilies) {
             this.comboBox = comboBox;
             this.fontFamilies = fontFamilies;
             defaultModel = comboBox.getModel();
             editingValue = fontFamilies[0];
+            list = List.of();
+            getDocument().addDocumentListener(this);
         }
 
         @Override
@@ -57,9 +60,7 @@ public class AutoComboBox {
         }
 
         @Override
-        public void setItem(Object anObject) {
-            // deja esto vacío o se arruina toda la estrategía
-        }
+        public void setItem(Object anObject) {}
 
         @Override
         public Object getItem() {
@@ -102,7 +103,9 @@ public class AutoComboBox {
         @Override
         public void actionPerformed(ActionEvent e) {
             if ("comboBoxEdited".equals(e.getActionCommand())) {
-                List<String> list = Arrays.asList(fontFamilies);
+                if (list.isEmpty()) {
+                    return;
+                }
                 if (!list.contains(selectedValue)) {
                     searchDisabled = true;
                     setText(editingValue);
@@ -114,13 +117,18 @@ public class AutoComboBox {
         public void search(String value) {
             typedValue = value;
             if (value.isBlank()) {
+                list = List.of();
                 editingValue = defaultModel.getElementAt(0);
                 comboBox.setModel(defaultModel);
                 return;
             }
+            list = new ArrayList<>();
             DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+            String regex = "(?i).*" + Pattern.quote(value) + ".*";
+            Pattern pattern = Pattern.compile(regex);
             for (String family : fontFamilies) {
-                if (family.matches("(?i).*" + value + ".*")) {
+                if (pattern.matcher(family).find()) {
+                    list.add(family);
                     model.addElement(family);
                 }
             }
