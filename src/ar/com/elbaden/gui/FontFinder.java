@@ -125,7 +125,7 @@ public class FontFinder extends JComboBox<Font> {
             getComboBox().setModel(getDefaultModel());
             setText("");
             previous = getText();
-            caretPosition = getCaretPosition();
+            caretPosition = 0;
             selectedFont = null;
         }
 
