@@ -61,12 +61,15 @@ public class FontFinder extends JComboBox<Font> {
                     selectedFont = getComboBox().getItemAt(0);
                     setText(selectedFont.getFamily());
                     selectAll();
+                    getComboBox().setSelectedItem(selectedFont);
+                    confirmMatch();
                     return;
                 }
                 // en esta acción ya no es necesario una selección parcial
                 if (getSelectionStart() > 0) {
                     selectAll();
                 }
+                confirmMatch();
             }
         }
 
@@ -146,6 +149,14 @@ public class FontFinder extends JComboBox<Font> {
             }
             getComboBox().setModel(newModel);
             getComboBox().showPopup();
+        }
+
+        private void confirmMatch() {
+            for (ActionListener listener : getActionListeners()) {
+                ActionEvent event;
+                event = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "selectedFont");
+                listener.actionPerformed(event);
+            }
         }
 
         public JComboBox<Font> getComboBox() {

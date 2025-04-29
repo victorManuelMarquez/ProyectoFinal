@@ -74,10 +74,9 @@ public class FontChooserDialog extends JDialog {
         getContentPane().add(previewAreaScrollPane, gbc);
 
         // eventos
-        fontFinder.addActionListener(e -> {
-            if ("comboBoxEdited".equals(e.getActionCommand())) {
+        fontFinder.getEditor().addActionListener(e -> {
+            if ("selectedFont".equals(e.getActionCommand())) {
                 Font selected = (Font) fontFinder.getSelectedItem();
-                System.out.println("FontChooser: " + selected);
                 Font previous = fontList.getSelectedValue();
                 if (previous != selected) {
                     fontList.setSelectedValue(selected, true);
