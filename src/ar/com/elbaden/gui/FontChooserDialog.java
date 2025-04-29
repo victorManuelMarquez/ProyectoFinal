@@ -8,7 +8,6 @@ import java.util.function.Function;
 
 public class FontChooserDialog extends JDialog {
 
-    private final FontFinder fontFinder;
     private final JList<Font> fontList;
     private Font selectedFont;
 
@@ -22,7 +21,7 @@ public class FontChooserDialog extends JDialog {
 
         // componentes
         JLabel searchLabel = new JLabel("Buscar");
-        fontFinder = new FontFinder();
+        JTextField searchField = new JTextField(12);
         fontList = new JList<>();
         fontList.setCellRenderer(new ListFontRenderer());
         fontList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -48,7 +47,7 @@ public class FontChooserDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.weightx = 1.0;
-        getContentPane().add(fontFinder, gbc);
+        getContentPane().add(searchField, gbc);
         row++;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridy = row;
@@ -74,17 +73,6 @@ public class FontChooserDialog extends JDialog {
         getContentPane().add(previewAreaScrollPane, gbc);
 
         // eventos
-        fontFinder.addActionListener(e -> {
-            if ("comboBoxEdited".equals(e.getActionCommand())) {
-                Font selected = (Font) fontFinder.getSelectedItem();
-                System.out.println("FontChooser: " + selected);
-                Font previous = fontList.getSelectedValue();
-                if (previous != selected) {
-                    fontList.setSelectedValue(selected, true);
-                }
-            }
-        });
-
         Function<Font, Font> deriveFontSize = f -> f.deriveFont(Float.parseFloat(fontSize.getValue().toString()));
 
         fontList.addListSelectionListener(_ -> {
@@ -137,16 +125,13 @@ public class FontChooserDialog extends JDialog {
             SwingUtilities.invokeLater(this::dispose);
             return;
         }
-        DefaultComboBoxModel<Font> comboBoxModel = new DefaultComboBoxModel<>();
         DefaultListModel<Font> listModel = new DefaultListModel<>();
         for (Font font : results) {
-            comboBoxModel.addElement(font);
             listModel.addElement(font);
             if (font.getFamily().equals(fontList.getFont().getFamily())) {
                 selectedFont = font; // asigno esta fuente que será la "seleccionada" por defecto
             }
         }
-        fontFinder.setDefaults(comboBoxModel, results);
         fontList.setModel(listModel);
         fontList.setSelectedValue(selectedFont, true);
     }
