@@ -54,6 +54,12 @@ public class FontFinder extends JComboBox<Font> {
         }
 
         @Override
+        public void selectAll() {
+            super.selectAll();
+            caretPosition = 0;
+        }
+
+        @Override
         public void actionPerformed(ActionEvent e) {
             if ("comboBoxEdited".equals(e.getActionCommand())) {
                 int size = getComboBox().getModel().getSize();
@@ -126,8 +132,7 @@ public class FontFinder extends JComboBox<Font> {
 
         public void resetField() {
             getComboBox().setModel(getDefaultModel());
-            setText("");
-            previous = getText();
+            previous = null;
             caretPosition = 0;
             selectedFont = null;
         }

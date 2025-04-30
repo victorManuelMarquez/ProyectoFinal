@@ -78,7 +78,7 @@ public class FontChooserDialog extends JDialog {
             if ("selectedFont".equals(e.getActionCommand())) {
                 Font selected = (Font) fontFinder.getSelectedItem();
                 Font previous = fontList.getSelectedValue();
-                if (previous != selected) {
+                if (selected != null && previous != selected) {
                     fontList.setSelectedValue(selected, true);
                 }
             }
