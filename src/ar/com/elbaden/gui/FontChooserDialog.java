@@ -24,7 +24,7 @@ public class FontChooserDialog extends JDialog {
         JLabel searchLabel = new JLabel("Buscar");
         fontFinder = new FontFinder();
         fontList = new JList<>();
-        fontList.setCellRenderer(new ListFontRenderer());
+        fontList.setCellRenderer(new FontCellRenderer());
         fontList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane fontListScrollPane = new JScrollPane();
         JLabel fontSizeLabel = new JLabel("Tamaño de fuente");

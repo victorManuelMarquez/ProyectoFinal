@@ -11,12 +11,13 @@ import java.awt.event.ItemListener;
 import java.util.List;
 import java.util.regex.Pattern;
 
+@Deprecated
 public class FontFinder extends JComboBox<Font> {
 
     private final FontEditor fontEditor;
 
     public FontFinder() {
-        setRenderer(new ListFontRenderer());
+        setRenderer(new FontCellRenderer());
         setEditable(true);
         this.fontEditor = new FontEditor(this);
         setEditor(fontEditor);

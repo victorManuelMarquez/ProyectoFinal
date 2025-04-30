@@ -3,7 +3,7 @@ package ar.com.elbaden.gui;
 import javax.swing.*;
 import java.awt.*;
 
-public class ListFontRenderer extends DefaultListCellRenderer {
+public class FontCellRenderer extends DefaultListCellRenderer {
 
     @Override
     public Component getListCellRendererComponent(
