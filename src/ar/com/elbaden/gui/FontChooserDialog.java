@@ -136,16 +136,14 @@ public class FontChooserDialog extends JDialog {
             SwingUtilities.invokeLater(this::dispose);
             return;
         }
-        DefaultComboBoxModel<Font> comboBoxModel = new DefaultComboBoxModel<>();
         DefaultListModel<Font> listModel = new DefaultListModel<>();
         for (Font font : results) {
-            comboBoxModel.addElement(font);
             listModel.addElement(font);
             if (font.getFamily().equals(fontList.getFont().getFamily())) {
                 selectedFont = font; // asigno esta fuente que será la "seleccionada" por defecto
             }
         }
-        fontFinder.setDefaults(comboBoxModel, results);
+        fontFinder.setDefaults(results);
         fontList.setModel(listModel);
         fontList.setSelectedValue(selectedFont, true);
     }
