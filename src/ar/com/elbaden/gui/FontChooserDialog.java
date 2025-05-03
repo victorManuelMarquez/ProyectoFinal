@@ -9,7 +9,7 @@ import java.util.function.Function;
 public class FontChooserDialog extends JDialog {
 
     private final FontFinder fontFinder;
-    private final JList<Font> fontList;
+    private final FontList fontList;
     private Font selectedFont;
 
     public FontChooserDialog(Window owner) {
@@ -23,9 +23,7 @@ public class FontChooserDialog extends JDialog {
         // componentes
         JLabel searchLabel = new JLabel("Buscar");
         fontFinder = new FontFinder();
-        fontList = new JList<>();
-        fontList.setCellRenderer(new FontCellRenderer());
-        fontList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        fontList = new FontList();
         JScrollPane fontListScrollPane = new JScrollPane();
         JLabel fontSizeLabel = new JLabel("Tamaño de fuente");
         JSpinner fontSize = new JSpinner(new SpinnerNumberModel(12, 8, 36, 2));
@@ -33,6 +31,7 @@ public class FontChooserDialog extends JDialog {
         previewTextArea.setLineWrap(true);
         previewTextArea.setWrapStyleWord(true);
         JScrollPane previewAreaScrollPane = new JScrollPane();
+        JCheckBox showPreviews = new JCheckBox("Listar con vista previa");
 
         // amplío el alto de previsualización
         previewTextArea.setText(previewTextArea.getText() + String.valueOf(System.lineSeparator()).repeat(5));
@@ -64,6 +63,7 @@ public class FontChooserDialog extends JDialog {
         getContentPane().add(fontSizeLabel, gbc);
         gbc.gridwidth = GridBagConstraints.RELATIVE;
         getContentPane().add(fontSize, gbc);
+        getContentPane().add(showPreviews, gbc);
         row++;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.BOTH;
@@ -102,6 +102,8 @@ public class FontChooserDialog extends JDialog {
 
         PropertyChangeListener previewListener = _ -> selectedFont = previewTextArea.getFont();
         previewTextArea.addPropertyChangeListener("font", previewListener);
+
+        showPreviews.addActionListener(_ -> fontList.setRenderWithPreview(showPreviews.isSelected()));
 
         // valor de retorno
         selectedFont = getFont(); // puede retornar null CUIDADO!

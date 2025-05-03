@@ -23,6 +23,11 @@ public class FontCellRenderer extends DefaultListCellRenderer {
                     label.setForeground(list.getForeground()); // renderiza correctamente
                 }
             }
+            if (list instanceof FontList fontList) {
+                if (fontList.isRenderWithPreview()) {
+                    setFont(font);
+                }
+            }
         }
         return original;
     }
