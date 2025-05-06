@@ -16,6 +16,7 @@ public class FontChooser extends JDialog {
     private final FontFamilyList familyList;
     private final Matcher boldMatcher;
     private final Matcher italicMatcher;
+    private String previewText;
     private Font selectedFont;
     private int fontSize = 12;
 
@@ -25,7 +26,7 @@ public class FontChooser extends JDialog {
         italicMatcher = Pattern.compile("(?i)(Italic|Cursive)").matcher("");
 
         String sizeText = "Tamaño del texto";
-        String previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
+        previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
         previewText += String.valueOf(System.lineSeparator()).repeat(5);
 
         // componentes
@@ -92,14 +93,20 @@ public class FontChooser extends JDialog {
         return new Font(familyName, Font.PLAIN, fontSize);
     }
 
-    public static void createAndShow(Window owner) {
-        FontChooser fontChooserDialog = new FontChooser(owner);
+    private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
         LoadingDialog loadingDialog = new LoadingDialog(owner, null);
         loadingDialog.pack();
         loadingDialog.setLocationRelativeTo(owner);
-        FontsLoader fontsLoader = new FontsLoader(fontChooserDialog.familyList);
         fontsLoader.addPropertyChangeListener(loadingDialog);
         loadingDialog.addWindowListener(fontsLoader);
+        return loadingDialog;
+    }
+
+    public static void createAndShow(Window owner) {
+        FontChooser fontChooserDialog = new FontChooser(owner);
+        FontsLoader fontsLoader = new FontsLoader(fontChooserDialog.familyList);
+        fontsLoader.setContentPreview(fontChooserDialog.previewText);
+        JDialog loadingDialog = fontChooserDialog.createLoadingDialog(owner, fontsLoader);
         fontsLoader.execute();
         loadingDialog.setVisible(true);
         if (fontChooserDialog.familyList.getModel().getSize() == 0) {
@@ -178,6 +185,7 @@ public class FontChooser extends JDialog {
     static class FontsLoader extends SwingWorker<DefaultListModel<String>, String> implements WindowListener {
 
         private final FontFamilyList fontFamilyList;
+        private String contentPreview;
 
         public FontsLoader(FontFamilyList fontFamilyList) {
             this.fontFamilyList = fontFamilyList;
@@ -199,7 +207,9 @@ public class FontChooser extends JDialog {
                     throw new InterruptedException();
                 }
                 value++;
-                listModel.addElement(family);
+                if (isSupported(family, getContentPreview())) {
+                    listModel.addElement(family);
+                }
                 setProgress(value * 100 / fontFamilyList.getNames().length);
             }
             return listModel;
@@ -214,6 +224,16 @@ public class FontChooser extends JDialog {
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
+        }
+
+        public boolean isSupported(String family, String value) {
+            if (value == null) {
+                return true;
+            } else if (value.isBlank()) {
+                return true;
+            }
+            Font temp = new Font(family, Font.PLAIN, 1);
+            return temp.canDisplayUpTo(value) == -1;
         }
 
         @Override
@@ -238,6 +258,14 @@ public class FontChooser extends JDialog {
 
         @Override
         public void windowDeactivated(WindowEvent e) {}
+
+        public String getContentPreview() {
+            return contentPreview;
+        }
+
+        public void setContentPreview(String contentPreview) {
+            this.contentPreview = contentPreview;
+        }
 
     }
 
