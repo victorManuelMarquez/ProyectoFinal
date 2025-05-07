@@ -13,17 +13,17 @@ import java.util.regex.Pattern;
 
 public class FontChooser extends JDialog {
 
+    private static final int DEFAULT_FONT_SIZE = 12;
+
     private final FontFamilyList familyList;
-    private final Matcher boldMatcher;
-    private final Matcher italicMatcher;
+
     private String previewText;
     private Font selectedFont;
-    private int fontSize = 12;
+    private int fontSize = DEFAULT_FONT_SIZE;
 
     private FontChooser(Window owner) {
         super(owner);
-        boldMatcher = Pattern.compile("(?i)(Black|Bolder|Bold)").matcher("");
-        italicMatcher = Pattern.compile("(?i)(Italic|Cursive)").matcher("");
+
 
         String sizeText = "Tamaño del texto";
         previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
@@ -32,6 +32,7 @@ public class FontChooser extends JDialog {
         // componentes
         familyList = new FontFamilyList();
         JScrollPane fontFamilyScrollPane = new JScrollPane();
+        JLabel fontSizeLabel = new JLabel(sizeText);
         JSpinner fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 36, 2));
         JTextArea previewArea = new JTextArea(previewText);
         previewArea.setLineWrap(true);
@@ -47,13 +48,17 @@ public class FontChooser extends JDialog {
         GridBagConstraints gbc = new GridBagConstraints();
         int row = 0;
         gbc.insets = new Insets(5, 5, 4, 4);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
         fontFamilyScrollPane.getViewport().setView(familyList);
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         getContentPane().add(fontFamilyScrollPane, gbc);
         row++;
-        JLabel fontSizeLabel = new JLabel(sizeText);
+        gbc.fill = GridBagConstraints.NONE;
         gbc.gridwidth = GridBagConstraints.RELATIVE;
         gbc.gridy = row;
+        gbc.weighty = .0;
         getContentPane().add(fontSizeLabel, gbc);
         getContentPane().add(fontSizeSpinner, gbc);
         row++;
@@ -61,12 +66,13 @@ public class FontChooser extends JDialog {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.gridy = row;
+        gbc.weighty = 1.0;
         getContentPane().add(previewScrollPane, gbc);
 
         // eventos
         familyList.addListSelectionListener(_ -> {
-            if (familyList.getSelectedValue() instanceof String family) {
-                selectedFont = createFont(family);
+            if (familyList.getSelectedValue() instanceof Font font) {
+                selectedFont = font.deriveFont((float) fontSize);
                 previewArea.setFont(selectedFont);
             }
         });
@@ -79,18 +85,6 @@ public class FontChooser extends JDialog {
                 previewArea.setFont(selectedFont);
             }
         });
-    }
-
-    private Font createFont(String familyName) {
-        if (boldMatcher.reset(familyName).find()) {
-            if (italicMatcher.reset(familyName).find()) {
-                return new Font(familyName, Font.BOLD|Font.ITALIC, fontSize);
-            }
-            return new Font(familyName, Font.BOLD, fontSize);
-        } else if (italicMatcher.reset(familyName).find()) {
-            return new Font(familyName, Font.ITALIC, fontSize);
-        }
-        return new Font(familyName, Font.PLAIN, fontSize);
     }
 
     private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
@@ -117,12 +111,13 @@ public class FontChooser extends JDialog {
         fontChooserDialog.setVisible(true);
     }
 
-    static class FontFamilyList extends JList<String> {
+    static class FontFamilyList extends JList<Font> {
 
         private String[] names;
 
         public FontFamilyList() {
             setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            setCellRenderer(new FontCellRenderer());
         }
 
         public String[] getNames() {
@@ -131,6 +126,21 @@ public class FontChooser extends JDialog {
 
         public void setNames(String[] names) {
             this.names = names;
+        }
+
+    }
+
+    static class FontCellRenderer extends DefaultListCellRenderer {
+
+        @Override
+        public Component getListCellRendererComponent(
+                JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus
+        ) {
+            Component renderer = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            if (value instanceof Font font && renderer instanceof JLabel label) {
+                label.setText(font.getFamily());
+            }
+            return renderer;
         }
 
     }
@@ -182,22 +192,27 @@ public class FontChooser extends JDialog {
 
     }
 
-    static class FontsLoader extends SwingWorker<DefaultListModel<String>, String> implements WindowListener {
+    static class FontsLoader extends SwingWorker<DefaultListModel<Font>, String> implements WindowListener {
 
         private final FontFamilyList fontFamilyList;
+        private final Matcher boldMatcher;
+        private final Matcher italicMatcher;
         private String contentPreview;
+        private Font selectionFont;
 
         public FontsLoader(FontFamilyList fontFamilyList) {
             this.fontFamilyList = fontFamilyList;
+            boldMatcher = Pattern.compile("(?i)(Black|Bolder|Bold)").matcher("");
+            italicMatcher = Pattern.compile("(?i)(Italic|Cursive)").matcher("");
         }
 
         @Override
-        protected DefaultListModel<String> doInBackground() throws Exception {
+        protected DefaultListModel<Font> doInBackground() throws Exception {
             firePropertyChange("indeterminate", false, true);
             GraphicsEnvironment environment = GraphicsEnvironment.getLocalGraphicsEnvironment();
             fontFamilyList.setNames(environment.getAvailableFontFamilyNames(Locale.getDefault()));
             firePropertyChange("indeterminate", true, false);
-            DefaultListModel<String> listModel = new DefaultListModel<>();
+            DefaultListModel<Font> listModel = new DefaultListModel<>();
             int value = 0;
             for (String family : fontFamilyList.getNames()) {
                 if (isCancelled()) {
@@ -207,8 +222,12 @@ public class FontChooser extends JDialog {
                     throw new InterruptedException();
                 }
                 value++;
-                if (isSupported(family, getContentPreview())) {
-                    listModel.addElement(family);
+                Font font = createFont(family);
+                if (selectionFont == null && family.equals(fontFamilyList.getFont().getFamily())) {
+                    selectionFont = font;
+                }
+                if (isSupported(font, getContentPreview())) {
+                    listModel.addElement(font);
                 }
                 setProgress(value * 100 / fontFamilyList.getNames().length);
             }
@@ -219,21 +238,26 @@ public class FontChooser extends JDialog {
         protected void done() {
             try {
                 fontFamilyList.setModel(get());
-                String family = fontFamilyList.getFont().getFamily();
-                fontFamilyList.setSelectedValue(family, true);
+                fontFamilyList.setSelectedValue(selectionFont, true);
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
         }
 
-        public boolean isSupported(String family, String value) {
-            if (value == null) {
-                return true;
-            } else if (value.isBlank()) {
-                return true;
+        public boolean isSupported(Font font, String value) {
+            return font.canDisplayUpTo(value) == -1;
+        }
+
+        private Font createFont(String familyName) {
+            if (boldMatcher.reset(familyName).find()) {
+                if (italicMatcher.reset(familyName).find()) {
+                    return new Font(familyName, Font.BOLD|Font.ITALIC, DEFAULT_FONT_SIZE);
+                }
+                return new Font(familyName, Font.BOLD, DEFAULT_FONT_SIZE);
+            } else if (italicMatcher.reset(familyName).find()) {
+                return new Font(familyName, Font.ITALIC, DEFAULT_FONT_SIZE);
             }
-            Font temp = new Font(family, Font.PLAIN, 1);
-            return temp.canDisplayUpTo(value) == -1;
+            return new Font(familyName, Font.PLAIN, DEFAULT_FONT_SIZE);
         }
 
         @Override
