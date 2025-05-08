@@ -16,8 +16,8 @@ public class FontChooser extends JDialog {
     private static final int DEFAULT_FONT_SIZE = 12;
 
     private final FontFamilyList familyList;
+    private final String previewText;
 
-    private String previewText;
     private Font selectedFont;
     private int fontSize = DEFAULT_FONT_SIZE;
 
@@ -27,7 +27,6 @@ public class FontChooser extends JDialog {
 
         String sizeText = "Tamaño del texto";
         previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
-        previewText += String.valueOf(System.lineSeparator()).repeat(5);
 
         // componentes
         familyList = new FontFamilyList();
@@ -35,6 +34,7 @@ public class FontChooser extends JDialog {
         JLabel fontSizeLabel = new JLabel(sizeText);
         JSpinner fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 36, 2));
         JTextArea previewArea = new JTextArea(previewText);
+        previewArea.append(String.valueOf(System.lineSeparator()).repeat(5));
         previewArea.setLineWrap(true);
         previewArea.setWrapStyleWord(true);
         JScrollPane previewScrollPane = new JScrollPane();
@@ -96,13 +96,17 @@ public class FontChooser extends JDialog {
         return loadingDialog;
     }
 
+    private void loadFonts(String previewValue) {
+        FontsLoader loader = new FontsLoader(familyList);
+        loader.setContentPreview(previewValue);
+        JDialog dialog = createLoadingDialog(this, loader);
+        loader.execute();
+        dialog.setVisible(true);
+    }
+
     public static void createAndShow(Window owner) {
         FontChooser fontChooserDialog = new FontChooser(owner);
-        FontsLoader fontsLoader = new FontsLoader(fontChooserDialog.familyList);
-        fontsLoader.setContentPreview(fontChooserDialog.previewText);
-        JDialog loadingDialog = fontChooserDialog.createLoadingDialog(owner, fontsLoader);
-        fontsLoader.execute();
-        loadingDialog.setVisible(true);
+        fontChooserDialog.loadFonts(fontChooserDialog.previewText);
         if (fontChooserDialog.familyList.getModel().getSize() == 0) {
             return;
         }
