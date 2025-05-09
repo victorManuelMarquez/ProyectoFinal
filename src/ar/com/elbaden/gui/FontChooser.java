@@ -9,10 +9,13 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class FontChooser extends JDialog {
 
@@ -255,6 +258,9 @@ public class FontChooser extends JDialog {
             firePropertyChange("indeterminate", true, false);
             DefaultListModel<Font> listModel = new DefaultListModel<>();
             int value = 0;
+            ArrayList<Font> fonts = new ArrayList<>();
+            String listFamily = fontFamilyList.getFont().getFamily();
+            Font listFont = null;
             for (String family : fontFamilyList.getNames()) {
                 if (isCancelled()) {
                     throw new CancellationException();
@@ -264,13 +270,32 @@ public class FontChooser extends JDialog {
                 }
                 value++;
                 Font font = createFont(family);
-                if (getSelectionFont() == null && family.equals(fontFamilyList.getFont().getFamily())) {
-                    setSelectionFont(font);
-                }
                 if (isSupported(font, getContentPreview())) {
+                    if (listFont == null && family.equals(listFamily)) {
+                        listFont = font;
+                    }
+                    fonts.add(font);
                     listModel.addElement(font);
                 }
                 setProgress(value * 100 / fontFamilyList.getNames().length);
+            }
+            Stream<Font> stream = fonts.parallelStream();
+            Font firstElement = listModel.getElementAt(0);
+            // sí se definió una fuente previa
+            if (getSelectionFont() != null) {
+                String family = getSelectionFont().getFamily();
+                // se busca la fuente establecida en la nueva colección
+                Optional<Font> result = stream.filter(f -> f.getFamily().equals(family)).findFirst();
+                // se establece la misma fuente o el primer elemento si está no existe, pudiendo ser null
+                setSelectionFont(result.orElse(firstElement));
+            } else if (listFont != null) {
+                // sí la fuente previa no está establecida se usará la fuente de la lista
+                // verificando de antemano si puede renderizar el texto establecido
+                setSelectionFont(listFont);
+            } else {
+                // sí no fue posible establecer una fuente con los criterios anteriores se establecerá
+                // el primer elemento o null si no hay tal
+                setSelectionFont(firstElement);
             }
             return listModel;
         }
