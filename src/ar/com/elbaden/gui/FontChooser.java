@@ -1,7 +1,10 @@
 package ar.com.elbaden.gui;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
@@ -85,6 +88,9 @@ public class FontChooser extends JDialog {
                 previewArea.setFont(selectedFont);
             }
         });
+
+        Updater updater = new Updater(_ -> loadFonts(previewArea.getText()));
+        previewArea.getDocument().addDocumentListener(updater);
     }
 
     private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
@@ -99,6 +105,7 @@ public class FontChooser extends JDialog {
     private void loadFonts(String previewValue) {
         FontsLoader loader = new FontsLoader(familyList);
         loader.setContentPreview(previewValue);
+        loader.setSelectionFont(selectedFont);
         JDialog dialog = createLoadingDialog(this, loader);
         loader.execute();
         dialog.setVisible(true);
@@ -113,6 +120,36 @@ public class FontChooser extends JDialog {
         fontChooserDialog.pack();
         fontChooserDialog.setLocationRelativeTo(owner);
         fontChooserDialog.setVisible(true);
+    }
+
+    static class Updater extends Timer implements DocumentListener {
+
+        public Updater(ActionListener listener) {
+            super(500, listener);
+            setRepeats(false);
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            reset();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            reset();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {}
+
+        private void reset() {
+            if (isRunning()) {
+                restart();
+            } else {
+                start();
+            }
+        }
+
     }
 
     static class FontFamilyList extends JList<Font> {
@@ -227,8 +264,8 @@ public class FontChooser extends JDialog {
                 }
                 value++;
                 Font font = createFont(family);
-                if (selectionFont == null && family.equals(fontFamilyList.getFont().getFamily())) {
-                    selectionFont = font;
+                if (getSelectionFont() == null && family.equals(fontFamilyList.getFont().getFamily())) {
+                    setSelectionFont(font);
                 }
                 if (isSupported(font, getContentPreview())) {
                     listModel.addElement(font);
@@ -242,7 +279,7 @@ public class FontChooser extends JDialog {
         protected void done() {
             try {
                 fontFamilyList.setModel(get());
-                fontFamilyList.setSelectedValue(selectionFont, true);
+                fontFamilyList.setSelectedValue(getSelectionFont(), true);
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
@@ -293,6 +330,14 @@ public class FontChooser extends JDialog {
 
         public void setContentPreview(String contentPreview) {
             this.contentPreview = contentPreview;
+        }
+
+        public Font getSelectionFont() {
+            return selectionFont;
+        }
+
+        public void setSelectionFont(Font selectionFont) {
+            this.selectionFont = selectionFont;
         }
 
     }
