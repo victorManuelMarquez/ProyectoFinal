@@ -44,6 +44,7 @@ public class FontChooser extends JDialog {
         previewArea.setLineWrap(true);
         previewArea.setWrapStyleWord(true);
         JScrollPane previewScrollPane = new JScrollPane();
+        JButton resetText = new JButton("Restablecer texto");
 
         // ajustes
         setModal(true);
@@ -74,6 +75,12 @@ public class FontChooser extends JDialog {
         gbc.gridy = row;
         gbc.weighty = 1.0;
         getContentPane().add(previewScrollPane, gbc);
+        row++;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridwidth = 1;
+        gbc.gridy = row;
+        gbc.weighty = .0;
+        getContentPane().add(resetText, gbc);
 
         // eventos
         familyList.addListSelectionListener(_ -> {
@@ -94,6 +101,8 @@ public class FontChooser extends JDialog {
 
         Updater updater = new Updater(_ -> loadFonts(previewArea.getText()));
         previewArea.getDocument().addDocumentListener(updater);
+
+        resetText.addActionListener(_ -> previewArea.setText(previewText));
     }
 
     private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
