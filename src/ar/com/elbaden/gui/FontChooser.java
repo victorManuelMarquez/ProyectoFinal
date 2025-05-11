@@ -39,6 +39,7 @@ public class FontChooser extends JDialog {
         JScrollPane fontFamilyScrollPane = new JScrollPane();
         JLabel fontSizeLabel = new JLabel(sizeText);
         JSpinner fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 36, 2));
+        fontSizeLabel.setLabelFor(fontSizeSpinner);
         JTextArea previewArea = new JTextArea(previewText);
         previewArea.append(String.valueOf(System.lineSeparator()).repeat(5));
         previewArea.setLineWrap(true);
