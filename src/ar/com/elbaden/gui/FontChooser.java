@@ -37,9 +37,8 @@ public class FontChooser extends JDialog {
         // componentes
         familyList = new FontFamilyList();
         JScrollPane fontFamilyScrollPane = new JScrollPane();
-        DefaultListModel<Font> historyModel = new DefaultListModel<>();
-        JList<Font> historyList = new JList<>(historyModel);
-        historyList.setCellRenderer(new FontCellRenderer(true));
+        FontModel historyModel = new FontModel();
+        FontList historyList = new FontList(historyModel);
         JScrollPane historyScrollPane = new JScrollPane();
         JLabel fontSizeLabel = new JLabel(sizeText);
         JSpinner fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 36, 2));
@@ -70,7 +69,7 @@ public class FontChooser extends JDialog {
         getContentPane().add(historyScrollPane, gbc);
         row++;
         gbc.fill = GridBagConstraints.NONE;
-        gbc.gridwidth = GridBagConstraints.RELATIVE;
+        gbc.gridwidth = 1;
         gbc.gridy = row;
         gbc.weighty = .0;
         getContentPane().add(fontSizeLabel, gbc);
@@ -108,12 +107,23 @@ public class FontChooser extends JDialog {
 
         Updater updater = new Updater(_ -> loadFonts(previewArea.getText()));
         previewArea.getDocument().addDocumentListener(updater);
+        PropertyChangeListener fontChangeListener = e -> {
+            Font previous = (Font) e.getOldValue();
+            historyModel.addElement(previous);
+        };
+        previewArea.addPropertyChangeListener("font", fontChangeListener);
 
         resetText.addActionListener(_ -> previewArea.setText(previewText));
 
-        previewArea.addPropertyChangeListener("font", e -> {
-            Font previous = (Font) e.getOldValue();
-            historyModel.addElement(previous);
+        historyList.addListSelectionListener(_ -> {
+            if (historyList.getSelectedValue() instanceof Font font) {
+                selectedFont = font;
+                fontSize = font.getSize();
+                previewArea.removePropertyChangeListener("font", fontChangeListener);
+                previewArea.setFont(selectedFont);
+                fontSizeSpinner.setValue(fontSize);
+                previewArea.addPropertyChangeListener("font", fontChangeListener);
+            }
         });
     }
 
@@ -176,14 +186,23 @@ public class FontChooser extends JDialog {
 
     }
 
-    static class FontFamilyList extends JList<Font> {
+    static class FontList extends JList<Font> {
 
-        private String[] names;
-
-        public FontFamilyList() {
+        public FontList(AbstractListModel<Font> model) {
+            super(model);
             setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             setCellRenderer(new FontCellRenderer());
         }
+
+        public FontList() {
+            this(new DefaultListModel<>());
+        }
+
+    }
+
+    static class FontFamilyList extends FontList {
+
+        private String[] names;
 
         public String[] getNames() {
             return names;
@@ -191,6 +210,64 @@ public class FontChooser extends JDialog {
 
         public void setNames(String[] names) {
             this.names = names;
+        }
+
+    }
+
+    static class FontModel extends DefaultListModel<Font> {
+
+        @Override
+        public boolean contains(Object elem) {
+            if (elem instanceof Font fontElement) {
+                String fontFamily = fontElement.getFamily();
+                int index = 0, foundIndex = 0;
+                boolean isPresent = false;
+                while (index < getSize() && !isPresent) {
+                    Object item = getElementAt(index);
+                    if (item instanceof Font font) {
+                        isPresent = font.getFamily().equals(fontFamily);
+                        foundIndex = index;
+                    }
+                    index++;
+                }
+                if (isPresent) {
+                    removeElementAt(foundIndex);
+                    return false;
+                }
+                return false;
+            } else {
+                return super.contains(elem);
+            }
+        }
+
+        @Override
+        public void addElement(Font element) {
+            if (element == null) {
+                return;
+            }
+            if (!contains(element)) {
+                super.addElement(element);
+            }
+        }
+
+        @Override
+        public void insertElementAt(Font element, int index) {
+            if (index < 0 || index >= getSize() || element == null) {
+                return;
+            }
+            if (!contains(element)) {
+                super.insertElementAt(element, index);
+            }
+        }
+
+        @Override
+        public void setElementAt(Font element, int index) {
+            if (index < 0 || index >= getSize() || element == null) {
+                return;
+            }
+            if (!contains(element)) {
+                super.setElementAt(element, index);
+            }
         }
 
     }
@@ -214,11 +291,15 @@ public class FontChooser extends JDialog {
             Component renderer = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             if (value instanceof Font font && renderer instanceof JLabel label) {
                 label.setText(font.getFamily());
-                if (previewFont) {
+                if (isPreviewFont()) {
                     label.setFont(font);
                 }
             }
             return renderer;
+        }
+
+        public boolean isPreviewFont() {
+            return previewFont;
         }
 
     }
