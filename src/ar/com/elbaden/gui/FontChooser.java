@@ -37,6 +37,10 @@ public class FontChooser extends JDialog {
         // componentes
         familyList = new FontFamilyList();
         JScrollPane fontFamilyScrollPane = new JScrollPane();
+        DefaultListModel<Font> historyModel = new DefaultListModel<>();
+        JList<Font> historyList = new JList<>(historyModel);
+        historyList.setCellRenderer(new FontCellRenderer(true));
+        JScrollPane historyScrollPane = new JScrollPane();
         JLabel fontSizeLabel = new JLabel(sizeText);
         JSpinner fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 36, 2));
         fontSizeLabel.setLabelFor(fontSizeSpinner);
@@ -60,8 +64,10 @@ public class FontChooser extends JDialog {
         gbc.weighty = 1.0;
         fontFamilyScrollPane.getViewport().setView(familyList);
         gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.gridwidth = 2;
         getContentPane().add(fontFamilyScrollPane, gbc);
+        historyScrollPane.getViewport().setView(historyList);
+        getContentPane().add(historyScrollPane, gbc);
         row++;
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridwidth = GridBagConstraints.RELATIVE;
@@ -104,6 +110,11 @@ public class FontChooser extends JDialog {
         previewArea.getDocument().addDocumentListener(updater);
 
         resetText.addActionListener(_ -> previewArea.setText(previewText));
+
+        previewArea.addPropertyChangeListener("font", e -> {
+            Font previous = (Font) e.getOldValue();
+            historyModel.addElement(previous);
+        });
     }
 
     private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
@@ -186,6 +197,16 @@ public class FontChooser extends JDialog {
 
     static class FontCellRenderer extends DefaultListCellRenderer {
 
+        private final boolean previewFont;
+
+        public FontCellRenderer(boolean previewFont) {
+            this.previewFont = previewFont;
+        }
+
+        public FontCellRenderer() {
+            this(false);
+        }
+
         @Override
         public Component getListCellRendererComponent(
                 JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus
@@ -193,6 +214,9 @@ public class FontChooser extends JDialog {
             Component renderer = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             if (value instanceof Font font && renderer instanceof JLabel label) {
                 label.setText(font.getFamily());
+                if (previewFont) {
+                    label.setFont(font);
+                }
             }
             return renderer;
         }
