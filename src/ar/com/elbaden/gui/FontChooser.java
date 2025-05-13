@@ -93,6 +93,7 @@ public class FontChooser extends JDialog {
             if (familyList.getSelectedValue() instanceof Font font) {
                 selectedFont = font.deriveFont((float) fontSize);
                 previewArea.setFont(selectedFont);
+                historyList.clearSelection();
             }
         });
 
@@ -120,6 +121,7 @@ public class FontChooser extends JDialog {
                 selectedFont = font;
                 fontSize = font.getSize();
                 previewArea.removePropertyChangeListener("font", fontChangeListener);
+                familyList.clearSelection();
                 previewArea.setFont(selectedFont);
                 fontSizeSpinner.setValue(fontSize);
                 previewArea.addPropertyChangeListener("font", fontChangeListener);
