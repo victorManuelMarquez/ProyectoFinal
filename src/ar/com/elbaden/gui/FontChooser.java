@@ -3,10 +3,16 @@ package ar.com.elbaden.gui;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -37,8 +43,7 @@ public class FontChooser extends JDialog {
         // componentes
         familyList = new FontFamilyList();
         JScrollPane fontFamilyScrollPane = new JScrollPane();
-        FontModel historyModel = new FontModel();
-        FontList historyList = new FontList(historyModel);
+        FontTable historyTable = new FontTable();
         JScrollPane historyScrollPane = new JScrollPane();
         JLabel fontSizeLabel = new JLabel(sizeText);
         JSpinner fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 36, 2));
@@ -65,12 +70,13 @@ public class FontChooser extends JDialog {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridwidth = 2;
         getContentPane().add(fontFamilyScrollPane, gbc);
-        historyScrollPane.getViewport().setView(historyList);
+        historyScrollPane.getViewport().setView(historyTable);
         getContentPane().add(historyScrollPane, gbc);
         row++;
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridwidth = 1;
         gbc.gridy = row;
+        gbc.weightx = .0;
         gbc.weighty = .0;
         getContentPane().add(fontSizeLabel, gbc);
         getContentPane().add(fontSizeSpinner, gbc);
@@ -79,12 +85,14 @@ public class FontChooser extends JDialog {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.gridy = row;
+        gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         getContentPane().add(previewScrollPane, gbc);
         row++;
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridwidth = 1;
         gbc.gridy = row;
+        gbc.weightx = .0;
         gbc.weighty = .0;
         getContentPane().add(resetText, gbc);
 
@@ -93,7 +101,6 @@ public class FontChooser extends JDialog {
             if (familyList.getSelectedValue() instanceof Font font) {
                 selectedFont = font.deriveFont((float) fontSize);
                 previewArea.setFont(selectedFont);
-                historyList.clearSelection();
             }
         });
 
@@ -108,25 +115,12 @@ public class FontChooser extends JDialog {
 
         Updater updater = new Updater(_ -> loadFonts(previewArea.getText()));
         previewArea.getDocument().addDocumentListener(updater);
-        PropertyChangeListener fontChangeListener = e -> {
-            Font previous = (Font) e.getOldValue();
-            historyModel.addElement(previous);
-        };
-        previewArea.addPropertyChangeListener("font", fontChangeListener);
+        previewArea.addPropertyChangeListener("font", fontChangeEvent -> {
+            Font previousFont = (Font) fontChangeEvent.getOldValue();
+            historyTable.addFont(previousFont);
+        });
 
         resetText.addActionListener(_ -> previewArea.setText(previewText));
-
-        historyList.addListSelectionListener(_ -> {
-            if (historyList.getSelectedValue() instanceof Font font) {
-                selectedFont = font;
-                fontSize = font.getSize();
-                previewArea.removePropertyChangeListener("font", fontChangeListener);
-                familyList.clearSelection();
-                previewArea.setFont(selectedFont);
-                fontSizeSpinner.setValue(fontSize);
-                previewArea.addPropertyChangeListener("font", fontChangeListener);
-            }
-        });
     }
 
     private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
@@ -216,64 +210,6 @@ public class FontChooser extends JDialog {
 
     }
 
-    static class FontModel extends DefaultListModel<Font> {
-
-        @Override
-        public boolean contains(Object elem) {
-            if (elem instanceof Font fontElement) {
-                String fontFamily = fontElement.getFamily();
-                int index = 0, foundIndex = 0;
-                boolean isPresent = false;
-                while (index < getSize() && !isPresent) {
-                    Object item = getElementAt(index);
-                    if (item instanceof Font font) {
-                        isPresent = font.getFamily().equals(fontFamily);
-                        foundIndex = index;
-                    }
-                    index++;
-                }
-                if (isPresent) {
-                    removeElementAt(foundIndex);
-                    return false;
-                }
-                return false;
-            } else {
-                return super.contains(elem);
-            }
-        }
-
-        @Override
-        public void addElement(Font element) {
-            if (element == null) {
-                return;
-            }
-            if (!contains(element)) {
-                super.addElement(element);
-            }
-        }
-
-        @Override
-        public void insertElementAt(Font element, int index) {
-            if (index < 0 || index >= getSize() || element == null) {
-                return;
-            }
-            if (!contains(element)) {
-                super.insertElementAt(element, index);
-            }
-        }
-
-        @Override
-        public void setElementAt(Font element, int index) {
-            if (index < 0 || index >= getSize() || element == null) {
-                return;
-            }
-            if (!contains(element)) {
-                super.setElementAt(element, index);
-            }
-        }
-
-    }
-
     static class FontCellRenderer extends DefaultListCellRenderer {
 
         private final boolean previewFont;
@@ -302,6 +238,121 @@ public class FontChooser extends JDialog {
 
         public boolean isPreviewFont() {
             return previewFont;
+        }
+
+    }
+
+    static class FontTable extends JTable {
+
+        private final FontTableModel tableModel;
+
+        public FontTable() {
+            tableModel = new FontTableModel();
+            setModel(tableModel);
+            calculateColumnHeaderWidth();
+            int defaultWidth = (getColumnCount() + 1) * 75;
+            setPreferredScrollableViewportSize(new Dimension(defaultWidth, 75));
+            getColumnModel().getColumn(0).setCellRenderer(new FontTableCellRenderer());
+        }
+
+        public Dimension calculateContentDimensions(Font font, String content, FontRenderContext renderContext) {
+            Rectangle2D bounds = font.getStringBounds(content, renderContext);
+            int width = (int) Math.ceil(bounds.getWidth());
+            int height = (int) Math.ceil(bounds.getHeight());
+            return new Dimension(width, height);
+        }
+
+        public void calculateColumnHeaderWidth() {
+            Font headerFont = getTableHeader().getFont();
+            FontRenderContext context = getTableHeader().getFontMetrics(headerFont).getFontRenderContext();
+            TableColumnModel tableColumnModel = getTableHeader().getColumnModel();
+            for (int col = 0; col < getColumnCount(); col++) {
+                String columnName = getColumnName(col);
+                Dimension dimension = calculateContentDimensions(headerFont, columnName, context);
+                TableColumn column = tableColumnModel.getColumn(col);
+                column.setMinWidth(dimension.width);
+            }
+        }
+
+        public void addFont(Font value) {
+            tableModel.addElement(value);
+        }
+
+    }
+
+    static class FontTableCellRenderer extends DefaultTableCellRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column
+        ) {
+            Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            JLabel label = (JLabel) component;
+            if (value instanceof Font font && table instanceof FontTable fontTable) {
+                label.setText(font.getFamily());
+                label.setFont(font);
+                FontRenderContext context = label.getFontMetrics(font).getFontRenderContext();
+                Dimension dimension = fontTable.calculateContentDimensions(font, getText(), context);
+                fontTable.setRowHeight(row, dimension.height);
+            }
+            return label;
+        }
+
+    }
+
+    static class FontTableModel extends AbstractTableModel {
+
+        private final Class<?>[] columnClasses;
+        private final ArrayList<String> columnNames;
+        private final ArrayList<Font> dataList;
+
+        public FontTableModel() {
+            columnClasses = new Class[] {
+                    Font.class,
+                    Integer.class
+            };
+            columnNames = new ArrayList<>();
+            columnNames.add("Fuente");
+            columnNames.add("Tamaño");
+            dataList = new ArrayList<>();
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return columnNames.get(column);
+        }
+
+        @Override
+        public Class<?> getColumnClass(int columnIndex) {
+            return columnClasses[columnIndex];
+        }
+
+        @Override
+        public int getRowCount() {
+            return dataList.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columnNames.size();
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            if (getColumnClass(columnIndex) == Font.class) {
+                return dataList.get(rowIndex);
+            } else if (getColumnClass(columnIndex) == Integer.class) {
+                return dataList.get(rowIndex).getSize();
+            } else {
+                return null;
+            }
+        }
+
+        public void addElement(Font font) {
+            if (!dataList.contains(font)) {
+                dataList.add(font);
+                fireTableDataChanged();
+            }
         }
 
     }
