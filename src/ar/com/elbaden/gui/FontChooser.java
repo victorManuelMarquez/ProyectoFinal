@@ -3,10 +3,7 @@ package ar.com.elbaden.gui;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -48,6 +45,7 @@ public class FontChooser extends JDialog {
         JLabel fontSizeLabel = new JLabel(sizeText);
         JSpinner fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 36, 2));
         fontSizeLabel.setLabelFor(fontSizeSpinner);
+        JButton clearHistory = new JButton("Limpiar historial");
         JTextArea previewArea = new JTextArea(previewText);
         previewArea.append(String.valueOf(System.lineSeparator()).repeat(5));
         previewArea.setLineWrap(true);
@@ -80,6 +78,7 @@ public class FontChooser extends JDialog {
         gbc.weighty = .0;
         getContentPane().add(fontSizeLabel, gbc);
         getContentPane().add(fontSizeSpinner, gbc);
+        getContentPane().add(clearHistory, gbc);
         row++;
         previewScrollPane.getViewport().setView(previewArea);
         gbc.fill = GridBagConstraints.BOTH;
@@ -112,6 +111,8 @@ public class FontChooser extends JDialog {
                 previewArea.setFont(selectedFont);
             }
         });
+
+        clearHistory.addActionListener(_ -> historyTable.clear());
 
         Updater updater = new Updater(_ -> loadFonts(previewArea.getText()));
         previewArea.getDocument().addDocumentListener(updater);
@@ -249,6 +250,7 @@ public class FontChooser extends JDialog {
         public FontTable() {
             tableModel = new FontTableModel();
             setModel(tableModel);
+            setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             calculateColumnHeaderWidth();
             int defaultWidth = (getColumnCount() + 1) * 75;
             setPreferredScrollableViewportSize(new Dimension(defaultWidth, 75));
@@ -278,6 +280,11 @@ public class FontChooser extends JDialog {
             tableModel.addElement(value);
         }
 
+        public void clear() {
+            tableModel.removeAll();
+            calculateColumnHeaderWidth();
+        }
+
     }
 
     static class FontTableCellRenderer extends DefaultTableCellRenderer {
@@ -293,7 +300,12 @@ public class FontChooser extends JDialog {
                 label.setFont(font);
                 FontRenderContext context = label.getFontMetrics(font).getFontRenderContext();
                 Dimension dimension = fontTable.calculateContentDimensions(font, getText(), context);
-                fontTable.setRowHeight(row, dimension.height);
+                JTableHeader header = fontTable.getTableHeader();
+                TableColumnModel columnModel = header.getColumnModel();
+                TableColumn fontColumn = columnModel.getColumn(0);
+                int idealWidth = Math.max(fontColumn.getPreferredWidth(), dimension.width);
+                fontColumn.setPreferredWidth(idealWidth);
+                fontTable.setRowHeight(row, Math.max(dimension.height, fontTable.getRowHeight()));
             }
             return label;
         }
@@ -350,9 +362,18 @@ public class FontChooser extends JDialog {
 
         public void addElement(Font font) {
             if (!dataList.contains(font)) {
+                String family = font.getFamily();
+                Optional<Font> matchedFont;
+                matchedFont = dataList.stream().filter(f -> f.getFamily().equals(family)).findFirst();
+                matchedFont.ifPresent(dataList::remove);
                 dataList.add(font);
                 fireTableDataChanged();
             }
+        }
+
+        public void removeAll() {
+            dataList.clear();
+            fireTableDataChanged();
         }
 
     }
