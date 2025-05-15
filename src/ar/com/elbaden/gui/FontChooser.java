@@ -302,7 +302,7 @@ public class FontChooser extends JDialog {
                 Dimension dimension = fontTable.calculateContentDimensions(font, getText(), context);
                 JTableHeader header = fontTable.getTableHeader();
                 TableColumnModel columnModel = header.getColumnModel();
-                TableColumn fontColumn = columnModel.getColumn(0);
+                TableColumn fontColumn = columnModel.getColumn(column);
                 int idealWidth = Math.max(fontColumn.getPreferredWidth(), dimension.width);
                 fontColumn.setPreferredWidth(idealWidth);
                 fontTable.setRowHeight(row, Math.max(dimension.height, fontTable.getRowHeight()));
