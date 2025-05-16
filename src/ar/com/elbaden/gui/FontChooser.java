@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui;
 
 import javax.swing.*;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.*;
@@ -98,17 +99,43 @@ public class FontChooser extends JDialog {
         // eventos
         familyList.addListSelectionListener(_ -> {
             if (familyList.getSelectedValue() instanceof Font font) {
+                historyTable.getSelectionModel().clearSelection();
                 selectedFont = font.deriveFont((float) fontSize);
                 previewArea.setFont(selectedFont);
             }
         });
 
-        fontSizeSpinner.addChangeListener(_ -> {
+        ChangeListener sizeChange = _ -> {
             if (fontSizeSpinner.getValue() instanceof Integer value) {
                 fontSize = value;
                 Font oldFont = previewArea.getFont();
                 selectedFont = oldFont.deriveFont((float) fontSize);
                 previewArea.setFont(selectedFont);
+            }
+        };
+        fontSizeSpinner.addChangeListener(sizeChange);
+
+        PropertyChangeListener previewFontChange = fontChangeEvent -> {
+            Font previousFont = (Font) fontChangeEvent.getOldValue();
+            historyTable.addFont(previousFont);
+        };
+
+        historyTable.getSelectionModel().addListSelectionListener(_ -> {
+            int selectedRow = historyTable.getSelectedRow();
+            int selectedColumn = historyTable.getSelectedColumn();
+            if (historyTable.getValueAt(selectedRow, selectedColumn) instanceof Font font) {
+                // deshabilito los eventos de cambio de fuente
+                previewArea.removePropertyChangeListener("font", previewFontChange);
+                fontSizeSpinner.removeChangeListener(sizeChange);
+                // establezco un nuevo escenario
+                familyList.clearSelection();
+                selectedFont = font;
+                fontSize = font.getSize();
+                previewArea.setFont(font);
+                fontSizeSpinner.setValue(fontSize);
+                // restauro los eventos
+                fontSizeSpinner.addChangeListener(sizeChange);
+                previewArea.addPropertyChangeListener("font", previewFontChange);
             }
         });
 
@@ -116,10 +143,7 @@ public class FontChooser extends JDialog {
 
         Updater updater = new Updater(_ -> loadFonts(previewArea.getText()));
         previewArea.getDocument().addDocumentListener(updater);
-        previewArea.addPropertyChangeListener("font", fontChangeEvent -> {
-            Font previousFont = (Font) fontChangeEvent.getOldValue();
-            historyTable.addFont(previousFont);
-        });
+        previewArea.addPropertyChangeListener("font", previewFontChange);
 
         resetText.addActionListener(_ -> previewArea.setText(previewText));
     }
@@ -351,6 +375,15 @@ public class FontChooser extends JDialog {
 
         @Override
         public Object getValueAt(int rowIndex, int columnIndex) {
+            if (dataList.isEmpty()) {
+                return null;
+            }
+            if (rowIndex < 0 || rowIndex >= dataList.size()) {
+                return null;
+            }
+            if (columnIndex < 0 || columnIndex >= columnNames.size()) {
+                return null;
+            }
             if (getColumnClass(columnIndex) == Font.class) {
                 return dataList.get(rowIndex);
             } else if (getColumnClass(columnIndex) == Integer.class) {
