@@ -7,6 +7,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.font.FontRenderContext;
@@ -34,7 +35,6 @@ public class FontChooser extends JDialog {
     private FontChooser(Window owner) {
         super(owner);
 
-
         String sizeText = "Tamaño del texto";
         previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
 
@@ -61,6 +61,7 @@ public class FontChooser extends JDialog {
         previewArea.setWrapStyleWord(true);
         JScrollPane previewScrollPane = new JScrollPane();
         JButton resetTextBtn = new JButton("Restablecer texto");
+        JButton cancelBtn = new JButton("Cancelar");
 
         // ajustes
         setModal(true);
@@ -102,9 +103,19 @@ public class FontChooser extends JDialog {
         gbc.weighty = .0;
         optionsPanel.add(resetTextBtn);
         optionsPanel.add(Box.createHorizontalGlue());
+        optionsPanel.add(cancelBtn);
         getContentPane().add(optionsPanel, gbc);
 
         // eventos
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                Dimension previewScrollableSize = previewScrollPane.getSize();
+                previewScrollPane.setMinimumSize(previewScrollableSize);
+                previewScrollPane.setPreferredSize(previewScrollableSize);
+            }
+        });
+
         familyList.addListSelectionListener(_ -> {
             if (familyList.getSelectedValue() instanceof Font font) {
                 historyTable.getSelectionModel().clearSelection();
@@ -154,6 +165,8 @@ public class FontChooser extends JDialog {
         previewArea.addPropertyChangeListener("font", previewFontChange);
 
         resetTextBtn.addActionListener(_ -> previewArea.setText(previewText));
+
+        cancelBtn.addActionListener(_ -> dispose());
     }
 
     private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
@@ -284,8 +297,7 @@ public class FontChooser extends JDialog {
             setModel(tableModel);
             setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             calculateColumnHeaderWidth();
-            int defaultWidth = (getColumnCount() + 1) * 75;
-            setPreferredScrollableViewportSize(new Dimension(defaultWidth, 75));
+            setPreferredScrollableViewportSize(new Dimension(75, 75));
             getColumnModel().getColumn(0).setCellRenderer(new FontTableCellRenderer());
         }
 
