@@ -39,6 +39,14 @@ public class FontChooser extends JDialog {
         previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
 
         // componentes
+        JTabbedPane tabbedPane = new JTabbedPane();
+        JPanel mainTab = new JPanel(new BorderLayout());
+        JPanel mainTabOptions = new JPanel();
+        JPanel secondaryTab = new JPanel(new BorderLayout());
+        JPanel secondaryTabOptions = new JPanel();
+        JPanel optionsPanel = new JPanel(null);
+        BoxLayout optionsBoxLayout = new BoxLayout(optionsPanel, BoxLayout.LINE_AXIS);
+        optionsPanel.setLayout(optionsBoxLayout);
         familyList = new FontFamilyList();
         JScrollPane fontFamilyScrollPane = new JScrollPane();
         FontTable historyTable = new FontTable();
@@ -46,13 +54,13 @@ public class FontChooser extends JDialog {
         JLabel fontSizeLabel = new JLabel(sizeText);
         JSpinner fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 36, 2));
         fontSizeLabel.setLabelFor(fontSizeSpinner);
-        JButton clearHistory = new JButton("Limpiar historial");
+        JButton clearHistoryBtn = new JButton("Limpiar historial");
         JTextArea previewArea = new JTextArea(previewText);
         previewArea.append(String.valueOf(System.lineSeparator()).repeat(5));
         previewArea.setLineWrap(true);
         previewArea.setWrapStyleWord(true);
         JScrollPane previewScrollPane = new JScrollPane();
-        JButton resetText = new JButton("Restablecer texto");
+        JButton resetTextBtn = new JButton("Restablecer texto");
 
         // ajustes
         setModal(true);
@@ -61,40 +69,40 @@ public class FontChooser extends JDialog {
         // instalando componentes
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        int row = 0;
-        gbc.insets = new Insets(5, 5, 4, 4);
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
+
         fontFamilyScrollPane.getViewport().setView(familyList);
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridwidth = 2;
-        getContentPane().add(fontFamilyScrollPane, gbc);
+        mainTab.add(fontFamilyScrollPane);
+        mainTabOptions.add(fontSizeLabel);
+        mainTabOptions.add(fontSizeSpinner);
+        mainTab.add(mainTabOptions, BorderLayout.SOUTH);
+        tabbedPane.addTab("Fuentes", mainTab);
+
         historyScrollPane.getViewport().setView(historyTable);
-        getContentPane().add(historyScrollPane, gbc);
-        row++;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.gridwidth = 1;
-        gbc.gridy = row;
-        gbc.weightx = .0;
-        gbc.weighty = .0;
-        getContentPane().add(fontSizeLabel, gbc);
-        getContentPane().add(fontSizeSpinner, gbc);
-        getContentPane().add(clearHistory, gbc);
-        row++;
-        previewScrollPane.getViewport().setView(previewArea);
+        secondaryTab.add(historyScrollPane);
+        secondaryTabOptions.add(clearHistoryBtn);
+        secondaryTab.add(secondaryTabOptions, BorderLayout.SOUTH);
+        tabbedPane.addTab("Historial", secondaryTab);
+
+        int row = 0;
         gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.gridy = row;
+        gbc.insets = new Insets(4, 4, 3, 3);
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
-        getContentPane().add(previewScrollPane, gbc);
+        getContentPane().add(tabbedPane, gbc);
+
         row++;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.gridwidth = 1;
         gbc.gridy = row;
-        gbc.weightx = .0;
+        previewScrollPane.getViewport().setView(previewArea);
+        getContentPane().add(previewScrollPane, gbc);
+
+        row++;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridy = row;
         gbc.weighty = .0;
-        getContentPane().add(resetText, gbc);
+        optionsPanel.add(resetTextBtn);
+        optionsPanel.add(Box.createHorizontalGlue());
+        getContentPane().add(optionsPanel, gbc);
 
         // eventos
         familyList.addListSelectionListener(_ -> {
@@ -139,13 +147,13 @@ public class FontChooser extends JDialog {
             }
         });
 
-        clearHistory.addActionListener(_ -> historyTable.clear());
+        clearHistoryBtn.addActionListener(_ -> historyTable.clear());
 
         Updater updater = new Updater(_ -> loadFonts(previewArea.getText()));
         previewArea.getDocument().addDocumentListener(updater);
         previewArea.addPropertyChangeListener("font", previewFontChange);
 
-        resetText.addActionListener(_ -> previewArea.setText(previewText));
+        resetTextBtn.addActionListener(_ -> previewArea.setText(previewText));
     }
 
     private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
