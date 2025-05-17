@@ -22,6 +22,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static javax.swing.GroupLayout.Alignment;
+import static javax.swing.GroupLayout.DEFAULT_SIZE;
+import static javax.swing.GroupLayout.PREFERRED_SIZE;
+
 public class FontChooser extends JDialog {
 
     private static final int DEFAULT_FONT_SIZE = 12;
@@ -40,13 +44,8 @@ public class FontChooser extends JDialog {
 
         // componentes
         JTabbedPane tabbedPane = new JTabbedPane();
-        JPanel mainTab = new JPanel(new BorderLayout());
-        JPanel mainTabOptions = new JPanel();
-        JPanel secondaryTab = new JPanel(new BorderLayout());
-        JPanel secondaryTabOptions = new JPanel();
-        JPanel optionsPanel = new JPanel(null);
-        BoxLayout optionsBoxLayout = new BoxLayout(optionsPanel, BoxLayout.LINE_AXIS);
-        optionsPanel.setLayout(optionsBoxLayout);
+        JPanel fontsTab = new JPanel();
+        JPanel historyTab = new JPanel(new BorderLayout());
         familyList = new FontFamilyList();
         JScrollPane fontFamilyScrollPane = new JScrollPane();
         FontTable historyTable = new FontTable();
@@ -60,7 +59,7 @@ public class FontChooser extends JDialog {
         previewArea.setLineWrap(true);
         previewArea.setWrapStyleWord(true);
         JScrollPane previewScrollPane = new JScrollPane();
-        JButton resetTextBtn = new JButton("Restablecer texto");
+        JButton resetTextBtn = new JButton("Restaurar texto");
         JButton cancelBtn = new JButton("Cancelar");
 
         // ajustes
@@ -68,51 +67,77 @@ public class FontChooser extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         // instalando componentes
-        setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
+        GroupLayout mainLayout = new GroupLayout(getContentPane());
+        setLayout(mainLayout);
+
+        mainLayout.setAutoCreateGaps(true);
+        mainLayout.setAutoCreateContainerGaps(true);
 
         fontFamilyScrollPane.getViewport().setView(familyList);
-        mainTab.add(fontFamilyScrollPane);
-        mainTabOptions.add(fontSizeLabel);
-        mainTabOptions.add(fontSizeSpinner);
-        mainTab.add(mainTabOptions, BorderLayout.SOUTH);
-        tabbedPane.addTab("Fuentes", mainTab);
+        GroupLayout fontsTabLayout = new GroupLayout(fontsTab);
+        fontsTab.setLayout(fontsTabLayout);
+        fontsTabLayout.setAutoCreateContainerGaps(true);
+        fontsTabLayout.setAutoCreateGaps(true);
+        fontsTabLayout.setHorizontalGroup(fontsTabLayout.createParallelGroup(Alignment.LEADING)
+                .addComponent(fontFamilyScrollPane)
+                .addGroup(fontsTabLayout.createSequentialGroup()
+                        .addComponent(fontSizeLabel)
+                        .addGroup(fontsTabLayout.createParallelGroup(Alignment.LEADING)
+                            .addComponent(fontSizeSpinner, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)))
+        );
+        fontsTabLayout.setVerticalGroup(fontsTabLayout.createSequentialGroup()
+                .addComponent(fontFamilyScrollPane)
+                .addGroup(fontsTabLayout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(fontSizeLabel)
+                        .addComponent(fontSizeSpinner))
+        );
+        tabbedPane.addTab("Fuentes", fontsTab);
 
         historyScrollPane.getViewport().setView(historyTable);
-        secondaryTab.add(historyScrollPane);
-        secondaryTabOptions.add(clearHistoryBtn);
-        secondaryTab.add(secondaryTabOptions, BorderLayout.SOUTH);
-        tabbedPane.addTab("Historial", secondaryTab);
+        GroupLayout historyTabLayout = new GroupLayout(historyTab);
+        historyTab.setLayout(historyTabLayout);
+        historyTabLayout.setAutoCreateContainerGaps(true);
+        historyTabLayout.setAutoCreateGaps(true);
+        historyTabLayout.setHorizontalGroup(historyTabLayout.createParallelGroup(Alignment.LEADING)
+                .addComponent(historyScrollPane)
+                .addComponent(clearHistoryBtn)
+        );
+        historyTabLayout.setVerticalGroup(historyTabLayout.createSequentialGroup()
+                .addComponent(historyScrollPane)
+                .addComponent(clearHistoryBtn)
+        );
+        tabbedPane.addTab("Historial", historyTab);
 
-        int row = 0;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridy = row;
-        gbc.insets = new Insets(4, 4, 3, 3);
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        getContentPane().add(tabbedPane, gbc);
-
-        row++;
-        gbc.gridy = row;
         previewScrollPane.getViewport().setView(previewArea);
-        getContentPane().add(previewScrollPane, gbc);
 
-        row++;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridy = row;
-        gbc.weighty = .0;
-        optionsPanel.add(resetTextBtn);
-        optionsPanel.add(Box.createHorizontalGlue());
-        optionsPanel.add(cancelBtn);
-        getContentPane().add(optionsPanel, gbc);
+        mainLayout.setHorizontalGroup(mainLayout.createParallelGroup(Alignment.LEADING)
+                .addComponent(tabbedPane)
+                .addComponent(previewScrollPane)
+                .addGroup(mainLayout.createSequentialGroup()
+                        .addComponent(resetTextBtn)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(cancelBtn))
+        );
+
+        mainLayout.setVerticalGroup(mainLayout.createSequentialGroup()
+                .addComponent(tabbedPane)
+                .addComponent(previewScrollPane)
+                .addGroup(mainLayout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(resetTextBtn)
+                        .addComponent(cancelBtn))
+        );
 
         // eventos
+        Updater fontsUpdater = new Updater(_ -> loadFonts(previewArea.getText()));
+
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
                 Dimension previewScrollableSize = previewScrollPane.getSize();
-                previewScrollPane.setMinimumSize(previewScrollableSize);
                 previewScrollPane.setPreferredSize(previewScrollableSize);
+                previewArea.getDocument().removeDocumentListener(fontsUpdater);
+                previewArea.setText(previewText);
+                previewArea.getDocument().addDocumentListener(fontsUpdater);
             }
         });
 
@@ -160,8 +185,7 @@ public class FontChooser extends JDialog {
 
         clearHistoryBtn.addActionListener(_ -> historyTable.clear());
 
-        Updater updater = new Updater(_ -> loadFonts(previewArea.getText()));
-        previewArea.getDocument().addDocumentListener(updater);
+        previewArea.getDocument().addDocumentListener(fontsUpdater);
         previewArea.addPropertyChangeListener("font", previewFontChange);
 
         resetTextBtn.addActionListener(_ -> previewArea.setText(previewText));
