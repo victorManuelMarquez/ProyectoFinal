@@ -82,8 +82,7 @@ public class FontChooser extends JDialog {
                 .addComponent(fontFamilyScrollPane)
                 .addGroup(fontsTabLayout.createSequentialGroup()
                         .addComponent(fontSizeLabel)
-                        .addGroup(fontsTabLayout.createParallelGroup(Alignment.LEADING)
-                            .addComponent(fontSizeSpinner, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)))
+                        .addComponent(fontSizeSpinner, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
         );
         fontsTabLayout.setVerticalGroup(fontsTabLayout.createSequentialGroup()
                 .addComponent(fontFamilyScrollPane)
@@ -269,6 +268,11 @@ public class FontChooser extends JDialog {
     static class FontFamilyList extends FontList {
 
         private String[] names;
+
+        @Override
+        public int getVisibleRowCount() {
+            return (int) Math.ceil(super.getVisibleRowCount() * 1.5);
+        }
 
         public String[] getNames() {
             return names;
