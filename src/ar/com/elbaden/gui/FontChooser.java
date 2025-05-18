@@ -1,15 +1,11 @@
 package ar.com.elbaden.gui;
 
 import javax.swing.*;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
@@ -22,9 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static javax.swing.GroupLayout.Alignment;
-import static javax.swing.GroupLayout.DEFAULT_SIZE;
-import static javax.swing.GroupLayout.PREFERRED_SIZE;
+import static javax.swing.GroupLayout.*;
 
 public class FontChooser extends JDialog {
 
@@ -39,6 +33,8 @@ public class FontChooser extends JDialog {
     private FontChooser(Window owner) {
         super(owner);
 
+        // variables
+        final Integer[] sizes = new Integer[] {8, 10, 11, 12, 14, 16, 18, 20, 21, 22, 24, 26, 28, 32, 34, 36, 40};
         String sizeText = "Tamaño del texto";
         previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
 
@@ -51,8 +47,9 @@ public class FontChooser extends JDialog {
         FontTable historyTable = new FontTable();
         JScrollPane historyScrollPane = new JScrollPane();
         JLabel fontSizeLabel = new JLabel(sizeText);
-        JSpinner fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 36, 2));
-        fontSizeLabel.setLabelFor(fontSizeSpinner);
+        JComboBox<Integer> fontSizeCombo = new JComboBox<>(sizes);
+        fontSizeCombo.setSelectedItem(fontSize);
+        fontSizeLabel.setLabelFor(fontSizeCombo);
         JButton clearHistoryBtn = new JButton("Limpiar historial");
         JTextArea previewArea = new JTextArea(previewText);
         previewArea.append(String.valueOf(System.lineSeparator()).repeat(5));
@@ -82,13 +79,13 @@ public class FontChooser extends JDialog {
                 .addComponent(fontFamilyScrollPane)
                 .addGroup(fontsTabLayout.createSequentialGroup()
                         .addComponent(fontSizeLabel)
-                        .addComponent(fontSizeSpinner, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
+                        .addComponent(fontSizeCombo, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
         );
         fontsTabLayout.setVerticalGroup(fontsTabLayout.createSequentialGroup()
                 .addComponent(fontFamilyScrollPane)
                 .addGroup(fontsTabLayout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(fontSizeLabel)
-                        .addComponent(fontSizeSpinner))
+                        .addComponent(fontSizeCombo))
         );
         tabbedPane.addTab("Fuentes", fontsTab);
 
@@ -148,15 +145,15 @@ public class FontChooser extends JDialog {
             }
         });
 
-        ChangeListener sizeChange = _ -> {
-            if (fontSizeSpinner.getValue() instanceof Integer value) {
+        ItemListener sizeSelection = selectedItem -> {
+            if (selectedItem.getItem() instanceof Integer value) {
                 fontSize = value;
                 Font oldFont = previewArea.getFont();
                 selectedFont = oldFont.deriveFont((float) fontSize);
                 previewArea.setFont(selectedFont);
             }
         };
-        fontSizeSpinner.addChangeListener(sizeChange);
+        fontSizeCombo.addItemListener(sizeSelection);
 
         PropertyChangeListener previewFontChange = fontChangeEvent -> {
             Font previousFont = (Font) fontChangeEvent.getOldValue();
@@ -169,15 +166,15 @@ public class FontChooser extends JDialog {
             if (historyTable.getValueAt(selectedRow, selectedColumn) instanceof Font font) {
                 // deshabilito los eventos de cambio de fuente
                 previewArea.removePropertyChangeListener("font", previewFontChange);
-                fontSizeSpinner.removeChangeListener(sizeChange);
+                fontSizeCombo.removeItemListener(sizeSelection);
                 // establezco un nuevo escenario
                 familyList.clearSelection();
                 selectedFont = font;
                 fontSize = font.getSize();
                 previewArea.setFont(font);
-                fontSizeSpinner.setValue(fontSize);
+                fontSizeCombo.setSelectedItem(fontSize);
                 // restauro los eventos
-                fontSizeSpinner.addChangeListener(sizeChange);
+                fontSizeCombo.addItemListener(sizeSelection);
                 previewArea.addPropertyChangeListener("font", previewFontChange);
             }
         });
