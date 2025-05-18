@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static javax.swing.GroupLayout.*;
+import static javax.swing.LayoutStyle.*;
 
 public class FontChooser extends JDialog {
 
@@ -34,7 +35,10 @@ public class FontChooser extends JDialog {
         super(owner);
 
         // variables
-        final Integer[] sizes = new Integer[] {8, 10, 11, 12, 14, 16, 18, 20, 21, 22, 24, 26, 28, 32, 34, 36, 40};
+        final Integer[] sizes = new Integer[] {
+                8, 10, 11, fontSize, 14, 16, 18, 20, 21, 22, 24, 26, 28, 32, 34, 36, 40
+        };
+        final int minCache = 8;
         String sizeText = "Tamaño del texto";
         previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
 
@@ -45,11 +49,15 @@ public class FontChooser extends JDialog {
         familyList = new FontFamilyList();
         JScrollPane fontFamilyScrollPane = new JScrollPane();
         FontTable historyTable = new FontTable();
+        historyTable.setLimitSize(minCache);
         JScrollPane historyScrollPane = new JScrollPane();
         JLabel fontSizeLabel = new JLabel(sizeText);
         JComboBox<Integer> fontSizeCombo = new JComboBox<>(sizes);
         fontSizeCombo.setSelectedItem(fontSize);
         fontSizeLabel.setLabelFor(fontSizeCombo);
+        JLabel historyCacheLabel = new JLabel("Tamaño de la caché");
+        SpinnerNumberModel cacheModel = new SpinnerNumberModel(minCache, minCache, minCache * 4, minCache);
+        JSpinner historyCacheSpinner = new JSpinner(cacheModel);
         JButton clearHistoryBtn = new JButton("Limpiar historial");
         JTextArea previewArea = new JTextArea(previewText);
         previewArea.append(String.valueOf(System.lineSeparator()).repeat(5));
@@ -96,11 +104,18 @@ public class FontChooser extends JDialog {
         historyTabLayout.setAutoCreateGaps(true);
         historyTabLayout.setHorizontalGroup(historyTabLayout.createParallelGroup(Alignment.LEADING)
                 .addComponent(historyScrollPane)
-                .addComponent(clearHistoryBtn)
+                .addGroup(historyTabLayout.createSequentialGroup()
+                        .addComponent(historyCacheLabel)
+                        .addComponent(historyCacheSpinner, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+                        .addPreferredGap(ComponentPlacement.UNRELATED, FontTable.DEFAULT_COLUMN_SIZE, Short.MAX_VALUE)
+                        .addComponent(clearHistoryBtn))
         );
         historyTabLayout.setVerticalGroup(historyTabLayout.createSequentialGroup()
                 .addComponent(historyScrollPane)
-                .addComponent(clearHistoryBtn)
+                .addGroup(historyTabLayout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(historyCacheLabel)
+                        .addComponent(historyCacheSpinner)
+                        .addComponent(clearHistoryBtn))
         );
         tabbedPane.addTab("Historial", historyTab);
 
@@ -111,7 +126,7 @@ public class FontChooser extends JDialog {
                 .addComponent(previewScrollPane)
                 .addGroup(mainLayout.createSequentialGroup()
                         .addComponent(resetTextBtn)
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(ComponentPlacement.RELATED, DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(cancelBtn))
         );
 
@@ -176,6 +191,12 @@ public class FontChooser extends JDialog {
                 // restauro los eventos
                 fontSizeCombo.addItemListener(sizeSelection);
                 previewArea.addPropertyChangeListener("font", previewFontChange);
+            }
+        });
+
+        historyCacheSpinner.addChangeListener(_ -> {
+            if (historyCacheSpinner.getValue() instanceof Integer cacheSize) {
+                historyTable.setLimitSize(cacheSize);
             }
         });
 
@@ -266,11 +287,6 @@ public class FontChooser extends JDialog {
 
         private String[] names;
 
-        @Override
-        public int getVisibleRowCount() {
-            return (int) Math.ceil(super.getVisibleRowCount() * 1.5);
-        }
-
         public String[] getNames() {
             return names;
         }
@@ -315,15 +331,19 @@ public class FontChooser extends JDialog {
 
     static class FontTable extends JTable {
 
+        public static final int DEFAULT_COLUMN_SIZE = 75;
+
         private final FontTableModel tableModel;
 
         public FontTable() {
             tableModel = new FontTableModel();
             setModel(tableModel);
-            setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             calculateColumnHeaderWidth();
-            setPreferredScrollableViewportSize(new Dimension(75, 75));
+            setPreferredScrollableViewportSize(new Dimension(DEFAULT_COLUMN_SIZE, DEFAULT_COLUMN_SIZE));
             getColumnModel().getColumn(0).setCellRenderer(new FontTableCellRenderer());
+            DefaultTableCellRenderer centeredCellRender = new DefaultTableCellRenderer();
+            centeredCellRender.setHorizontalAlignment(SwingConstants.CENTER);
+            getColumnModel().getColumn(1).setCellRenderer(centeredCellRender);
         }
 
         public Dimension calculateContentDimensions(Font font, String content, FontRenderContext renderContext) {
@@ -354,6 +374,10 @@ public class FontChooser extends JDialog {
             calculateColumnHeaderWidth();
         }
 
+        public void setLimitSize(int size) {
+            tableModel.setLimitSize(size);
+        }
+
     }
 
     static class FontTableCellRenderer extends DefaultTableCellRenderer {
@@ -363,11 +387,10 @@ public class FontChooser extends JDialog {
                 JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column
         ) {
             Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            JLabel label = (JLabel) component;
             if (value instanceof Font font && table instanceof FontTable fontTable) {
-                label.setText(font.getFamily());
-                label.setFont(font);
-                FontRenderContext context = label.getFontMetrics(font).getFontRenderContext();
+                setText(font.getFamily());
+                setFont(font);
+                FontRenderContext context = getFontMetrics(font).getFontRenderContext();
                 Dimension dimension = fontTable.calculateContentDimensions(font, getText(), context);
                 JTableHeader header = fontTable.getTableHeader();
                 TableColumnModel columnModel = header.getColumnModel();
@@ -376,7 +399,7 @@ public class FontChooser extends JDialog {
                 fontColumn.setPreferredWidth(idealWidth);
                 fontTable.setRowHeight(row, Math.max(dimension.height, fontTable.getRowHeight()));
             }
-            return label;
+            return component;
         }
 
     }
@@ -386,6 +409,7 @@ public class FontChooser extends JDialog {
         private final Class<?>[] columnClasses;
         private final ArrayList<String> columnNames;
         private final ArrayList<Font> dataList;
+        private int limitSize;
 
         public FontTableModel() {
             columnClasses = new Class[] {
@@ -396,6 +420,7 @@ public class FontChooser extends JDialog {
             columnNames.add("Fuente");
             columnNames.add("Tamaño");
             dataList = new ArrayList<>();
+            limitSize = 0;
         }
 
         @Override
@@ -440,11 +465,16 @@ public class FontChooser extends JDialog {
 
         public void addElement(Font font) {
             if (!dataList.contains(font)) {
+                if (limitReached()) {
+                    do {
+                        dataList.removeLast();
+                    } while (dataList.size() >= getLimitSize());
+                }
                 String family = font.getFamily();
                 Optional<Font> matchedFont;
                 matchedFont = dataList.stream().filter(f -> f.getFamily().equals(family)).findFirst();
                 matchedFont.ifPresent(dataList::remove);
-                dataList.add(font);
+                dataList.addFirst(font);
                 fireTableDataChanged();
             }
         }
@@ -452,6 +482,21 @@ public class FontChooser extends JDialog {
         public void removeAll() {
             dataList.clear();
             fireTableDataChanged();
+        }
+
+        protected boolean limitReached() {
+            if (getLimitSize() <= 0) {
+                return false;
+            }
+            return dataList.size() >= getLimitSize();
+        }
+
+        public int getLimitSize() {
+            return limitSize;
+        }
+
+        public void setLimitSize(int limitSize) {
+            this.limitSize = limitSize;
         }
 
     }
