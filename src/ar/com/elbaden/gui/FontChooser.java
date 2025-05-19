@@ -40,7 +40,7 @@ public class FontChooser extends JDialog {
         final Integer[] sizes = new Integer[] {
                 8, 10, 11, fontSize, 14, 16, 18, 20, 21, 22, 24, 26, 28, 32, 34, 36, 40
         };
-        final int minCache = 8;
+        final int minCache = 10;
         String sizeText = "Tamaño del texto";
         previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
 
@@ -48,6 +48,9 @@ public class FontChooser extends JDialog {
         JTabbedPane tabbedPane = new JTabbedPane();
         JPanel fontsTab = new JPanel();
         JPanel historyTab = new JPanel(new BorderLayout());
+        JLabel searchLabel = new JLabel("Buscar");
+        JTextField searchField = new JTextField();
+        JButton clearSearchBtn = new JButton("Limpiar");
         familyList = new FontFamilyList();
         JScrollPane fontFamilyScrollPane = new JScrollPane();
         FontTable historyTable = new FontTable();
@@ -89,12 +92,20 @@ public class FontChooser extends JDialog {
         fontsTabLayout.setAutoCreateContainerGaps(true);
         fontsTabLayout.setAutoCreateGaps(true);
         fontsTabLayout.setHorizontalGroup(fontsTabLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(fontsTabLayout.createSequentialGroup()
+                        .addComponent(searchLabel)
+                        .addComponent(searchField)
+                        .addComponent(clearSearchBtn))
                 .addComponent(fontFamilyScrollPane)
                 .addGroup(fontsTabLayout.createSequentialGroup()
                         .addComponent(fontSizeLabel)
                         .addComponent(fontSizeCombo, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
         );
         fontsTabLayout.setVerticalGroup(fontsTabLayout.createSequentialGroup()
+                .addGroup(fontsTabLayout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(searchLabel)
+                        .addComponent(searchField)
+                        .addComponent(clearSearchBtn))
                 .addComponent(fontFamilyScrollPane)
                 .addGroup(fontsTabLayout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(fontSizeLabel)
@@ -144,16 +155,20 @@ public class FontChooser extends JDialog {
         );
 
         // eventos
-        Updater fontsUpdater = new Updater(_ -> loadFonts(previewArea.getText()));
+        Updater listUpdater = new Updater(_ -> {
+            String searchValue = searchField.getText();
+            String previewValue = previewArea.getText();
+            loadFonts(searchValue, previewValue);
+        });
 
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
                 Dimension previewScrollableSize = previewScrollPane.getSize();
                 previewScrollPane.setPreferredSize(previewScrollableSize);
-                previewArea.getDocument().removeDocumentListener(fontsUpdater);
+                previewArea.getDocument().removeDocumentListener(listUpdater);
                 previewArea.setText(previewText);
-                previewArea.getDocument().addDocumentListener(fontsUpdater);
+                previewArea.getDocument().addDocumentListener(listUpdater);
             }
 
             @Override
@@ -162,8 +177,13 @@ public class FontChooser extends JDialog {
             }
         });
 
+        searchField.getDocument().addDocumentListener(listUpdater);
+
+        clearSearchBtn.addActionListener(_ -> searchField.setText(""));
+
         familyList.addListSelectionListener(_ -> {
             if (familyList.getSelectedValue() instanceof Font font) {
+                familyList.setLastSelection(null); // evito marcar otra fuente que no sea la actual
                 historyTable.getSelectionModel().clearSelection();
                 selectedFont = font.deriveFont((float) fontSize);
                 previewArea.setFont(selectedFont);
@@ -193,6 +213,7 @@ public class FontChooser extends JDialog {
                 previewArea.removePropertyChangeListener("font", previewFontChange);
                 fontSizeCombo.removeItemListener(sizeSelection);
                 // establezco un nuevo escenario
+                familyList.setLastSelection(selectedFont);
                 familyList.clearSelection();
                 selectedFont = font;
                 fontSize = font.getSize();
@@ -212,7 +233,7 @@ public class FontChooser extends JDialog {
 
         clearHistoryBtn.addActionListener(_ -> historyTable.clear());
 
-        previewArea.getDocument().addDocumentListener(fontsUpdater);
+        previewArea.getDocument().addDocumentListener(listUpdater);
         previewArea.addPropertyChangeListener("font", previewFontChange);
 
         okButton.addActionListener(_ -> dispose());
@@ -232,9 +253,10 @@ public class FontChooser extends JDialog {
         return loadingDialog;
     }
 
-    private void loadFonts(String previewValue) {
+    private void loadFonts(String searchValue, String previewValue) {
         FontsLoader loader = new FontsLoader(familyList);
         loader.setContentPreview(previewValue);
+        loader.setSearchedValue(searchValue);
         loader.setSelectionFont(selectedFont);
         JDialog dialog = createLoadingDialog(this, loader);
         loader.execute();
@@ -243,7 +265,7 @@ public class FontChooser extends JDialog {
 
     public static Font createAndShow(Window owner) {
         FontChooser fontChooserDialog = new FontChooser(owner);
-        fontChooserDialog.loadFonts(fontChooserDialog.previewText);
+        fontChooserDialog.loadFonts(null, fontChooserDialog.previewText);
         if (fontChooserDialog.familyList.getModel().getSize() == 0) {
             return null;
         }
@@ -300,6 +322,7 @@ public class FontChooser extends JDialog {
     static class FontFamilyList extends FontList {
 
         private String[] names;
+        private Font lastSelection;
 
         public String[] getNames() {
             return names;
@@ -309,36 +332,38 @@ public class FontChooser extends JDialog {
             this.names = names;
         }
 
+        public Font getLastSelection() {
+            return lastSelection;
+        }
+
+        public void setLastSelection(Font lastSelection) {
+            this.lastSelection = lastSelection;
+        }
+
     }
 
     static class FontCellRenderer extends DefaultListCellRenderer {
-
-        private final boolean previewFont;
-
-        public FontCellRenderer(boolean previewFont) {
-            this.previewFont = previewFont;
-        }
-
-        public FontCellRenderer() {
-            this(false);
-        }
 
         @Override
         public Component getListCellRendererComponent(
                 JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus
         ) {
             Component renderer = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value instanceof Font font && renderer instanceof JLabel label) {
-                label.setText(font.getFamily());
-                if (isPreviewFont()) {
-                    label.setFont(font);
+            if (list instanceof FontFamilyList fontFamilyList && value instanceof Font font) {
+                // restauro el foco para no perder visualmente el ítem seleccionado previamente
+                if (compareFonts(font, fontFamilyList.getLastSelection())) {
+                    renderer = super.getListCellRendererComponent(list, value, index, isSelected, true);
                 }
+                setText(font.getFamily());
             }
             return renderer;
         }
 
-        public boolean isPreviewFont() {
-            return previewFont;
+        private boolean compareFonts(Font value, Font font) {
+            if (value == null || font == null) {
+                return false;
+            }
+            return value.getFamily().equals(font.getFamily());
         }
 
     }
@@ -352,6 +377,7 @@ public class FontChooser extends JDialog {
         public FontTable() {
             tableModel = new FontTableModel();
             setModel(tableModel);
+            setFillsViewportHeight(true);
             calculateColumnHeaderWidth();
             setPreferredScrollableViewportSize(new Dimension(DEFAULT_COLUMN_SIZE, DEFAULT_COLUMN_SIZE));
             getColumnModel().getColumn(0).setCellRenderer(new FontTableCellRenderer());
@@ -569,6 +595,7 @@ public class FontChooser extends JDialog {
         private final Matcher italicMatcher;
         private String contentPreview;
         private Font selectionFont;
+        private String searchedValue;
 
         public FontsLoader(FontFamilyList fontFamilyList) {
             this.fontFamilyList = fontFamilyList;
@@ -587,6 +614,7 @@ public class FontChooser extends JDialog {
             ArrayList<Font> fonts = new ArrayList<>();
             String listFamily = fontFamilyList.getFont().getFamily();
             Font listFont = null;
+            int progress;
             for (String family : fontFamilyList.getNames()) {
                 if (isCancelled()) {
                     throw new CancellationException();
@@ -595,6 +623,13 @@ public class FontChooser extends JDialog {
                     throw new InterruptedException();
                 }
                 value++;
+                progress = value * 100 / fontFamilyList.getNames().length;
+                if (getSearchedValue() != null && !getSearchedValue().isBlank()) {
+                    if (!family.startsWith(getSearchedValue())) {
+                        setProgress(progress);
+                        continue;
+                    }
+                }
                 Font font = createFont(family);
                 if (isSupported(font, getContentPreview())) {
                     if (listFont == null && family.equals(listFamily)) {
@@ -603,7 +638,10 @@ public class FontChooser extends JDialog {
                     fonts.add(font);
                     listModel.addElement(font);
                 }
-                setProgress(value * 100 / fontFamilyList.getNames().length);
+                setProgress(progress);
+            }
+            if (fonts.isEmpty()) {
+                return listModel;
             }
             Stream<Font> stream = fonts.parallelStream();
             Font firstElement = listModel.getElementAt(0);
@@ -689,6 +727,14 @@ public class FontChooser extends JDialog {
 
         public void setSelectionFont(Font selectionFont) {
             this.selectionFont = selectionFont;
+        }
+
+        public String getSearchedValue() {
+            return searchedValue;
+        }
+
+        public void setSearchedValue(String searchedValue) {
+            this.searchedValue = searchedValue;
         }
 
     }
