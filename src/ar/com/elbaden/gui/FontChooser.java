@@ -1,6 +1,8 @@
 package ar.com.elbaden.gui;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.*;
@@ -64,7 +66,10 @@ public class FontChooser extends JDialog {
         previewArea.setLineWrap(true);
         previewArea.setWrapStyleWord(true);
         JScrollPane previewScrollPane = new JScrollPane();
-        JButton resetTextBtn = new JButton("Restaurar texto");
+        TitledBorder previewTitledBorder = BorderFactory.createTitledBorder("Vista previa");
+        Border previewBorder = previewScrollPane.getBorder();
+        previewScrollPane.setBorder(BorderFactory.createCompoundBorder(previewTitledBorder, previewBorder));
+        JButton okButton = new JButton("Aceptar");
         JButton cancelBtn = new JButton("Cancelar");
 
         // ajustes
@@ -125,8 +130,8 @@ public class FontChooser extends JDialog {
                 .addComponent(tabbedPane)
                 .addComponent(previewScrollPane)
                 .addGroup(mainLayout.createSequentialGroup()
-                        .addComponent(resetTextBtn)
                         .addPreferredGap(ComponentPlacement.RELATED, DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(okButton)
                         .addComponent(cancelBtn))
         );
 
@@ -134,7 +139,7 @@ public class FontChooser extends JDialog {
                 .addComponent(tabbedPane)
                 .addComponent(previewScrollPane)
                 .addGroup(mainLayout.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(resetTextBtn)
+                        .addComponent(okButton)
                         .addComponent(cancelBtn))
         );
 
@@ -149,6 +154,11 @@ public class FontChooser extends JDialog {
                 previewArea.getDocument().removeDocumentListener(fontsUpdater);
                 previewArea.setText(previewText);
                 previewArea.getDocument().addDocumentListener(fontsUpdater);
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                selectedFont = null;
             }
         });
 
@@ -205,9 +215,12 @@ public class FontChooser extends JDialog {
         previewArea.getDocument().addDocumentListener(fontsUpdater);
         previewArea.addPropertyChangeListener("font", previewFontChange);
 
-        resetTextBtn.addActionListener(_ -> previewArea.setText(previewText));
+        okButton.addActionListener(_ -> dispose());
 
-        cancelBtn.addActionListener(_ -> dispose());
+        cancelBtn.addActionListener(_ -> {
+            selectedFont = null;
+            dispose();
+        });
     }
 
     private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
@@ -228,15 +241,16 @@ public class FontChooser extends JDialog {
         dialog.setVisible(true);
     }
 
-    public static void createAndShow(Window owner) {
+    public static Font createAndShow(Window owner) {
         FontChooser fontChooserDialog = new FontChooser(owner);
         fontChooserDialog.loadFonts(fontChooserDialog.previewText);
         if (fontChooserDialog.familyList.getModel().getSize() == 0) {
-            return;
+            return null;
         }
         fontChooserDialog.pack();
         fontChooserDialog.setLocationRelativeTo(owner);
         fontChooserDialog.setVisible(true);
+        return fontChooserDialog.selectedFont;
     }
 
     static class Updater extends Timer implements DocumentListener {
