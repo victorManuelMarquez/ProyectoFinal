@@ -393,6 +393,7 @@ public class FontChooser extends JDialog {
     static class FontCellRenderer extends JTextField implements ListCellRenderer<Font>, PropertyChangeListener {
 
         private final Border focusBorder;
+        private final Border noFocusBorder;
         private final Color backgroundColor;
         private final Color foregroundColor;
         private final Color selectionBgColor;
@@ -403,12 +404,13 @@ public class FontChooser extends JDialog {
 
         public FontCellRenderer() {
             focusBorder = UIManager.getBorder("List.focusCellHighlightBorder");
+            noFocusBorder = UIManager.getBorder("List.noFocusBorder");
             backgroundColor = UIManager.getColor("List.background");
             foregroundColor = UIManager.getColor("List.foreground");
             selectionBgColor = UIManager.getColor("List.selectionBackground");
             selectionFgColor = UIManager.getColor("List.selectionForeground");
             yellowPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
-            setBorder(null);
+            setBorder(noFocusBorder);
             setEditable(false);
         }
 
@@ -431,7 +433,7 @@ public class FontChooser extends JDialog {
             if (getText().equals(getLastFamilyName())) {
                 setBorder(focusBorder);
             } else {
-                setBorder(cellHasFocus ? focusBorder : null);
+                setBorder(cellHasFocus ? focusBorder : noFocusBorder);
             }
             if (getSearchedValue() != null && !getSearchedValue().equals(getText())) {
                 int start = getText().indexOf(getSearchedValue());
