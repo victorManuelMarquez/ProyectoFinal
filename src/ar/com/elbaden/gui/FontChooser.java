@@ -184,6 +184,7 @@ public class FontChooser extends JDialog {
         familyList.addListSelectionListener(_ -> {
             if (familyList.getSelectedValue() instanceof Font font) {
                 familyList.setLastSelection(null); // evito marcar otra fuente que no sea la actual
+                familyList.repaint(); // evito "ghosting" de la celda marcada anterior
                 historyTable.getSelectionModel().clearSelection();
                 selectedFont = font.deriveFont((float) fontSize);
                 previewArea.setFont(selectedFont);
