@@ -420,6 +420,8 @@ public class FontChooser extends JDialog {
             yellowPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
             setBorder(noFocusBorder);
             setEditable(false);
+            setFocusable(false);
+            setOpaque(true);
         }
 
         @Override
