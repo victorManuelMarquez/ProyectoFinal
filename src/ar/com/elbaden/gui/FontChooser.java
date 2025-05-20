@@ -228,6 +228,14 @@ public class FontChooser extends JDialog {
                 // restauro los eventos
                 fontSizeCombo.addItemListener(sizeSelection);
                 previewArea.addPropertyChangeListener("font", previewFontChange);
+            } else if (historyTable.getValueAt(selectedRow, selectedColumn) instanceof Integer size) {
+                // evito que se agregue al historial nuevamente
+                previewArea.removePropertyChangeListener("font", previewFontChange);
+                // asigno el tamaño elegido
+                fontSize = size;
+                fontSizeCombo.setSelectedItem(fontSize);
+                // restauro el comportamiento
+                previewArea.addPropertyChangeListener("font", previewFontChange);
             }
         });
 
