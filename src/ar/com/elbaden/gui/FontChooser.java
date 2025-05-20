@@ -322,8 +322,16 @@ public class FontChooser extends JDialog {
 
     static class FontFamilyList extends FontList {
 
+        private final String lastSelectionProperty;
         private String[] names;
         private Font lastSelection;
+
+        public FontFamilyList() {
+            lastSelectionProperty = "lastSelection";
+            if (getCellRenderer() instanceof PropertyChangeListener changeListener) {
+                addPropertyChangeListener(lastSelectionProperty, changeListener);
+            }
+        }
 
         public String[] getNames() {
             return names;
@@ -338,33 +346,59 @@ public class FontChooser extends JDialog {
         }
 
         public void setLastSelection(Font lastSelection) {
+            String oldFamily = getLastSelection() != null ? getLastSelection().getFamily() : null;
             this.lastSelection = lastSelection;
+            String newFamily = lastSelection != null ? lastSelection.getFamily() : null;
+            firePropertyChange(lastSelectionProperty, oldFamily, newFamily);
         }
 
     }
 
-    static class FontCellRenderer extends DefaultListCellRenderer {
+    static class FontCellRenderer extends JTextField implements ListCellRenderer<Font>, PropertyChangeListener {
+
+        private final Border focusBorder;
+        private final Color backgroundColor;
+        private final Color foregroundColor;
+        private final Color selectionBgColor;
+        private final Color selectionFgColor;
+        private Object lastFamilyName;
+
+        public FontCellRenderer() {
+            focusBorder = UIManager.getBorder("List.focusCellHighlightBorder");
+            backgroundColor = UIManager.getColor("List.background");
+            foregroundColor = UIManager.getColor("List.foreground");
+            selectionBgColor = UIManager.getColor("List.selectionBackground");
+            selectionFgColor = UIManager.getColor("List.selectionForeground");
+            setBorder(null);
+            setEditable(false);
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            setLastFamilyName(evt.getNewValue());
+        }
 
         @Override
         public Component getListCellRendererComponent(
-                JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus
+                JList<? extends Font> list, Font value, int index, boolean isSelected, boolean cellHasFocus
         ) {
-            Component renderer = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (list instanceof FontFamilyList fontFamilyList && value instanceof Font font) {
-                // restauro el foco para no perder visualmente el ítem seleccionado previamente
-                if (compareFonts(font, fontFamilyList.getLastSelection())) {
-                    renderer = super.getListCellRendererComponent(list, value, index, isSelected, true);
-                }
-                setText(font.getFamily());
+            setText(value.getFamily());
+            setBackground(isSelected ? selectionBgColor : backgroundColor);
+            setForeground(isSelected ? selectionFgColor : foregroundColor);
+            if (getText().equals(getLastFamilyName())) {
+                setBorder(focusBorder);
+            } else {
+                setBorder(cellHasFocus ? focusBorder : null);
             }
-            return renderer;
+            return this;
         }
 
-        private boolean compareFonts(Font value, Font font) {
-            if (value == null || font == null) {
-                return false;
-            }
-            return value.getFamily().equals(font.getFamily());
+        public Object getLastFamilyName() {
+            return lastFamilyName;
+        }
+
+        public void setLastFamilyName(Object lastFamilyName) {
+            this.lastFamilyName = lastFamilyName;
         }
 
     }
