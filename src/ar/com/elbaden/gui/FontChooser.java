@@ -6,6 +6,10 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Document;
+import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.font.FontRenderContext;
@@ -21,7 +25,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static javax.swing.GroupLayout.*;
-import static javax.swing.LayoutStyle.*;
+import static javax.swing.LayoutStyle.ComponentPlacement;
 
 public class FontChooser extends JDialog {
 
@@ -178,6 +182,7 @@ public class FontChooser extends JDialog {
         });
 
         searchField.getDocument().addDocumentListener(listUpdater);
+        searchField.getDocument().addDocumentListener(familyList);
 
         clearSearchBtn.addActionListener(_ -> searchField.setText(""));
 
@@ -308,28 +313,59 @@ public class FontChooser extends JDialog {
 
     static class FontList extends JList<Font> {
 
+        private final FontCellRenderer fontCellRenderer;
+
         public FontList(AbstractListModel<Font> model) {
             super(model);
+            fontCellRenderer = new FontCellRenderer();
             setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            setCellRenderer(new FontCellRenderer());
+            setCellRenderer(fontCellRenderer);
         }
 
         public FontList() {
             this(new DefaultListModel<>());
         }
 
+        public FontCellRenderer getFontCellRenderer() {
+            return fontCellRenderer;
+        }
+
     }
 
-    static class FontFamilyList extends FontList {
+    static class FontFamilyList extends FontList implements DocumentListener {
 
-        private final String lastSelectionProperty;
+        private static final String lastSelectionProperty = "lastSelection";
+        private static final String searchingFontProperty = "searchingFont";
         private String[] names;
         private Font lastSelection;
+        private String searchedValue;
 
         public FontFamilyList() {
-            lastSelectionProperty = "lastSelection";
-            if (getCellRenderer() instanceof PropertyChangeListener changeListener) {
-                addPropertyChangeListener(lastSelectionProperty, changeListener);
+            addPropertyChangeListener(lastSelectionProperty, getFontCellRenderer());
+            addPropertyChangeListener(searchingFontProperty, getFontCellRenderer());
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            paintMatches(e);
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            paintMatches(e);
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {}
+
+        public void paintMatches(DocumentEvent event) {
+            Document document = event.getDocument();
+            try {
+                String oldValue = searchedValue;
+                searchedValue = document.getText(0, document.getLength());
+                firePropertyChange(searchingFontProperty, oldValue, searchedValue);
+            } catch (BadLocationException e) {
+                e.printStackTrace(System.err);
             }
         }
 
@@ -361,7 +397,9 @@ public class FontChooser extends JDialog {
         private final Color foregroundColor;
         private final Color selectionBgColor;
         private final Color selectionFgColor;
-        private Object lastFamilyName;
+        private final Highlighter.HighlightPainter yellowPainter;
+        private String lastFamilyName;
+        private String searchedValue;
 
         public FontCellRenderer() {
             focusBorder = UIManager.getBorder("List.focusCellHighlightBorder");
@@ -369,13 +407,18 @@ public class FontChooser extends JDialog {
             foregroundColor = UIManager.getColor("List.foreground");
             selectionBgColor = UIManager.getColor("List.selectionBackground");
             selectionFgColor = UIManager.getColor("List.selectionForeground");
+            yellowPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
             setBorder(null);
             setEditable(false);
         }
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            setLastFamilyName(evt.getNewValue());
+            if (evt.getPropertyName().equals(FontFamilyList.lastSelectionProperty)) {
+                setLastFamilyName(evt.getNewValue() instanceof String value ? value : null);
+            } else if (evt.getPropertyName().equals(FontFamilyList.searchingFontProperty)) {
+                setSearchedValue(evt.getNewValue() instanceof String value ? value : null);
+            }
         }
 
         @Override
@@ -390,15 +433,36 @@ public class FontChooser extends JDialog {
             } else {
                 setBorder(cellHasFocus ? focusBorder : null);
             }
+            if (getSearchedValue() != null && !getSearchedValue().equals(getText())) {
+                int start = getText().indexOf(getSearchedValue());
+                if (start >= 0) {
+                    int end = getSearchedValue().length();
+                    Highlighter highlighter = getHighlighter();
+                    highlighter.removeAllHighlights();
+                    try {
+                        highlighter.addHighlight(start, end, yellowPainter);
+                    } catch (BadLocationException e) {
+                        e.printStackTrace(System.err);
+                    }
+                }
+            }
             return this;
         }
 
-        public Object getLastFamilyName() {
+        public String getLastFamilyName() {
             return lastFamilyName;
         }
 
-        public void setLastFamilyName(Object lastFamilyName) {
+        public void setLastFamilyName(String lastFamilyName) {
             this.lastFamilyName = lastFamilyName;
+        }
+
+        public String getSearchedValue() {
+            return searchedValue;
+        }
+
+        public void setSearchedValue(String searchedValue) {
+            this.searchedValue = searchedValue;
         }
 
     }
