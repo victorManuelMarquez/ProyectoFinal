@@ -395,7 +395,7 @@ public class FontChooser extends JDialog {
         private final Border focusBorder;
         private final Color backgroundColor;
         private final Color foregroundColor;
-        private final Highlighter.HighlightPainter highlightPainter;
+        private Highlighter.HighlightPainter highlightPainter;
         private Highlighter.HighlightPainter selectionHighlightPainter;
         private Border noFocusBorder;
         private Color selectionBgColor;
@@ -410,6 +410,7 @@ public class FontChooser extends JDialog {
             foregroundColor = UIManager.getColor("List.foreground");
             selectionBgColor = UIManager.getColor("List.selectionBackground");
             selectionFgColor = UIManager.getColor("List.selectionForeground");
+            highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
             if (UIManager.getLookAndFeel().getName().equals("Nimbus")) {
                 noFocusBorder = UIManager.getBorder("List.cellNoFocusBorder");
                 selectionBgColor = UIManager.getColor("Table[Enabled+Selected].textBackground");
@@ -418,8 +419,9 @@ public class FontChooser extends JDialog {
                 Color invertedNimbusSelection = new Color(198, 150, 117);
                 highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(nimbusYellow);
                 selectionHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(invertedNimbusSelection);
-            } else {
-                highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
+            } else if (UIManager.getLookAndFeel().getName().equals("CDE/Motif")) {
+                Color motifColor = new Color(178, 77, 122);
+                selectionHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(motifColor);
             }
             setBorder(noFocusBorder);
             setEditable(false);
@@ -463,7 +465,7 @@ public class FontChooser extends JDialog {
                 int start = matcher.start();
                 int end = matcher.end();
                 try {
-                    if (UIManager.getLookAndFeel().getName().equals("Nimbus")) {
+                    if (!UIManager.getLookAndFeel().getName().equals("Metal")) {
                         highlighter.addHighlight(start, end, isSelected ? selectionHighlightPainter : highlightPainter);
                     } else {
                         highlighter.addHighlight(start, end, highlightPainter);
