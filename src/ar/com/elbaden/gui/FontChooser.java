@@ -489,6 +489,7 @@ public class FontChooser extends JDialog {
             tableModel = new FontTableModel();
             setModel(tableModel);
             setFillsViewportHeight(true);
+            setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             calculateColumnHeaderWidth();
             setPreferredScrollableViewportSize(new Dimension(DEFAULT_COLUMN_SIZE, DEFAULT_COLUMN_SIZE));
             getColumnModel().getColumn(0).setCellRenderer(new FontTableCellRenderer());
