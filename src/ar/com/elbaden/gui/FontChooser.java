@@ -292,7 +292,7 @@ public class FontChooser extends JDialog {
     static class Updater extends Timer implements DocumentListener {
 
         public Updater(ActionListener listener) {
-            super(500, listener);
+            super(700, listener);
             setRepeats(false);
         }
 
