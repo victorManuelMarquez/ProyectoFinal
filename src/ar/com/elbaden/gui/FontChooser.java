@@ -449,27 +449,30 @@ public class FontChooser extends JDialog {
                 setBorder(cellHasFocus ? focusBorder : noFocusBorder);
             }
             if (getSearchedValue() != null && !getSearchedValue().equals(getText()) && !getSearchedValue().isBlank()) {
-                Highlighter highlighter = getHighlighter();
-                highlighter.removeAllHighlights();
-                Matcher matcher = Pattern.compile(getSearchedValue(), Pattern.CASE_INSENSITIVE).matcher(getText());
-                int pos = 0;
-                while (matcher.find(pos) && !matcher.group().isEmpty()) {
-                    int start = matcher.start();
-                    int end = matcher.end();
-                    try {
-                        if (UIManager.getLookAndFeel().getName().equals("Nimbus")) {
-                            highlighter.addHighlight(start, end,
-                                    isSelected ? selectionHighlightPainter : highlightPainter);
-                        } else {
-                            highlighter.addHighlight(start, end, highlightPainter);
-                        }
-                    } catch (BadLocationException e) {
-                        e.printStackTrace(System.err);
-                    }
-                    pos = end;
-                }
+                highlightMatches(isSelected);
             }
             return this;
+        }
+
+        private void highlightMatches(boolean isSelected) {
+            Highlighter highlighter = getHighlighter();
+            highlighter.removeAllHighlights();
+            Matcher matcher = Pattern.compile(getSearchedValue(), Pattern.CASE_INSENSITIVE).matcher(getText());
+            int pos = 0;
+            while (matcher.find(pos) && !matcher.group().isEmpty()) {
+                int start = matcher.start();
+                int end = matcher.end();
+                try {
+                    if (UIManager.getLookAndFeel().getName().equals("Nimbus")) {
+                        highlighter.addHighlight(start, end, isSelected ? selectionHighlightPainter : highlightPainter);
+                    } else {
+                        highlighter.addHighlight(start, end, highlightPainter);
+                    }
+                } catch (BadLocationException e) {
+                    e.printStackTrace(System.err);
+                }
+                pos = end;
+            }
         }
 
         public String getLastFamilyName() {
