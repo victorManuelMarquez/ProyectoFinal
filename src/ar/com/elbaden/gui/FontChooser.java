@@ -17,13 +17,13 @@ import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import java.util.List;
 
 import static javax.swing.GroupLayout.*;
 import static javax.swing.LayoutStyle.ComponentPlacement;
@@ -393,12 +393,13 @@ public class FontChooser extends JDialog {
     static class FontCellRenderer extends JTextField implements ListCellRenderer<Font>, PropertyChangeListener {
 
         private final Border focusBorder;
-        private final Border noFocusBorder;
         private final Color backgroundColor;
         private final Color foregroundColor;
-        private final Color selectionBgColor;
-        private final Color selectionFgColor;
-        private final Highlighter.HighlightPainter yellowPainter;
+        private final Highlighter.HighlightPainter highlightPainter;
+        private Highlighter.HighlightPainter selectionHighlightPainter;
+        private Border noFocusBorder;
+        private Color selectionBgColor;
+        private Color selectionFgColor;
         private String lastFamilyName;
         private String searchedValue;
 
@@ -409,7 +410,17 @@ public class FontChooser extends JDialog {
             foregroundColor = UIManager.getColor("List.foreground");
             selectionBgColor = UIManager.getColor("List.selectionBackground");
             selectionFgColor = UIManager.getColor("List.selectionForeground");
-            yellowPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
+            if (UIManager.getLookAndFeel().getName().equals("Nimbus")) {
+                noFocusBorder = UIManager.getBorder("List.cellNoFocusBorder");
+                selectionBgColor = UIManager.getColor("Table[Enabled+Selected].textBackground");
+                selectionFgColor = UIManager.getColor("Table[Enabled+Selected].textForeground");
+                Color nimbusYellow = new Color(255, 220, 35);
+                Color invertedNimbusSelection = new Color(198, 150, 117);
+                highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(nimbusYellow);
+                selectionHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(invertedNimbusSelection);
+            } else {
+                highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
+            }
             setBorder(noFocusBorder);
             setEditable(false);
             setFocusable(false);
@@ -446,7 +457,12 @@ public class FontChooser extends JDialog {
                     int start = matcher.start();
                     int end = matcher.end();
                     try {
-                        highlighter.addHighlight(start, end, yellowPainter);
+                        if (UIManager.getLookAndFeel().getName().equals("Nimbus")) {
+                            highlighter.addHighlight(start, end,
+                                    isSelected ? selectionHighlightPainter : highlightPainter);
+                        } else {
+                            highlighter.addHighlight(start, end, highlightPainter);
+                        }
                     } catch (BadLocationException e) {
                         e.printStackTrace(System.err);
                     }
