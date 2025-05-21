@@ -23,6 +23,7 @@ import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import java.util.List;
 
 import static javax.swing.GroupLayout.*;
 import static javax.swing.LayoutStyle.ComponentPlacement;
@@ -344,7 +345,6 @@ public class FontChooser extends JDialog {
 
         private static final String lastSelectionProperty = "lastSelection";
         private static final String searchingFontProperty = "searchingFont";
-        private String[] names;
         private Font lastSelection;
         private String searchedValue;
 
@@ -375,14 +375,6 @@ public class FontChooser extends JDialog {
             } catch (BadLocationException e) {
                 e.printStackTrace(System.err);
             }
-        }
-
-        public String[] getNames() {
-            return names;
-        }
-
-        public void setNames(String[] names) {
-            this.names = names;
         }
 
         public Font getLastSelection() {
@@ -445,17 +437,20 @@ public class FontChooser extends JDialog {
             } else {
                 setBorder(cellHasFocus ? focusBorder : noFocusBorder);
             }
-            if (getSearchedValue() != null && !getSearchedValue().equals(getText())) {
-                int start = getText().indexOf(getSearchedValue());
-                if (start >= 0) {
-                    int end = getSearchedValue().length();
-                    Highlighter highlighter = getHighlighter();
-                    highlighter.removeAllHighlights();
+            if (getSearchedValue() != null && !getSearchedValue().equals(getText()) && !getSearchedValue().isBlank()) {
+                Highlighter highlighter = getHighlighter();
+                highlighter.removeAllHighlights();
+                Matcher matcher = Pattern.compile(getSearchedValue(), Pattern.CASE_INSENSITIVE).matcher(getText());
+                int pos = 0;
+                while (matcher.find(pos) && !matcher.group().isEmpty()) {
+                    int start = matcher.start();
+                    int end = matcher.end();
                     try {
                         highlighter.addHighlight(start, end, yellowPainter);
                     } catch (BadLocationException e) {
                         e.printStackTrace(System.err);
                     }
+                    pos = end;
                 }
             }
             return this;
@@ -559,8 +554,8 @@ public class FontChooser extends JDialog {
     static class FontTableModel extends AbstractTableModel {
 
         private final Class<?>[] columnClasses;
-        private final ArrayList<String> columnNames;
-        private final ArrayList<Font> dataList;
+        private final List<String> columnNames;
+        private final List<Font> dataList;
         private int limitSize;
 
         public FontTableModel() {
@@ -719,15 +714,15 @@ public class FontChooser extends JDialog {
         protected DefaultListModel<Font> doInBackground() throws Exception {
             firePropertyChange("indeterminate", false, true);
             GraphicsEnvironment environment = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            fontFamilyList.setNames(environment.getAvailableFontFamilyNames(Locale.getDefault()));
+            String[] names = environment.getAvailableFontFamilyNames(Locale.getDefault());
             firePropertyChange("indeterminate", true, false);
             DefaultListModel<Font> listModel = new DefaultListModel<>();
             int value = 0;
-            ArrayList<Font> fonts = new ArrayList<>();
+            List<Font> fonts = new ArrayList<>();
+            List<Font> sensitiveMatches = new ArrayList<>();
             String listFamily = fontFamilyList.getFont().getFamily();
             Font listFont = null;
-            int progress;
-            for (String family : fontFamilyList.getNames()) {
+            for (String family : names) {
                 if (isCancelled()) {
                     throw new CancellationException();
                 }
@@ -735,24 +730,31 @@ public class FontChooser extends JDialog {
                     throw new InterruptedException();
                 }
                 value++;
-                progress = value * 100 / fontFamilyList.getNames().length;
-                if (getSearchedValue() != null && !getSearchedValue().isBlank()) {
-                    if (!family.startsWith(getSearchedValue())) {
-                        setProgress(progress);
-                        continue;
-                    }
-                }
-                Font font = createFont(family);
-                if (isSupported(font, getContentPreview())) {
-                    if (listFont == null && family.equals(listFamily)) {
+                if (getSearchedValue() == null || getSearchedValue().isBlank()) {
+                    Font font = createFont(family);
+                    if (font.getFamily().equals(listFamily)) {
                         listFont = font;
                     }
-                    fonts.add(font);
-                    listModel.addElement(font);
+                    if (isSupported(font, getContentPreview())) {
+                        fonts.add(font);
+                    }
+                } else if (getSearchedValue() != null) {
+                    Pattern sensitive = Pattern.compile(Pattern.quote(getSearchedValue()));
+                    Pattern insensitive = Pattern.compile(Pattern.quote(getSearchedValue()), Pattern.CASE_INSENSITIVE);
+                    Font font = createFont(family);
+                    if (isSupported(font, getContentPreview())) {
+                        if (sensitive.matcher(family).find()) {
+                            sensitiveMatches.add(font);
+                        } else if (insensitive.matcher(family).find()) {
+                            fonts.add(font);
+                        }
+                    }
                 }
-                setProgress(progress);
+                setProgress(value * 100 / names.length);
             }
-            if (fonts.isEmpty()) {
+            fonts.addAll(0, sensitiveMatches); // las coincidencias literales se listarán primero
+            fonts.forEach(listModel::addElement);
+            if (listModel.isEmpty()) {
                 return listModel;
             }
             Stream<Font> stream = fonts.parallelStream();
@@ -773,6 +775,7 @@ public class FontChooser extends JDialog {
                 // el primer elemento o null si no hay tal
                 setSelectionFont(firstElement);
             }
+            System.gc(); // despejo la memoria
             return listModel;
         }
 
