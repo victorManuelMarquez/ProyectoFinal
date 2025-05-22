@@ -68,6 +68,7 @@ public class FontChooser extends JDialog {
         JSpinner historyCacheSpinner = new JSpinner(cacheModel);
         JButton clearHistoryBtn = new JButton("Limpiar historial");
         JTextArea previewArea = new JTextArea(previewText);
+        selectedFont = previewArea.getFont();
         previewArea.append(String.valueOf(System.lineSeparator()).repeat(5));
         previewArea.setLineWrap(true);
         previewArea.setWrapStyleWord(true);
@@ -281,6 +282,7 @@ public class FontChooser extends JDialog {
     private void loadFonts(String contentPreview) {
         FontsLoader loader = new FontsLoader(familyList);
         loader.setContentPreview(contentPreview);
+        loader.setCurrentFamily(selectedFont != null ? selectedFont.getFamily() : null);
         JDialog dialog = createLoadingDialog(this, loader);
         loader.execute();
         dialog.setVisible(true);
@@ -301,7 +303,7 @@ public class FontChooser extends JDialog {
     static class Updater extends Timer implements DocumentListener {
 
         public Updater(ActionListener listener) {
-            super(200, listener);
+            super(500, listener);
             setRepeats(false);
         }
 
@@ -807,6 +809,8 @@ public class FontChooser extends JDialog {
         private final Matcher boldMatcher;
         private final Matcher italicMatcher;
         private String contentPreview;
+        private String currentFamily;
+        private Font actualFont;
 
         public FontsLoader(FontFamilyList fontFamilyList) {
             this.fontFamilyList = fontFamilyList;
@@ -833,12 +837,18 @@ public class FontChooser extends JDialog {
                 value++;
                 Font font = createFont(name);
                 fonts.add(font);
+                if (font.getFamily().equals(getCurrentFamily())) {
+                    actualFont = font;
+                }
                 if (canDisplayContent(font, getContentPreview())) {
                     listModel.addElement(font);
                 }
                 setProgress(value * 100 / names.length);
             }
             getFontFamilyList().setAllFonts(Collections.unmodifiableList(fonts));
+            if (actualFont == null && !fonts.isEmpty()) {
+                actualFont = fonts.getFirst();
+            }
             System.gc(); // despejo la memoria
             return listModel;
         }
@@ -847,6 +857,7 @@ public class FontChooser extends JDialog {
         protected void done() {
             try {
                 fontFamilyList.setModel(get());
+                fontFamilyList.setSelectedValue(actualFont, true);
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
@@ -904,6 +915,14 @@ public class FontChooser extends JDialog {
 
         public void setContentPreview(String contentPreview) {
             this.contentPreview = contentPreview;
+        }
+
+        public String getCurrentFamily() {
+            return currentFamily;
+        }
+
+        public void setCurrentFamily(String currentFamily) {
+            this.currentFamily = currentFamily;
         }
 
     }
