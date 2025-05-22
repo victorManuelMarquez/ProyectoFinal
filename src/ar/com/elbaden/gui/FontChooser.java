@@ -954,7 +954,6 @@ public class FontChooser extends JDialog {
                     throw new InterruptedException();
                 }
                 item++;
-                int actualProgress = item * 100 / total;
                 if (canDisplayContent(font, getContentPreview())) {
                     if (getSearchedValue() == null || getSearchedValue().isBlank()) {
                         listModel.addElement(font);
@@ -970,10 +969,20 @@ public class FontChooser extends JDialog {
                         }
                     }
                 }
-                setProgress(actualProgress);
+                setProgress(item * 100 / total);
             }
-            sensitiveMatches.forEach(listModel::addElement);
-            insensitiveMatches.forEach(listModel::addElement);
+            total += sensitiveMatches.size();
+            total += insensitiveMatches.size();
+            for (Font font : sensitiveMatches) {
+                item++;
+                listModel.addElement(font);
+                setProgress(item * 100 / total);
+            }
+            for (Font font : insensitiveMatches) {
+                item++;
+                listModel.addElement(font);
+                setProgress(item * 100 / total);
+            }
             return listModel;
         }
 
