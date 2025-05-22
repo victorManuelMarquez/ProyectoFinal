@@ -322,21 +322,27 @@ public class FontChooser extends JDialog {
 
     static class FontList extends JList<Font> {
 
-        private final FontCellRenderer fontCellRenderer;
+        private final SimpleFontCellRenderer simpleFontCellRenderer;
+        private final HighlightFontCellRenderer highlightFontCellRenderer;
 
         public FontList(AbstractListModel<Font> model) {
             super(model);
-            fontCellRenderer = new FontCellRenderer();
+            simpleFontCellRenderer = new SimpleFontCellRenderer();
+            highlightFontCellRenderer = new HighlightFontCellRenderer();
             setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            setCellRenderer(fontCellRenderer);
+            setCellRenderer(simpleFontCellRenderer);
         }
 
         public FontList() {
             this(new DefaultListModel<>());
         }
 
-        public FontCellRenderer getFontCellRenderer() {
-            return fontCellRenderer;
+        public SimpleFontCellRenderer getSimpleFontCellRenderer() {
+            return simpleFontCellRenderer;
+        }
+
+        public HighlightFontCellRenderer getFontCellRenderer() {
+            return highlightFontCellRenderer;
         }
 
     }
@@ -349,8 +355,17 @@ public class FontChooser extends JDialog {
         private String searchedValue;
 
         public FontFamilyList() {
+            addPropertyChangeListener(lastSelectionProperty, getSimpleFontCellRenderer());
             addPropertyChangeListener(lastSelectionProperty, getFontCellRenderer());
             addPropertyChangeListener(searchingFontProperty, getFontCellRenderer());
+        }
+
+        public void installFontRenderer() {
+            setCellRenderer(getSimpleFontCellRenderer());
+        }
+
+        public void installHighlightRenderer() {
+            setCellRenderer(getFontCellRenderer());
         }
 
         @Override
@@ -390,11 +405,65 @@ public class FontChooser extends JDialog {
 
     }
 
-    static class FontCellRenderer extends JTextField implements ListCellRenderer<Font>, PropertyChangeListener {
+    static class SimpleFontCellRenderer extends DefaultListCellRenderer implements PropertyChangeListener {
 
         private final Border focusBorder;
-        private final Color backgroundColor;
-        private final Color foregroundColor;
+        private Border noFocusBorder;
+        private Color selectedBgColor;
+        private Color selectedFgColor;
+        private String searchedValue;
+
+        public SimpleFontCellRenderer() {
+            focusBorder = UIManager.getBorder("List.focusCellHighlightBorder");
+            noFocusBorder = UIManager.getBorder("List.noFocusBorder");
+            selectedBgColor = UIManager.getColor("List.selectionBackground");
+            selectedFgColor = UIManager.getColor("List.selectionForeground");
+            if (UIManager.getLookAndFeel().getName().equals("Nimbus")) {
+                noFocusBorder = UIManager.getBorder("List.cellNoFocusBorder");
+                selectedBgColor = new Color(57, 105, 138);
+                selectedFgColor = Color.WHITE;
+            }
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals(FontFamilyList.lastSelectionProperty)) {
+                setSearchedValue(evt.getNewValue() instanceof String value ? value : null);
+            }
+        }
+
+        @Override
+        public Component getListCellRendererComponent(
+                JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus
+        ) {
+            Component component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            if (value instanceof Font font && component instanceof JLabel label) {
+                label.setText(font.getFamily());
+                label.setBackground(isSelected ? selectedBgColor : list.getBackground());
+                label.setForeground(isSelected ? selectedFgColor : list.getForeground());
+                if (getText().equals(getSearchedValue())) {
+                    setBorder(focusBorder);
+                } else {
+                    setBorder(cellHasFocus ? focusBorder : noFocusBorder);
+                }
+            }
+            return component;
+        }
+
+        public String getSearchedValue() {
+            return searchedValue;
+        }
+
+        public void setSearchedValue(String searchedValue) {
+            this.searchedValue = searchedValue;
+        }
+
+    }
+
+    static class HighlightFontCellRenderer extends JTextField
+            implements ListCellRenderer<Font>, PropertyChangeListener {
+
+        private final Border focusBorder;
         private Highlighter.HighlightPainter highlightPainter;
         private Highlighter.HighlightPainter selectionHighlightPainter;
         private Border noFocusBorder;
@@ -403,11 +472,9 @@ public class FontChooser extends JDialog {
         private String lastFamilyName;
         private String searchedValue;
 
-        public FontCellRenderer() {
+        public HighlightFontCellRenderer() {
             focusBorder = UIManager.getBorder("List.focusCellHighlightBorder");
             noFocusBorder = UIManager.getBorder("List.noFocusBorder");
-            backgroundColor = UIManager.getColor("List.background");
-            foregroundColor = UIManager.getColor("List.foreground");
             selectionBgColor = UIManager.getColor("List.selectionBackground");
             selectionFgColor = UIManager.getColor("List.selectionForeground");
             highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
@@ -443,8 +510,8 @@ public class FontChooser extends JDialog {
                 JList<? extends Font> list, Font value, int index, boolean isSelected, boolean cellHasFocus
         ) {
             setText(value.getFamily());
-            setBackground(isSelected ? selectionBgColor : backgroundColor);
-            setForeground(isSelected ? selectionFgColor : foregroundColor);
+            setBackground(isSelected ? selectionBgColor : list.getBackground());
+            setForeground(isSelected ? selectionFgColor : list.getForeground());
             if (getText().equals(getLastFamilyName())) {
                 setBorder(focusBorder);
             } else {
@@ -805,6 +872,11 @@ public class FontChooser extends JDialog {
             try {
                 fontFamilyList.setModel(get());
                 fontFamilyList.setSelectedValue(getSelectionFont(), true);
+                if (getSearchedValue() == null || getSearchedValue().isBlank()) {
+                    fontFamilyList.installFontRenderer();
+                } else {
+                    fontFamilyList.installHighlightRenderer();
+                }
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
