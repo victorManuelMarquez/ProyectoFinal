@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
@@ -16,14 +17,11 @@ import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import static javax.swing.GroupLayout.*;
 import static javax.swing.LayoutStyle.ComponentPlacement;
@@ -163,7 +161,7 @@ public class FontChooser extends JDialog {
         Updater listUpdater = new Updater(_ -> {
             String searchValue = searchField.getText();
             String previewValue = previewArea.getText();
-            loadFonts(searchValue, previewValue);
+            searchFonts(searchValue, previewValue);
         });
 
         addWindowListener(new WindowAdapter() {
@@ -259,20 +257,30 @@ public class FontChooser extends JDialog {
         });
     }
 
-    private JDialog createLoadingDialog(Window owner, FontsLoader fontsLoader) {
+    private JDialog createLoadingDialog(Window owner, SwingWorker<?,?> worker) {
         LoadingDialog loadingDialog = new LoadingDialog(owner, null);
         loadingDialog.pack();
         loadingDialog.setLocationRelativeTo(owner);
-        fontsLoader.addPropertyChangeListener(loadingDialog);
-        loadingDialog.addWindowListener(fontsLoader);
+        worker.addPropertyChangeListener(loadingDialog);
+        if (worker instanceof WindowListener listener) {
+            loadingDialog.addWindowListener(listener);
+        }
         return loadingDialog;
     }
 
-    private void loadFonts(String searchValue, String previewValue) {
+    private void searchFonts(String searchedValue, String contentPreview) {
+        FontSearch search = new FontSearch(familyList);
+        search.setSearchedValue(searchedValue);
+        search.setContentPreview(contentPreview);
+        search.setActualSelection(selectedFont);
+        JDialog dialog = createLoadingDialog(this, search);
+        search.execute();
+        dialog.setVisible(true);
+    }
+
+    private void loadFonts(String contentPreview) {
         FontsLoader loader = new FontsLoader(familyList);
-        loader.setContentPreview(previewValue);
-        loader.setSearchedValue(searchValue);
-        loader.setSelectionFont(selectedFont);
+        loader.setContentPreview(contentPreview);
         JDialog dialog = createLoadingDialog(this, loader);
         loader.execute();
         dialog.setVisible(true);
@@ -280,7 +288,7 @@ public class FontChooser extends JDialog {
 
     public static Font createAndShow(Window owner) {
         FontChooser fontChooserDialog = new FontChooser(owner);
-        fontChooserDialog.loadFonts(null, fontChooserDialog.previewText);
+        fontChooserDialog.loadFonts(fontChooserDialog.previewText);
         if (fontChooserDialog.familyList.getModel().getSize() == 0) {
             return null;
         }
@@ -293,7 +301,7 @@ public class FontChooser extends JDialog {
     static class Updater extends Timer implements DocumentListener {
 
         public Updater(ActionListener listener) {
-            super(700, listener);
+            super(200, listener);
             setRepeats(false);
         }
 
@@ -322,11 +330,13 @@ public class FontChooser extends JDialog {
 
     static class FontList extends JList<Font> {
 
+        private List<Font> allFonts;
         private final SimpleFontCellRenderer simpleFontCellRenderer;
         private final HighlightFontCellRenderer highlightFontCellRenderer;
 
         public FontList(AbstractListModel<Font> model) {
             super(model);
+            allFonts = Collections.emptyList();
             simpleFontCellRenderer = new SimpleFontCellRenderer();
             highlightFontCellRenderer = new HighlightFontCellRenderer();
             setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -335,6 +345,14 @@ public class FontChooser extends JDialog {
 
         public FontList() {
             this(new DefaultListModel<>());
+        }
+
+        public List<Font> getAllFonts() {
+            return allFonts;
+        }
+
+        public void setAllFonts(List<Font> allFonts) {
+            this.allFonts = allFonts;
         }
 
         public SimpleFontCellRenderer getSimpleFontCellRenderer() {
@@ -411,7 +429,7 @@ public class FontChooser extends JDialog {
         private Border noFocusBorder;
         private Color selectedBgColor;
         private Color selectedFgColor;
-        private String searchedValue;
+        private String lastSelection;
 
         public SimpleFontCellRenderer() {
             focusBorder = UIManager.getBorder("List.focusCellHighlightBorder");
@@ -428,7 +446,7 @@ public class FontChooser extends JDialog {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals(FontFamilyList.lastSelectionProperty)) {
-                setSearchedValue(evt.getNewValue() instanceof String value ? value : null);
+                setLastSelection(evt.getNewValue() instanceof String value ? value : null);
             }
         }
 
@@ -441,7 +459,7 @@ public class FontChooser extends JDialog {
                 label.setText(font.getFamily());
                 label.setBackground(isSelected ? selectedBgColor : list.getBackground());
                 label.setForeground(isSelected ? selectedFgColor : list.getForeground());
-                if (getText().equals(getSearchedValue())) {
+                if (getText().equals(getLastSelection())) {
                     setBorder(focusBorder);
                 } else {
                     setBorder(cellHasFocus ? focusBorder : noFocusBorder);
@@ -450,12 +468,12 @@ public class FontChooser extends JDialog {
             return component;
         }
 
-        public String getSearchedValue() {
-            return searchedValue;
+        public String getLastSelection() {
+            return lastSelection;
         }
 
-        public void setSearchedValue(String searchedValue) {
-            this.searchedValue = searchedValue;
+        public void setLastSelection(String lastSelection) {
+            this.lastSelection = lastSelection;
         }
 
     }
@@ -789,8 +807,6 @@ public class FontChooser extends JDialog {
         private final Matcher boldMatcher;
         private final Matcher italicMatcher;
         private String contentPreview;
-        private Font selectionFont;
-        private String searchedValue;
 
         public FontsLoader(FontFamilyList fontFamilyList) {
             this.fontFamilyList = fontFamilyList;
@@ -807,10 +823,7 @@ public class FontChooser extends JDialog {
             DefaultListModel<Font> listModel = new DefaultListModel<>();
             int value = 0;
             List<Font> fonts = new ArrayList<>();
-            List<Font> sensitiveMatches = new ArrayList<>();
-            String listFamily = fontFamilyList.getFont().getFamily();
-            Font listFont = null;
-            for (String family : names) {
+            for (String name : names) {
                 if (isCancelled()) {
                     throw new CancellationException();
                 }
@@ -818,51 +831,14 @@ public class FontChooser extends JDialog {
                     throw new InterruptedException();
                 }
                 value++;
-                if (getSearchedValue() == null || getSearchedValue().isBlank()) {
-                    Font font = createFont(family);
-                    if (font.getFamily().equals(listFamily)) {
-                        listFont = font;
-                    }
-                    if (isSupported(font, getContentPreview())) {
-                        fonts.add(font);
-                    }
-                } else if (getSearchedValue() != null) {
-                    Pattern sensitive = Pattern.compile(Pattern.quote(getSearchedValue()));
-                    Pattern insensitive = Pattern.compile(Pattern.quote(getSearchedValue()), Pattern.CASE_INSENSITIVE);
-                    Font font = createFont(family);
-                    if (isSupported(font, getContentPreview())) {
-                        if (sensitive.matcher(family).find()) {
-                            sensitiveMatches.add(font);
-                        } else if (insensitive.matcher(family).find()) {
-                            fonts.add(font);
-                        }
-                    }
+                Font font = createFont(name);
+                fonts.add(font);
+                if (canDisplayContent(font, getContentPreview())) {
+                    listModel.addElement(font);
                 }
                 setProgress(value * 100 / names.length);
             }
-            fonts.addAll(0, sensitiveMatches); // las coincidencias literales se listarán primero
-            fonts.forEach(listModel::addElement);
-            if (listModel.isEmpty()) {
-                return listModel;
-            }
-            Stream<Font> stream = fonts.parallelStream();
-            Font firstElement = listModel.getElementAt(0);
-            // sí se definió una fuente previa
-            if (getSelectionFont() != null) {
-                String family = getSelectionFont().getFamily();
-                // se busca la fuente establecida en la nueva colección
-                Optional<Font> result = stream.filter(f -> f.getFamily().equals(family)).findFirst();
-                // se establece la misma fuente o el primer elemento si está no existe, pudiendo ser null
-                setSelectionFont(result.orElse(firstElement));
-            } else if (listFont != null) {
-                // sí la fuente previa no está establecida se usará la fuente de la lista
-                // verificando de antemano si puede renderizar el texto establecido
-                setSelectionFont(listFont);
-            } else {
-                // sí no fue posible establecer una fuente con los criterios anteriores se establecerá
-                // el primer elemento o null si no hay tal
-                setSelectionFont(firstElement);
-            }
+            getFontFamilyList().setAllFonts(Collections.unmodifiableList(fonts));
             System.gc(); // despejo la memoria
             return listModel;
         }
@@ -871,18 +847,15 @@ public class FontChooser extends JDialog {
         protected void done() {
             try {
                 fontFamilyList.setModel(get());
-                fontFamilyList.setSelectedValue(getSelectionFont(), true);
-                if (getSearchedValue() == null || getSearchedValue().isBlank()) {
-                    fontFamilyList.installFontRenderer();
-                } else {
-                    fontFamilyList.installHighlightRenderer();
-                }
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
         }
 
-        public boolean isSupported(Font font, String value) {
+        protected boolean canDisplayContent(Font font, String value) {
+            if (value == null || value.isBlank()) {
+                return true;
+            }
             return font.canDisplayUpTo(value) == -1;
         }
 
@@ -921,6 +894,10 @@ public class FontChooser extends JDialog {
         @Override
         public void windowDeactivated(WindowEvent e) {}
 
+        protected FontFamilyList getFontFamilyList() {
+            return fontFamilyList;
+        }
+
         public String getContentPreview() {
             return contentPreview;
         }
@@ -929,12 +906,113 @@ public class FontChooser extends JDialog {
             this.contentPreview = contentPreview;
         }
 
-        public Font getSelectionFont() {
-            return selectionFont;
+    }
+
+    static class FontSearch extends SwingWorker<DefaultListModel<Font>, Font> implements WindowListener {
+
+        private final FontFamilyList fontFamilyList;
+        private String contentPreview;
+        private String searchedValue;
+        private Font actualSelection;
+
+        public FontSearch(FontFamilyList fontFamilyList) {
+            this.fontFamilyList = fontFamilyList;
         }
 
-        public void setSelectionFont(Font selectionFont) {
-            this.selectionFont = selectionFont;
+        @Override
+        protected DefaultListModel<Font> doInBackground() throws Exception {
+            DefaultListModel<Font> listModel = new DefaultListModel<>();
+            List<Font> allFonts = getFontFamilyList().getAllFonts();
+            List<Font> sensitiveMatches = new ArrayList<>();
+            List<Font> insensitiveMatches = new ArrayList<>();
+            int item = 0;
+            int total = allFonts.size();
+            for (Font font : allFonts) {
+                if (isCancelled()) {
+                    throw new CancellationException();
+                }
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
+                item++;
+                int actualProgress = item * 100 / total;
+                if (canDisplayContent(font, getContentPreview())) {
+                    if (getSearchedValue() == null || getSearchedValue().isBlank()) {
+                        listModel.addElement(font);
+                    } else {
+                        String fontFamily = font.getFamily();
+                        String regex = Pattern.quote(getSearchedValue());
+                        Pattern caseSensitive = Pattern.compile(regex);
+                        Pattern caseInsensitive = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+                        if (caseSensitive.matcher(fontFamily).find()) {
+                            sensitiveMatches.add(font);
+                        } else if (caseInsensitive.matcher(fontFamily).find()) {
+                            insensitiveMatches.add(font);
+                        }
+                    }
+                }
+                setProgress(actualProgress);
+            }
+            sensitiveMatches.forEach(listModel::addElement);
+            insensitiveMatches.forEach(listModel::addElement);
+            return listModel;
+        }
+
+        @Override
+        protected void done() {
+            try {
+                getFontFamilyList().setModel(get());
+                getFontFamilyList().setSelectedValue(getActualSelection(), true);
+                if (getSearchedValue() == null || getSearchedValue().isBlank()) {
+                    getFontFamilyList().installFontRenderer();
+                } else {
+                    getFontFamilyList().installHighlightRenderer();
+                }
+            } catch (Exception e) {
+                e.printStackTrace(System.err);
+            }
+        }
+
+        @Override
+        public void windowOpened(WindowEvent e) {}
+
+        @Override
+        public void windowClosing(WindowEvent e) {
+            cancel(true);
+        }
+
+        @Override
+        public void windowClosed(WindowEvent e) {}
+
+        @Override
+        public void windowIconified(WindowEvent e) {}
+
+        @Override
+        public void windowDeiconified(WindowEvent e) {}
+
+        @Override
+        public void windowActivated(WindowEvent e) {}
+
+        @Override
+        public void windowDeactivated(WindowEvent e) {}
+
+        private boolean canDisplayContent(Font font, String text) {
+            if (text == null || text.isBlank()) {
+                return true;
+            }
+            return font.canDisplayUpTo(text) == -1;
+        }
+
+        public FontFamilyList getFontFamilyList() {
+            return fontFamilyList;
+        }
+
+        public String getContentPreview() {
+            return contentPreview;
+        }
+
+        public void setContentPreview(String contentPreview) {
+            this.contentPreview = contentPreview;
         }
 
         public String getSearchedValue() {
@@ -943,6 +1021,14 @@ public class FontChooser extends JDialog {
 
         public void setSearchedValue(String searchedValue) {
             this.searchedValue = searchedValue;
+        }
+
+        public Font getActualSelection() {
+            return actualSelection;
+        }
+
+        public void setActualSelection(Font actualSelection) {
+            this.actualSelection = actualSelection;
         }
 
     }
