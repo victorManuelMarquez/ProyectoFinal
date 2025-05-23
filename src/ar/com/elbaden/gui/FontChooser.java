@@ -183,6 +183,14 @@ public class FontChooser extends JDialog {
 
         searchField.getDocument().addDocumentListener(listUpdater);
         searchField.getDocument().addDocumentListener(familyList);
+        searchField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (KeyEvent.VK_DOWN == e.getKeyCode()) {
+                    familyList.requestFocus();
+                }
+            }
+        });
 
         clearSearchBtn.addActionListener(_ -> searchField.setText(""));
 
