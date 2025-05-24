@@ -1,5 +1,7 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
@@ -7,7 +9,9 @@ import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.concurrent.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -20,6 +24,9 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
     private final JProgressBar progressBar;
 
     private LoadingScreen() throws HeadlessException {
+        ResourceBundle messages = ResourceBundle.getBundle(App.MESSAGES);
+        String title = messages.getString("loadingScreen.title");
+        setTitle(title);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         JTextPane infoPane = new JTextPane();
         infoPane.setEditable(false);
@@ -32,7 +39,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         progressBar.setStringPainted(true);
         getContentPane().add(infoScrollPane);
         getContentPane().add(progressBar, BorderLayout.SOUTH);
-        Launcher launcher = new Launcher(infoPane);
+        Launcher launcher = new Launcher(infoPane, messages);
         launcher.addPropertyChangeListener(this);
         addWindowListener(launcher);
     }
@@ -55,10 +62,12 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
     static class Launcher extends SwingWorker<Void, String> implements WindowListener {
 
         private final JTextPane outputPane;
+        private final ResourceBundle messages;
         private final StringBuilder outputBuilder;
 
-        public Launcher(JTextPane outputPane) {
+        public Launcher(JTextPane outputPane, ResourceBundle messages) {
             this.outputPane = outputPane;
+            this.messages = messages;
             outputBuilder = new StringBuilder(outputPane.getText());
         }
 
@@ -66,7 +75,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         protected Void doInBackground() throws Exception {
             File userHome = new File(System.getProperty("user.home"));
             List<Callable<?>> callables = List.of(
-                    new CreateMainFolderTask(userHome),
+                    new CreateMainFolderTask(userHome, messages),
                     new FileHandlerSetTask(new File(userHome, ".baden"))
             );
             int item = 0;
@@ -106,7 +115,8 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
             StringBuilder builder = new StringBuilder(outputPane.getText());
             try {
                 Void ignore = get();
-                builder.append("Finalizado correctamente.");
+                String finished = messages.getString("loadingScreen.task.finished");
+                builder.append(finished);
             } catch (Exception e) {
                 builder.append(e.getMessage());
                 LOGGER.severe(e.getMessage());
@@ -146,13 +156,14 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
 
     }
 
-
     static class CreateMainFolderTask implements Callable<String> {
 
         private final File userHome;
+        private final ResourceBundle messages;
 
-        public CreateMainFolderTask(File userHome) {
+        public CreateMainFolderTask(File userHome, ResourceBundle messages) {
             this.userHome = userHome;
+            this.messages = messages;
         }
 
         @Override
@@ -163,12 +174,14 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
             try {
                 File file = new File(userHome, ".baden");
                 if (file.exists()) {
-                    return "Directorio \"" + file.getName() + "\" encontrado...";
+                    return messages.getString("loadingScreen.task.appFolder.found");
                 } else {
                     if (file.mkdir()) {
-                        return "Se ha creado el directorio: \"" + file.getName() + "\"...";
+                        String message = messages.getString("loadingScreen.task.appFolder.creationSuccessfully");
+                        return MessageFormat.format(message, file.getName());
                     } else {
-                        return "No se pudo crear: \"" + file.getName() + "\".";
+                        String message = messages.getString("loadingScreen.task.appFolder.creationFailed");
+                        return MessageFormat.format(message, file.getPath());
                     }
                 }
             } catch (RuntimeException e) {
