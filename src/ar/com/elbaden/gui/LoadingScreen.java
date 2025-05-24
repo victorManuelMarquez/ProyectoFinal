@@ -4,6 +4,8 @@ import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.WindowEvent;
@@ -73,7 +75,8 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
 
         @Override
         protected Void doInBackground() throws Exception {
-            outputPane.setText(messages.getString("loadingScreen.task.starting") + System.lineSeparator());
+            String starting = messages.getString("loadingScreen.task.starting");
+            appendText(starting + System.lineSeparator(), null);
             File userHome = new File(System.getProperty("user.home"));
             List<CallableTask<?>> tasks = List.of(
                     new CreateMainFolderTask(userHome, messages),
@@ -91,13 +94,14 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
                     try {
                         Object output = result.get();
                         if (output instanceof String line) {
+                            appendText(line, null);
                             String newLine;
+                            SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+                            StyleConstants.setForeground(attributeSet, task.getTextColor());
                             if (task.getSymbol() != null) {
-                                newLine = task.getSymbol() + " " + line + System.lineSeparator();
-                            } else {
-                                newLine = line + System.lineSeparator();
+                                newLine = " " + task.getSymbol() + System.lineSeparator();
+                                appendText(newLine, attributeSet);
                             }
-                            publish(newLine);
                         }
                     } catch (InterruptedException | ExecutionException e) {
                         service.shutdownNow();
@@ -110,30 +114,21 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         }
 
         @Override
-        protected void process(List<String> chunks) {
-            for (String chunk : chunks) {
-                appendText(chunk);
-            }
-        }
-
-        @Override
         protected void done() {
-            StringBuilder builder = new StringBuilder(outputPane.getText());
             try {
                 Void ignore = get();
                 String finished = messages.getString("loadingScreen.task.finished");
-                builder.append(finished);
+                appendText(finished, null);
             } catch (Exception e) {
-                builder.append(e.getMessage());
+                appendText(e.getMessage(), null);
                 LOGGER.severe(e.getMessage());
             }
-            outputPane.setText(builder.toString());
         }
 
-        private void appendText(String line) {
+        private void appendText(String line, SimpleAttributeSet attributeSet) {
             StyledDocument document = outputPane.getStyledDocument();
             try {
-                document.insertString(document.getLength(), line, null);
+                document.insertString(document.getLength(), line, attributeSet);
             } catch (BadLocationException e) {
                 LOGGER.severe(e.getMessage());
             }
@@ -172,13 +167,15 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         public static final String ERROR_SYMBOL = "❌";
 
         private String symbol;
+        private Color textColor;
 
-        public CallableTask(String symbol) {
+        public CallableTask(String symbol, Color textColor) {
             this.symbol = symbol;
+            this.textColor = textColor;
         }
 
         public CallableTask() {
-            this(OK_SYMBOL);
+            this(OK_SYMBOL, Color.GREEN);
         }
 
         public String getSymbol() {
@@ -187,6 +184,14 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
 
         public void setSymbol(String symbol) {
             this.symbol = symbol;
+        }
+
+        public Color getTextColor() {
+            return textColor;
+        }
+
+        public void setTextColor(Color textColor) {
+            this.textColor = textColor;
         }
 
     }
@@ -216,6 +221,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
                         return MessageFormat.format(message, file.getName());
                     } else {
                         setSymbol(ERROR_SYMBOL);
+                        setTextColor(Color.RED);
                         String message = messages.getString("loadingScreen.task.appFolder.creationFailed");
                         return MessageFormat.format(message, file.getPath());
                     }
