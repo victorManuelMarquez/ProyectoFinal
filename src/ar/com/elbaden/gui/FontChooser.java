@@ -1,5 +1,7 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
 import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.border.Border;
@@ -38,46 +40,62 @@ public class FontChooser extends JDialog {
 
     private FontChooser(Window owner) {
         super(owner);
+        ResourceBundle messages = ResourceBundle.getBundle(App.MESSAGES);
 
         // variables
         final Integer[] sizes = new Integer[] {
                 8, 10, 11, fontSize, 14, 16, 18, 20, 21, 22, 24, 26, 28, 32, 34, 36, 40
         };
         final int minCache = 10;
-        String sizeText = "Tamaño del texto";
-        previewText = "El veloz murciélago hindú comía feliz cardillo y kiwi.";
+
+        // localización
+        String title = messages.getString("dialog.fontChooser.title");
+        String fontsTabTitle = messages.getString("dialog.fontChooser.fontsTab.title");
+        String historyTabTitle = messages.getString("dialog.fontChooser.historyTab.title");
+        String searchText = messages.getString("dialog.fontChooser.search");
+        String clearText = messages.getString("dialog.fontChooser.clear");
+        String fontSizeText = messages.getString("dialog.fontChooser.fontSize");
+        String previewBorderTitle = messages.getString("dialog.fontChooser.previewBorder.title");
+        previewText = messages.getString("dialog.fontChooser.previewContent");
+        String okText = messages.getString("dialog.fontChooser.ok");
+        String cancelText = messages.getString("dialog.fontChooser.cancel");
+        String cacheText = messages.getString("dialog.fontChooser.cacheSize");
+        String clearHistoryText = messages.getString("dialog.fontChooser.clearHistory");
+
+        // ajustes
+        setTitle(title);
 
         // componentes
         JTabbedPane tabbedPane = new JTabbedPane();
         JPanel fontsTab = new JPanel();
         JPanel historyTab = new JPanel();
-        JLabel searchLabel = new JLabel("Buscar");
+        JLabel searchLabel = new JLabel(searchText);
         JTextField searchField = new JTextField();
-        JButton clearSearchBtn = new JButton("Limpiar");
+        JButton clearSearchBtn = new JButton(clearText);
         familyList = new FontFamilyList();
         JScrollPane fontFamilyScrollPane = new JScrollPane();
-        FontTable historyTable = new FontTable();
+        FontTable historyTable = new FontTable(messages);
         historyTable.setLimitSize(minCache);
         JScrollPane historyScrollPane = new JScrollPane();
-        JLabel fontSizeLabel = new JLabel(sizeText);
+        JLabel fontSizeLabel = new JLabel(fontSizeText);
         JComboBox<Integer> fontSizeCombo = new JComboBox<>(sizes);
         fontSizeCombo.setSelectedItem(fontSize);
         fontSizeLabel.setLabelFor(fontSizeCombo);
-        JLabel historyCacheLabel = new JLabel("Tamaño de la caché");
+        JLabel historyCacheLabel = new JLabel(cacheText);
         SpinnerNumberModel cacheModel = new SpinnerNumberModel(minCache, minCache, minCache * 4, minCache);
         JSpinner historyCacheSpinner = new JSpinner(cacheModel);
-        JButton clearHistoryBtn = new JButton("Limpiar historial");
+        JButton clearHistoryBtn = new JButton(clearHistoryText);
         JTextArea previewArea = new JTextArea(previewText);
         selectedFont = previewArea.getFont();
         previewArea.append(String.valueOf(System.lineSeparator()).repeat(5));
         previewArea.setLineWrap(true);
         previewArea.setWrapStyleWord(true);
         JScrollPane previewScrollPane = new JScrollPane();
-        TitledBorder previewTitledBorder = BorderFactory.createTitledBorder("Vista previa");
+        TitledBorder previewTitledBorder = BorderFactory.createTitledBorder(previewBorderTitle);
         Border previewBorder = previewScrollPane.getBorder();
         previewScrollPane.setBorder(BorderFactory.createCompoundBorder(previewTitledBorder, previewBorder));
-        JButton okButton = new JButton("Aceptar");
-        JButton cancelBtn = new JButton("Cancelar");
+        JButton okButton = new JButton(okText);
+        JButton cancelBtn = new JButton(cancelText);
 
         // ajustes
         setModal(true);
@@ -115,7 +133,7 @@ public class FontChooser extends JDialog {
                         .addComponent(fontSizeLabel)
                         .addComponent(fontSizeCombo))
         );
-        tabbedPane.addTab("Fuentes", fontsTab);
+        tabbedPane.addTab(fontsTabTitle, fontsTab);
 
         historyScrollPane.getViewport().setView(historyTable);
         GroupLayout historyTabLayout = new GroupLayout(historyTab);
@@ -137,7 +155,7 @@ public class FontChooser extends JDialog {
                         .addComponent(historyCacheSpinner)
                         .addComponent(clearHistoryBtn))
         );
-        tabbedPane.addTab("Historial", historyTab);
+        tabbedPane.addTab(historyTabTitle, historyTab);
 
         previewScrollPane.getViewport().setView(previewArea);
 
@@ -612,8 +630,8 @@ public class FontChooser extends JDialog {
 
         private final FontTableModel tableModel;
 
-        public FontTable() {
-            tableModel = new FontTableModel();
+        public FontTable(ResourceBundle messages) {
+            tableModel = new FontTableModel(messages);
             setModel(tableModel);
             setFillsViewportHeight(true);
             setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -690,14 +708,14 @@ public class FontChooser extends JDialog {
         private final List<Font> dataList;
         private int limitSize;
 
-        public FontTableModel() {
+        public FontTableModel(ResourceBundle messages) {
             columnClasses = new Class[] {
                     Font.class,
                     Integer.class
             };
             columnNames = new ArrayList<>();
-            columnNames.add("Fuente");
-            columnNames.add("Tamaño");
+            columnNames.add(messages.getString("dialog.fontChooser.history.font"));
+            columnNames.add(messages.getString("dialog.fontChooser.history.size"));
             dataList = new ArrayList<>();
             limitSize = 0;
         }
