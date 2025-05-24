@@ -50,7 +50,7 @@ public class FontChooser extends JDialog {
         // componentes
         JTabbedPane tabbedPane = new JTabbedPane();
         JPanel fontsTab = new JPanel();
-        JPanel historyTab = new JPanel(new BorderLayout());
+        JPanel historyTab = new JPanel();
         JLabel searchLabel = new JLabel("Buscar");
         JTextField searchField = new JTextField();
         JButton clearSearchBtn = new JButton("Limpiar");
