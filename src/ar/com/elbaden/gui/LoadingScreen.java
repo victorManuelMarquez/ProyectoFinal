@@ -3,6 +3,8 @@ package ar.com.elbaden.gui;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -63,34 +65,38 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
 
         private final JTextPane outputPane;
         private final ResourceBundle messages;
-        private final StringBuilder outputBuilder;
 
         public Launcher(JTextPane outputPane, ResourceBundle messages) {
             this.outputPane = outputPane;
             this.messages = messages;
-            outputBuilder = new StringBuilder(outputPane.getText());
         }
 
         @Override
         protected Void doInBackground() throws Exception {
+            outputPane.setText(messages.getString("loadingScreen.task.starting") + System.lineSeparator());
             File userHome = new File(System.getProperty("user.home"));
-            List<Callable<?>> callables = List.of(
+            List<CallableTask<?>> tasks = List.of(
                     new CreateMainFolderTask(userHome, messages),
                     new FileHandlerSetTask(new File(userHome, ".baden"))
             );
             int item = 0;
-            int total = callables.size();
-            for (Callable<?> callable : callables) {
+            int total = tasks.size();
+            for (CallableTask<?> task : tasks) {
                 if (isCancelled()) {
                     throw new CancellationException();
                 }
                 try (ExecutorService service = Executors.newSingleThreadExecutor()) {
                     item++;
-                    Future<?> result = service.submit(callable);
+                    Future<?> result = service.submit(task);
                     try {
                         Object output = result.get();
                         if (output instanceof String line) {
-                            String newLine = line + System.lineSeparator();
+                            String newLine;
+                            if (task.getSymbol() != null) {
+                                newLine = task.getSymbol() + " " + line + System.lineSeparator();
+                            } else {
+                                newLine = line + System.lineSeparator();
+                            }
                             publish(newLine);
                         }
                     } catch (InterruptedException | ExecutionException e) {
@@ -125,8 +131,12 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         }
 
         private void appendText(String line) {
-            outputBuilder.append(line);
-            outputPane.setText(outputBuilder.toString());
+            StyledDocument document = outputPane.getStyledDocument();
+            try {
+                document.insertString(document.getLength(), line, null);
+            } catch (BadLocationException e) {
+                LOGGER.severe(e.getMessage());
+            }
         }
 
         @Override
@@ -156,7 +166,32 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
 
     }
 
-    static class CreateMainFolderTask implements Callable<String> {
+    static abstract class CallableTask<T> implements Callable<T> {
+
+        public static final String OK_SYMBOL = "✔";
+        public static final String ERROR_SYMBOL = "❌";
+
+        private String symbol;
+
+        public CallableTask(String symbol) {
+            this.symbol = symbol;
+        }
+
+        public CallableTask() {
+            this(OK_SYMBOL);
+        }
+
+        public String getSymbol() {
+            return symbol;
+        }
+
+        public void setSymbol(String symbol) {
+            this.symbol = symbol;
+        }
+
+    }
+
+    static class CreateMainFolderTask extends CallableTask<String> {
 
         private final File userHome;
         private final ResourceBundle messages;
@@ -180,6 +215,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
                         String message = messages.getString("loadingScreen.task.appFolder.creationSuccessfully");
                         return MessageFormat.format(message, file.getName());
                     } else {
+                        setSymbol(ERROR_SYMBOL);
                         String message = messages.getString("loadingScreen.task.appFolder.creationFailed");
                         return MessageFormat.format(message, file.getPath());
                     }
@@ -191,7 +227,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
 
     }
 
-    static class FileHandlerSetTask implements Callable<FileHandler> {
+    static class FileHandlerSetTask extends CallableTask<FileHandler> {
 
         private final File userHome;
 
