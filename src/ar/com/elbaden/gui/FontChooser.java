@@ -203,6 +203,14 @@ public class FontChooser extends JDialog {
                 previewArea.setFont(selectedFont);
             }
         });
+        familyList.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (KeyEvent.VK_ENTER == e.getKeyCode()) {
+                    okButton.requestFocus();
+                }
+            }
+        });
 
         ItemListener sizeSelection = selectedItem -> {
             if (selectedItem.getItem() instanceof Integer value) {
@@ -259,6 +267,14 @@ public class FontChooser extends JDialog {
         previewArea.addPropertyChangeListener("font", previewFontChange);
 
         okButton.addActionListener(_ -> dispose());
+        okButton.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (KeyEvent.VK_ENTER == e.getKeyCode()) {
+                    okButton.doClick();
+                }
+            }
+        });
 
         cancelBtn.addActionListener(_ -> {
             selectedFont = null;
