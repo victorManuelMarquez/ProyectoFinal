@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import static javax.swing.GroupLayout.*;
 import static javax.swing.LayoutStyle.ComponentPlacement;
 
+@SuppressWarnings("unused")
 public class FontChooser extends JDialog {
 
     private static final int DEFAULT_FONT_SIZE = 12;

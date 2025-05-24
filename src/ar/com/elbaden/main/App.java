@@ -1,6 +1,6 @@
 package ar.com.elbaden.main;
 
-import ar.com.elbaden.gui.FontChooser;
+import ar.com.elbaden.gui.LoadingScreen;
 
 import javax.swing.*;
 import java.util.logging.Logger;
@@ -13,7 +13,7 @@ public class App {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-                System.out.println(FontChooser.createAndShow(null));
+                LoadingScreen.createAndShow();
             } catch (Exception e) {
                 LOGGER.severe(e.getMessage());
             }
