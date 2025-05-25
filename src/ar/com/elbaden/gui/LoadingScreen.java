@@ -1,7 +1,5 @@
 package ar.com.elbaden.gui;
 
-import ar.com.elbaden.main.App;
-
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -20,6 +18,7 @@ import java.util.concurrent.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class LoadingScreen extends JFrame implements PropertyChangeListener {
 
@@ -27,8 +26,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
 
     private final JProgressBar progressBar;
 
-    private LoadingScreen() throws HeadlessException {
-        ResourceBundle messages = ResourceBundle.getBundle(App.MESSAGES);
+    private LoadingScreen(ResourceBundle messages) throws HeadlessException {
         String title = messages.getString("loadingScreen.title");
         setTitle(title);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -37,8 +35,11 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         infoPane.setFocusable(false);
         infoPane.setCaretColor(infoPane.getBackground());
         infoPane.getCaret().setBlinkRate(0);
-        infoPane.setPreferredSize(new Dimension(360, 144));
+        infoPane.setOpaque(false);
+        infoPane.setBackground(new Color(255, 255, 255, 0));
+        infoPane.setPreferredSize(new Dimension(320, 144));
         JScrollPane infoScrollPane = new JScrollPane(infoPane);
+        infoScrollPane.setBorder(null);
         progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
         getContentPane().add(infoScrollPane);
@@ -56,8 +57,8 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         }
     }
 
-    public static void createAndShow() {
-        LoadingScreen loadingScreen = new LoadingScreen();
+    public static void createAndShow(ResourceBundle messages) {
+        LoadingScreen loadingScreen = new LoadingScreen(messages);
         loadingScreen.pack();
         loadingScreen.setLocationRelativeTo(null);
         loadingScreen.setVisible(true);
@@ -80,7 +81,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
             File userHome = new File(System.getProperty("user.home"));
             List<CallableTask<?>> tasks = List.of(
                     new CreateMainFolderTask(userHome, messages),
-                    new FileHandlerSetTask(new File(userHome, ".baden"))
+                    new FileHandlerSetTask(new File(userHome, ".baden"), messages)
             );
             int item = 0;
             int total = tasks.size();
@@ -236,9 +237,11 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
     static class FileHandlerSetTask extends CallableTask<FileHandler> {
 
         private final File userHome;
+        private final ResourceBundle messages;
 
-        public FileHandlerSetTask(File userHome) {
+        public FileHandlerSetTask(File userHome, ResourceBundle messages) {
             this.userHome = userHome;
+            this.messages = messages;
         }
 
         @Override
@@ -250,7 +253,10 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
                 File logFile = new File(userHome, "log.txt");
                 FileHandler fileHandler = new FileHandler(logFile.getPath(), false);
                 fileHandler.setLevel(Level.INFO);
+                SimpleFormatter simpleFormatter = new SimpleFormatter();
+                fileHandler.setFormatter(simpleFormatter);
                 LOGGER.addHandler(fileHandler);
+                LOGGER.info(messages.getString("log.info.fileHandlerSet"));
                 return fileHandler;
             } catch (RuntimeException e) {
                 throw new ExecutionException(e);
