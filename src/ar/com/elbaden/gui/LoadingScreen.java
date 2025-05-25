@@ -27,9 +27,14 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
     private final JProgressBar progressBar;
 
     private LoadingScreen(ResourceBundle messages) throws HeadlessException {
+        // localización
         String title = messages.getString("loadingScreen.title");
+
+        // ajustes
         setTitle(title);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        // componentes
         JTextPane infoPane = new JTextPane();
         infoPane.setEditable(false);
         infoPane.setFocusable(false);
@@ -42,9 +47,13 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         infoScrollPane.setBorder(null);
         progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
+
+        // instalando componentes
         getContentPane().add(infoScrollPane);
         getContentPane().add(progressBar, BorderLayout.SOUTH);
         Launcher launcher = new Launcher(infoPane, messages);
+
+        // eventos
         launcher.addPropertyChangeListener(this);
         addWindowListener(launcher);
     }
