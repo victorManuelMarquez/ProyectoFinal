@@ -6,6 +6,8 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
@@ -13,6 +15,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.*;
 import java.util.logging.FileHandler;
@@ -25,10 +28,12 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
     private static final Logger LOGGER = Logger.getGlobal();
 
     private final JProgressBar progressBar;
+    private final String captionMessage;
 
     private LoadingScreen(ResourceBundle messages) throws HeadlessException {
         // localización
         String title = messages.getString("loadingScreen.title");
+        captionMessage = messages.getString("loadingScreen.task.countdown.caption");
 
         // ajustes
         setTitle(title);
@@ -63,6 +68,12 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         if ("progress".equals(evt.getPropertyName())) {
             Integer progressValue = (Integer) evt.getNewValue();
             progressBar.setValue(progressValue);
+        } else if ("countdown".equals(evt.getPropertyName())) {
+            Integer countdownValue = (Integer) evt.getNewValue();
+            progressBar.setString(MessageFormat.format(captionMessage, countdownValue));
+            if (countdownValue == 0) {
+                dispose();
+            }
         }
     }
 
@@ -73,14 +84,37 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         loadingScreen.setVisible(true);
     }
 
-    static class Launcher extends SwingWorker<Void, String> implements WindowListener {
+    static class Launcher extends SwingWorker<Void, String> implements WindowListener, ActionListener {
 
         private final JTextPane outputPane;
         private final ResourceBundle messages;
+        private final Timer countdown;
+        private final int totalSeconds;
+
+        private int seconds;
 
         public Launcher(JTextPane outputPane, ResourceBundle messages) {
             this.outputPane = outputPane;
             this.messages = messages;
+            countdown = new Timer(1000, this);
+            countdown.setActionCommand("countdown");
+            totalSeconds = 30;
+            seconds = totalSeconds;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (Objects.equals(countdown.getActionCommand(), e.getActionCommand())) {
+                int old = seconds;
+                seconds--;
+                firePropertyChange(countdown.getActionCommand(), old, seconds);
+                int oldProgress = old * 100 / totalSeconds;
+                int newProgress = seconds * 100 / totalSeconds;
+                firePropertyChange("progress", oldProgress, newProgress);
+                if (seconds <= 0) {
+                    countdown.stop();
+                }
+            }
         }
 
         @Override
@@ -133,6 +167,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
                 appendText(e.getMessage(), null);
                 LOGGER.severe(e.getMessage());
             }
+            countdown.start(); // por ahora se iniciará el conteo de cierre
         }
 
         private void appendText(String line, SimpleAttributeSet attributeSet) {
@@ -152,6 +187,9 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
         @Override
         public void windowClosing(WindowEvent e) {
             cancel(true);
+            if (countdown.isRunning()) {
+                countdown.stop();
+            }
         }
 
         @Override
