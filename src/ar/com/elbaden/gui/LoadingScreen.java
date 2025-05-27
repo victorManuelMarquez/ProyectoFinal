@@ -74,6 +74,8 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
             if (countdownValue == 0) {
                 dispose();
             }
+        } else if ("close".equals(evt.getPropertyName())) {
+            dispose();
         }
     }
 
@@ -163,11 +165,13 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
                 Void ignore = get();
                 String finished = messages.getString("loadingScreen.task.finished");
                 appendText(finished, null);
+                SwingUtilities.invokeLater(() -> MainFrame.createAndShow("Demo"));
+                firePropertyChange("close", false, true);
             } catch (Exception e) {
                 appendText(e.getMessage(), null);
                 LOGGER.severe(e.getMessage());
+                countdown.start();
             }
-            countdown.start(); // por ahora se iniciará el conteo de cierre
         }
 
         private void appendText(String line, SimpleAttributeSet attributeSet) {
