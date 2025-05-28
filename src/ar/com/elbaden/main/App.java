@@ -16,9 +16,6 @@ public class App {
         SwingUtilities.invokeLater(() -> {
             try {
                 ResourceBundle messages = ResourceBundle.getBundle(MESSAGES);
-                Runtime.getRuntime().addShutdownHook(
-                    new Thread(() -> LOGGER.info(messages.getString("log.info.exitProgram")), "exitLog")
-                );
                 LoadingScreen.createAndShow(messages);
             } catch (Exception e) {
                 LOGGER.severe(e.getMessage());
