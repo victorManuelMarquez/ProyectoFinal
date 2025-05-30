@@ -1,5 +1,7 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -124,7 +126,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
             File userHome = new File(System.getProperty("user.home"));
             List<CallableTask<?>> tasks = List.of(
                     new CreateMainFolderTask(userHome, messages),
-                    new FileHandlerSetTask(new File(userHome, ".baden"), messages)
+                    new FileHandlerSetTask(new File(userHome, App.FOLDER), messages)
             );
             int item = 0;
             int total = tasks.size();
@@ -264,7 +266,7 @@ public class LoadingScreen extends JFrame implements PropertyChangeListener {
                 throw new InterruptedException();
             }
             try {
-                File file = new File(userHome, ".baden");
+                File file = new File(userHome, App.FOLDER);
                 if (file.exists()) {
                     return messages.getString("loadingScreen.task.appFolder.found");
                 } else {

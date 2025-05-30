@@ -11,6 +11,7 @@ public class App {
     private static final Logger LOGGER = Logger.getGlobal();
 
     public static final String MESSAGES = "i18n/messages";
+    public static final String FOLDER = ".baden";
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
