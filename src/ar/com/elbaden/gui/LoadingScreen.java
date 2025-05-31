@@ -60,6 +60,9 @@ public class LoadingScreen extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 loader.cancel(true);
+                if (loader.getCountdown().isRunning()) {
+                    loader.getCountdown().stop();
+                }
             }
 
         });
