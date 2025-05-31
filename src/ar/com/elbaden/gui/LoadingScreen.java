@@ -195,6 +195,10 @@ public class LoadingScreen extends JFrame {
             return textPane;
         }
 
+        public Timer getCountdown() {
+            return countdown;
+        }
+
     }
 
     static abstract class CheckPoint<T> implements Callable<T> {
