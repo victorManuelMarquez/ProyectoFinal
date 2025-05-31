@@ -87,9 +87,6 @@ public class LoadingScreen extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (Thread.currentThread().isInterrupted()) {
-                countdown.stop();
-            }
             int old = second;
             second--;
             firePropertyChange("progress",
