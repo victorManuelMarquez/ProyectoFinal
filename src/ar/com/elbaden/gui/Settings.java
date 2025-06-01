@@ -20,6 +20,9 @@ public class Settings {
     private DocumentBuilderFactory builderFactory;
     private DocumentBuilder builder;
     private Document document;
+    private Element root;
+    private Element themeNode;
+    private Element fontsNode;
 
     public Settings() throws ParserConfigurationException {
         builderFactory = DocumentBuilderFactory.newInstance();
@@ -32,11 +35,12 @@ public class Settings {
         return document.getDocumentURI();
     }
 
-    private Element createNode(String tagName, String attrName, String attrValue) {
-        Attr attr = (attrName == null) ? null : document.createAttribute(attrName);
-        if (attr != null) {
-            attr.setValue((attrValue == null) ? "" : attrValue);
+    private Element createNodeWithId(String tagName, String idValue) {
+        if (idValue == null) {
+            throw new IllegalArgumentException("id = null");
         }
+        Attr attr = document.createAttribute("id");
+        attr.setValue(idValue);
         return createNode(tagName, attr);
     }
 
@@ -46,7 +50,11 @@ public class Settings {
         }
         Element node = document.createElement(tagName);
         if (attribute != null) {
-            node.setAttributeNode(attribute);
+            if (attribute.isId()) {
+                node.setIdAttributeNode(attribute, true);
+            } else {
+                node.setAttributeNode(attribute);
+            }
         }
         return node;
     }
@@ -61,6 +69,53 @@ public class Settings {
         }
         Text textContent = document.createTextNode((value == null) ? "" : value.toString());
         node.appendChild(textContent);
+    }
+
+    private void installRoot() {
+        root = createNode("settings", null);
+        document.appendChild(root);
+    }
+
+    private void installTheme(LookAndFeel theme) {
+        themeNode = createNodeWithId("theme", theme.getID());
+        Element classNode = document.createElement("className");
+        setTextNode(classNode, theme.getClass().getName());
+        append(themeNode, classNode);
+        append(root, themeNode);
+    }
+
+    private void installFontsNode() {
+        fontsNode = createNode("fonts", null);
+        append(root, fontsNode);
+    }
+
+    private void mapping() {
+        NodeList nodeList = document.getElementsByTagName("settings");
+        if (nodeList.getLength() > 0) {
+            root = (Element) nodeList.item(0);
+        }
+        nodeList = document.getElementsByTagName("theme");
+        if (nodeList.getLength() > 0) {
+            themeNode = (Element) nodeList.item(0);
+        }
+        nodeList = document.getElementsByTagName("fonts");
+        if (nodeList.getLength() > 0) {
+            fontsNode = (Element) nodeList.item(0);
+        }
+    }
+
+    private void addFont(Object key, Font font) {
+        Element fontNode = createNodeWithId("font", key.toString());
+        append(fontsNode, fontNode);
+        Element familyNode = createNode("family", null);
+        setTextNode(familyNode, font.getFamily());
+        append(fontNode, familyNode);
+        Element styleNode = createNode("style", null);
+        setTextNode(styleNode, font.getStyle());
+        append(fontNode, styleNode);
+        Element sizeNode = createNode("size", null);
+        setTextNode(sizeNode, font.getSize());
+        append(fontNode, sizeNode);
     }
 
     public void dump(File outputFile, int indentSpaces) throws TransformerException {
@@ -81,44 +136,28 @@ public class Settings {
         builderFactory = DocumentBuilderFactory.newInstance();
         builder = builderFactory.newDocumentBuilder();
         document = builder.parse(inputFile);
+        mapping();
     }
 
     public static Settings getDefaults() throws ParserConfigurationException {
+        Settings settings = new Settings();
+
         UIDefaults defaults = UIManager.getDefaults();
         Enumeration<Object> keys = defaults.keys();
-        Settings settings = new Settings();
         LookAndFeel theme = UIManager.getLookAndFeel();
 
-        Element root = settings.createNode("settings", null);
-        settings.document.appendChild(root);
-
-        Element themeNode = settings.createNode("theme", "id", theme.getID());
-        settings.append(root, themeNode);
-        Element classThemeNode = settings.createNode("class", null);
-        settings.setTextNode(classThemeNode, theme.getClass().getName());
-        settings.append(themeNode, classThemeNode);
-
-        Element fontsNode = settings.createNode("fonts", null);
-        settings.append(root, fontsNode);
+        settings.installRoot();
+        settings.installTheme(theme);
+        settings.installFontsNode();
 
         if (theme.getID().equals("Metal")) {
-            fontsNode.setAttribute("swing.boldMetal", "true");
+            settings.fontsNode.setAttribute("swing.boldMetal", "true");
         }
 
         while (keys.hasMoreElements()) {
             Object key = keys.nextElement();
             if (defaults.get(key) instanceof Font font) {
-                Element fontNode = settings.createNode("font", "key", key.toString());
-                settings.append(fontsNode, fontNode);
-                Element familyNode = settings.createNode("family", null);
-                settings.setTextNode(familyNode, font.getFamily());
-                settings.append(fontNode, familyNode);
-                Element styleNode = settings.createNode("style", null);
-                settings.setTextNode(styleNode, font.getStyle());
-                settings.append(fontNode, styleNode);
-                Element sizeNode = settings.createNode("size", null);
-                settings.setTextNode(sizeNode, font.getSize());
-                settings.append(fontNode, sizeNode);
+                settings.addFont(key, font);
             }
         }
         return settings;
