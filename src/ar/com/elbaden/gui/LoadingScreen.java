@@ -100,7 +100,7 @@ public class LoadingScreen extends JFrame {
             firePropertyChange("countdown", old, second);
             if (second <= 0) {
                 countdown.stop();
-                Window ancestor = SwingUtilities.getWindowAncestor(getTextPane());
+                Window ancestor = SwingUtilities.getWindowAncestor(textPane);
                 ancestor.dispose();
             }
         }
@@ -183,7 +183,7 @@ public class LoadingScreen extends JFrame {
         }
 
         private void appendText(String text, AttributeSet attributeSet, boolean newLine) {
-            StyledDocument styledDocument = getTextPane().getStyledDocument();
+            StyledDocument styledDocument = textPane.getStyledDocument();
             try {
                 int offset = styledDocument.getLength();
                 styledDocument.insertString(offset, text, attributeSet);
@@ -194,10 +194,6 @@ public class LoadingScreen extends JFrame {
             } catch (BadLocationException e) {
                 e.printStackTrace(System.err);
             }
-        }
-
-        public JTextPane getTextPane() {
-            return textPane;
         }
 
         public Timer getCountdown() {
