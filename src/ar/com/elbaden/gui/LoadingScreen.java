@@ -9,10 +9,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.*;
 
 public class LoadingScreen extends JFrame {
@@ -109,7 +110,7 @@ public class LoadingScreen extends JFrame {
             appendText("Cargando la información necesaria...", null, true);
             List<CheckPoint<?>> routineCheckPoints = List.of(
                     new FindAppFolder(),
-                    new LoadProperties()
+                    new LoadSettings()
             );
             int total = routineCheckPoints.size();
             int item = 0;
@@ -133,8 +134,8 @@ public class LoadingScreen extends JFrame {
             } catch (Exception e) {
                 List<CheckPoint<?>> firstRunTasks = List.of(
                         new CreateAppFolder(),
-                        new SaveProperties(),
-                        new LoadProperties()
+                        new RestoreSettings(),
+                        new LoadSettings()
                 );
                 total = item + firstRunTasks.size();
                 for (CheckPoint<?> checkPoint : firstRunTasks) {
@@ -267,50 +268,44 @@ public class LoadingScreen extends JFrame {
 
     }
 
-    static class LoadProperties extends CheckPoint<Properties> {
+    static class LoadSettings extends CheckPoint<Settings> {
 
         @Override
-        public Properties call() throws Exception {
+        public Settings call() throws Exception {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            Properties properties;
+            Settings settings;
             try {
                 File appFolder = new File(System.getProperty("user.home"), App.FOLDER);
-                File iniFile = new File(appFolder, "settings.ini");
-                try (FileInputStream inputStream = new FileInputStream(iniFile)) {
-                    properties = new Properties();
-                    properties.load(inputStream);
-                }
+                File xmlFile = new File(appFolder, "settings.xml");
+                settings = new Settings();
+                settings.load(xmlFile);
             } catch (Exception e) {
                 setForegroundColor(Color.RED);
                 throw new ExecutionException(e);
             }
-            return properties;
+            return settings;
         }
 
     }
 
-    static class SaveProperties extends CheckPoint<Properties> {
+    static class RestoreSettings extends CheckPoint<Settings> {
 
         @Override
-        public Properties call() throws Exception {
-            Properties properties;
+        public Settings call() throws Exception {
+            Settings settings;
             try {
                 File appFolder = new File(System.getProperty("user.home"), App.FOLDER);
-                File iniFile = new File(appFolder, "settings.ini");
-                try (FileOutputStream outputStream = new FileOutputStream(iniFile)) {
-                    properties = new Properties();
-                    properties.setProperty("fontFamily", "Dialog");
-                    properties.setProperty("fontSize", "12");
-                    properties.store(outputStream, "Configuración");
-                }
+                File xmlFile = new File(appFolder, "settings.xml");
+                settings = Settings.getDefaults();
+                settings.dump(xmlFile, 4);
                 setForegroundColor(Color.GREEN);
             } catch (Exception e) {
                 setForegroundColor(Color.RED);
                 throw new ExecutionException(e);
             }
-            return properties;
+            return settings;
         }
 
     }
