@@ -25,12 +25,13 @@ public class LoadingScreen extends JFrame {
         }
 
         // componentes
-        JTextPane outputPane = new JTextPane();
+        CustomTextPane outputPane = new CustomTextPane();
+        outputPane.setRows(12);
+        outputPane.setCols(36);
         outputPane.setEditable(false);
         outputPane.setFocusable(false);
         outputPane.getCaret().setVisible(false);
         JScrollPane scrollPane = new JScrollPane(outputPane);
-        scrollPane.setPreferredSize(new Dimension(240, 144));
         JProgressBar progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
 
