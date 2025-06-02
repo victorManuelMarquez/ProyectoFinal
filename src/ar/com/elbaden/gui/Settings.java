@@ -23,16 +23,18 @@ public class Settings {
     private Element root;
     private Element themeNode;
     private Element fontsNode;
+    private String source;
 
     public Settings() throws ParserConfigurationException {
         builderFactory = DocumentBuilderFactory.newInstance();
         builder = builderFactory.newDocumentBuilder();
         document = builder.newDocument();
+        source = Settings.class.getSimpleName();
     }
 
     @Override
     public String toString() {
-        return document.getDocumentURI();
+        return source;
     }
 
     private Element createNodeWithId(String tagName, String idValue) {
@@ -137,6 +139,20 @@ public class Settings {
         builder = builderFactory.newDocumentBuilder();
         document = builder.parse(inputFile);
         mapping();
+        source = inputFile.getPath();
+    }
+
+    public String getThemeID() {
+        return themeNode.getAttributeNode("id").getValue();
+    }
+
+    public String getThemeClass() {
+        NodeList elements = themeNode.getElementsByTagName("className");
+        if (elements.getLength() > 0) {
+            Node classNode = elements.item(0);
+            return classNode.getTextContent();
+        }
+        return null;
     }
 
     public static Settings getDefaults() throws ParserConfigurationException {

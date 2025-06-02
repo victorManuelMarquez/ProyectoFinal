@@ -12,7 +12,6 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -80,12 +79,14 @@ public class LoadingScreen extends JFrame {
     static class Loader extends SwingWorker<Void, Void> implements ActionListener {
 
         private final JTextPane textPane;
+        private final Window ancestor;
         private final Timer countdown;
         private final int totalSeconds = 30;
         private int second;
 
         public Loader(JTextPane textPane) {
             this.textPane = textPane;
+            ancestor = SwingUtilities.getWindowAncestor(textPane);
             countdown = new Timer(1000, this);
             second = totalSeconds;
         }
@@ -100,7 +101,6 @@ public class LoadingScreen extends JFrame {
             firePropertyChange("countdown", old, second);
             if (second <= 0) {
                 countdown.stop();
-                Window ancestor = SwingUtilities.getWindowAncestor(textPane);
                 ancestor.dispose();
             }
         }
@@ -108,50 +108,22 @@ public class LoadingScreen extends JFrame {
         @Override
         protected Void doInBackground() throws Exception {
             appendText("Cargando la información necesaria...", null, true);
-            List<CheckPoint<?>> routineCheckPoints = List.of(
-                    new FindAppFolder(),
-                    new LoadSettings()
-            );
-            int total = routineCheckPoints.size();
-            int item = 0;
-            try (ExecutorService service = Executors.newFixedThreadPool(routineCheckPoints.size())) {
-                List<Future<?>> results = new ArrayList<>();
-                for (CheckPoint<?> checkPoint : routineCheckPoints) {
-                    Future<?> result = service.submit(checkPoint);
-                    results.add(result);
-                }
-                for (Future<?> result : results) {
-                    try {
-                        appendText(result.get().toString(), null, true);
-                        item++;
-                        setProgress(calculateProgress(item, total));
-                    } catch (InterruptedException | ExecutionException e) {
-                        appendText(e.getMessage(), null, true);
-                        service.shutdownNow();
-                        throw e;
-                    }
-                }
+            int progress = 0;
+            try {
+                List<CheckPoint<?>> routineCheckPoints = List.of(
+                        new FindAppFolder(),
+                        new LoadSettings(),
+                        new ApplyTheme(ancestor)
+                );
+                processCheckPoints(routineCheckPoints, progress);
             } catch (Exception e) {
+                appendText(e.getMessage(), null, true);
                 List<CheckPoint<?>> firstRunTasks = List.of(
                         new CreateAppFolder(),
                         new RestoreSettings(),
                         new LoadSettings()
                 );
-                total = item + firstRunTasks.size();
-                for (CheckPoint<?> checkPoint : firstRunTasks) {
-                    try (ExecutorService service = Executors.newSingleThreadExecutor()) {
-                        Future<?> result = service.submit(checkPoint);
-                        try {
-                            appendText(result.get().toString(), styledContent(checkPoint), true);
-                            item++;
-                            setProgress(calculateProgress(item, total));
-                        } catch (InterruptedException | ExecutionException ex) {
-                            appendText(ex.getMessage(), styledContent(checkPoint), true);
-                            service.shutdownNow();
-                            throw ex;
-                        }
-                    }
-                }
+                processCheckPoints(firstRunTasks, progress);
             }
             return null;
         }
@@ -168,6 +140,25 @@ public class LoadingScreen extends JFrame {
                 e.printStackTrace(System.err);
             }
             countdown.start();
+        }
+
+        private void processCheckPoints(List<CheckPoint<?>> checkPoints, int progress)
+                throws InterruptedException, ExecutionException {
+            int total = progress + checkPoints.size();
+            int item = progress;
+            for (CheckPoint<?> checkPoint : checkPoints) {
+                try (ExecutorService service = Executors.newSingleThreadExecutor()) {
+                    Future<?> future = service.submit(checkPoint);
+                    try {
+                        appendText(future.get().toString(), styledContent(checkPoint), true);
+                        item++;
+                        setProgress(calculateProgress(item, total));
+                    } catch (InterruptedException | ExecutionException e) {
+                        service.shutdownNow();
+                        throw e;
+                    }
+                }
+            }
         }
 
         private int calculateProgress(int actual, int total) {
@@ -271,17 +262,16 @@ public class LoadingScreen extends JFrame {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            Settings settings;
             try {
                 File appFolder = new File(System.getProperty("user.home"), App.FOLDER);
                 File xmlFile = new File(appFolder, "settings.xml");
-                settings = new Settings();
-                settings.load(xmlFile);
+                App.settings = new Settings();
+                App.settings.load(xmlFile);
             } catch (Exception e) {
                 setForegroundColor(Color.RED);
                 throw new ExecutionException(e);
             }
-            return settings;
+            return App.settings;
         }
 
     }
@@ -302,6 +292,37 @@ public class LoadingScreen extends JFrame {
                 throw new ExecutionException(e);
             }
             return settings;
+        }
+
+    }
+
+    static class ApplyTheme extends CheckPoint<String> {
+
+        private final Window window;
+
+        public ApplyTheme(Window window) {
+            this.window = window;
+        }
+
+        @Override
+        public String call() throws Exception {
+            LookAndFeel theme = UIManager.getLookAndFeel();
+            try {
+                if (!theme.getID().equals(App.settings.getThemeID())) {
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            UIManager.setLookAndFeel(App.settings.getThemeClass());
+                            SwingUtilities.updateComponentTreeUI(window);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                setForegroundColor(Color.RED);
+                throw new ExecutionException(e);
+            }
+            return App.settings.getThemeID();
         }
 
     }
