@@ -30,11 +30,17 @@ public class Settings {
         builder = builderFactory.newDocumentBuilder();
         document = builder.newDocument();
         source = Settings.class.getSimpleName();
+        configureDOM();
     }
 
     @Override
     public String toString() {
         return source;
+    }
+
+    private void configureDOM() {
+        builderFactory.setValidating(true);
+        builderFactory.setNamespaceAware(true);
     }
 
     private Element createNodeWithId(String tagName, String idValue) {
@@ -103,6 +109,19 @@ public class Settings {
         nodeList = document.getElementsByTagName("fonts");
         if (nodeList.getLength() > 0) {
             fontsNode = (Element) nodeList.item(0);
+            NodeList nodes = fontsNode.getElementsByTagName("font");
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Element fontNode = (Element) nodes.item(i);
+                if (fontNode.hasAttributes()) {
+                    NamedNodeMap attributes = fontNode.getAttributes();
+                    for (int j = 0; j < attributes.getLength(); j++) {
+                        // solución "bruta" para establecer los ID para el document
+                        if (attributes.item(j).getNodeName().equals("id")) {
+                            fontNode.setIdAttributeNode((Attr) attributes.item(j), true);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -138,6 +157,7 @@ public class Settings {
         builderFactory = DocumentBuilderFactory.newInstance();
         builder = builderFactory.newDocumentBuilder();
         document = builder.parse(inputFile);
+        configureDOM();
         mapping();
         source = inputFile.getPath();
     }
