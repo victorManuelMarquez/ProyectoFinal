@@ -29,6 +29,7 @@ public class Settings {
     private final String rootNodeName = "settings";
     private final String themeNodeName = "theme";
     private final String classThemeNodeName = "className";
+    private final String fontsNodeName = "fonts";
     private final DocumentBuilder builder;
     private Document document;
 
@@ -51,6 +52,7 @@ public class Settings {
     private Document generateXSD() {
         String namespace = XMLConstants.W3C_XML_SCHEMA_NS_URI;
         String themeType = "LookAndFeelType";
+        String fontsType = "FontsType";
         Document xsdDocument = builder.newDocument();
 
         // esquema
@@ -69,7 +71,11 @@ public class Settings {
         Element themeElement = xsdDocument.createElementNS(namespace, "xs:element");
         themeElement.setAttribute("name", themeNodeName);
         themeElement.setAttribute("type", themeType);
+        Element fontsElement = xsdDocument.createElementNS(namespace, "xs:element");
+        fontsElement.setAttribute("name", fontsNodeName);
+        fontsElement.setAttribute("type", fontsType);
         rootSequence.appendChild(themeElement);
+        rootSequence.appendChild(fontsElement);
         rootComplexType.appendChild(rootSequence);
         rootElement.appendChild(rootComplexType);
         schemaElement.appendChild(rootElement);
@@ -93,6 +99,14 @@ public class Settings {
 
         schemaElement.appendChild(themeComplexType);
 
+        // nodo fuentes: fonts complexType
+        Element fontsComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
+        fontsComplexType.setAttribute("name", fontsType);
+        Element fontsSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
+        fontsComplexType.appendChild(fontsSequence);
+
+        schemaElement.appendChild(fontsComplexType);
+
         return xsdDocument;
     }
 
@@ -102,6 +116,7 @@ public class Settings {
         Element rootNode = document.createElementNS(targetNamespace, rootNodeName);
         Element themeNode = document.createElementNS(targetNamespace, themeNodeName);
         Element classThemeNode = document.createElementNS(targetNamespace, classThemeNodeName);
+        Element fontsNode = document.createElementNS(targetNamespace, fontsNodeName);
         // recuperando datos
         LookAndFeel theme = UIManager.getLookAndFeel();
         classThemeNode.setTextContent(theme.getClass().getName());
@@ -109,6 +124,7 @@ public class Settings {
         // estableciendo jerarquía entre los nodos
         themeNode.appendChild(classThemeNode);
         rootNode.appendChild(themeNode);
+        rootNode.appendChild(fontsNode);
         document.appendChild(rootNode);
     }
 
