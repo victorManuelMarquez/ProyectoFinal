@@ -7,10 +7,12 @@ import java.io.File;
 
 public class App {
 
+    public static final String FOLDER = ".baden";
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-                File outputDir = new File(System.getProperty("user.home"), ".baden");
+                File outputDir = new File(System.getProperty("user.home"), FOLDER);
                 File xsdFile = new File(outputDir, "settings.xsd");
                 File xmlFile = new File(outputDir, "settings.xml");
                 Settings settings = new Settings();
