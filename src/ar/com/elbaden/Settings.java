@@ -33,6 +33,9 @@ public class Settings {
     private final String classThemeNodeName = "className";
     private final String fontsNodeName = "fonts";
     private final String fontNodeName = "font";
+    private final String familyNodeName = "family";
+    private final String styleNodeName = "style";
+    private final String sizeNodeName = "size";
     private final DocumentBuilder builder;
     private Document document;
 
@@ -110,18 +113,31 @@ public class Settings {
         Element fontElement = xsdDocument.createElementNS(namespace, "xs:element");
         fontElement.setAttribute("name", fontNodeName);
         fontElement.setAttribute("type", fontType);
-        fontElement.setAttribute("minOccurs", "0");
         fontElement.setAttribute("maxOccurs", "unbounded");
         fontsSequence.appendChild(fontElement);
         fontsComplexType.appendChild(fontsSequence);
 
         schemaElement.appendChild(fontsComplexType);
 
+        // nodo fuente: font complexType
         Element fontComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
         fontComplexType.setAttribute("name", fontType);
         Element fontSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
+        Element familyElement = xsdDocument.createElementNS(namespace, "xs:element");
+        familyElement.setAttribute("name", familyNodeName);
+        familyElement.setAttribute("type", "xs:string");
+        fontSequence.appendChild(familyElement);
+        Element styleElement = xsdDocument.createElementNS(namespace, "xs:element");
+        styleElement.setAttribute("name", styleNodeName);
+        styleElement.setAttribute("type", "xs:integer");
+        fontSequence.appendChild(styleElement);
+        Element sizeElement = xsdDocument.createElementNS(namespace, "xs:element");
+        sizeElement.setAttribute("name", sizeNodeName);
+        sizeElement.setAttribute("type", "xs:integer");
+        fontSequence.appendChild(sizeElement);
         fontComplexType.appendChild(fontSequence);
 
+        // id para la fuente
         Element idFontAttribute = xsdDocument.createElementNS(namespace, "xs:attribute");
         idFontAttribute.setAttribute("name", "id");
         idFontAttribute.setAttribute("type", "xs:ID");
@@ -149,9 +165,18 @@ public class Settings {
         while (keys.hasMoreElements()) {
             Object key = keys.nextElement();
             Object value = defaults.get(key);
-            if (value instanceof Font) {
+            if (value instanceof Font font) {
                 Element fontNode = document.createElementNS(targetNamespace, fontNodeName);
                 fontNode.setAttribute("id", key.toString());
+                Element family = document.createElementNS(targetNamespace, familyNodeName);
+                family.setTextContent(font.getFamily());
+                fontNode.appendChild(family);
+                Element style = document.createElementNS(targetNamespace, styleNodeName);
+                style.setTextContent(Integer.toString(font.getStyle()));
+                fontNode.appendChild(style);
+                Element size = document.createElementNS(targetNamespace, sizeNodeName);
+                size.setTextContent(Integer.toString(font.getSize()));
+                fontNode.appendChild(size);
                 fontsNode.appendChild(fontNode);
             }
         }
