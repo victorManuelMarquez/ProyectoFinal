@@ -30,6 +30,7 @@ public class Settings {
     private final String themeNodeName = "theme";
     private final String classThemeNodeName = "className";
     private final String fontsNodeName = "fonts";
+    private final String fontNodeName = "font";
     private final DocumentBuilder builder;
     private Document document;
 
@@ -53,6 +54,7 @@ public class Settings {
         String namespace = XMLConstants.W3C_XML_SCHEMA_NS_URI;
         String themeType = "LookAndFeelType";
         String fontsType = "FontsType";
+        String fontType = "FontType";
         Document xsdDocument = builder.newDocument();
 
         // esquema
@@ -71,10 +73,10 @@ public class Settings {
         Element themeElement = xsdDocument.createElementNS(namespace, "xs:element");
         themeElement.setAttribute("name", themeNodeName);
         themeElement.setAttribute("type", themeType);
+        rootSequence.appendChild(themeElement);
         Element fontsElement = xsdDocument.createElementNS(namespace, "xs:element");
         fontsElement.setAttribute("name", fontsNodeName);
         fontsElement.setAttribute("type", fontsType);
-        rootSequence.appendChild(themeElement);
         rootSequence.appendChild(fontsElement);
         rootComplexType.appendChild(rootSequence);
         rootElement.appendChild(rootComplexType);
@@ -103,9 +105,22 @@ public class Settings {
         Element fontsComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
         fontsComplexType.setAttribute("name", fontsType);
         Element fontsSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
+        Element fontElement = xsdDocument.createElementNS(namespace, "xs:element");
+        fontElement.setAttribute("name", fontNodeName);
+        fontElement.setAttribute("type", fontType);
+        fontElement.setAttribute("minOccurs", "0");
+        fontElement.setAttribute("maxOccurs", "unbounded");
+        fontsSequence.appendChild(fontElement);
         fontsComplexType.appendChild(fontsSequence);
 
         schemaElement.appendChild(fontsComplexType);
+
+        Element fontComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
+        fontComplexType.setAttribute("name", fontType);
+        Element fontSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
+        fontComplexType.appendChild(fontSequence);
+
+        schemaElement.appendChild(fontComplexType);
 
         return xsdDocument;
     }
@@ -117,6 +132,7 @@ public class Settings {
         Element themeNode = document.createElementNS(targetNamespace, themeNodeName);
         Element classThemeNode = document.createElementNS(targetNamespace, classThemeNodeName);
         Element fontsNode = document.createElementNS(targetNamespace, fontsNodeName);
+        Element fontNode = document.createElementNS(targetNamespace, fontNodeName);
         // recuperando datos
         LookAndFeel theme = UIManager.getLookAndFeel();
         classThemeNode.setTextContent(theme.getClass().getName());
@@ -124,6 +140,7 @@ public class Settings {
         // estableciendo jerarquía entre los nodos
         themeNode.appendChild(classThemeNode);
         rootNode.appendChild(themeNode);
+        fontsNode.appendChild(fontNode);
         rootNode.appendChild(fontsNode);
         document.appendChild(rootNode);
     }
