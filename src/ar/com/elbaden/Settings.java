@@ -104,6 +104,12 @@ public class Settings {
         idThemeAttribute.setAttribute("use", "required");
         themeComplexType.appendChild(idThemeAttribute);
 
+        // atributo opcional
+        Element boldMetalAttribute = xsdDocument.createElementNS(namespace, "xs:attribute");
+        boldMetalAttribute.setAttribute("name", "swing.boldMetal");
+        boldMetalAttribute.setAttribute("use", "optional");
+        themeComplexType.appendChild(boldMetalAttribute);
+
         schemaElement.appendChild(themeComplexType);
 
         // nodo fuentes: fonts complexType
@@ -160,6 +166,9 @@ public class Settings {
         LookAndFeel theme = UIManager.getLookAndFeel();
         classThemeNode.setTextContent(theme.getClass().getName());
         themeNode.setAttribute("id", theme.getID());
+        if (theme.getName().equals("Metal")) {
+            themeNode.setAttribute("swing.boldMetal", "true");
+        }
         UIDefaults defaults = UIManager.getDefaults();
         Enumeration<Object> keys = defaults.keys();
         while (keys.hasMoreElements()) {
