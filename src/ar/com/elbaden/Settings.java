@@ -107,6 +107,7 @@ public class Settings {
         // atributo opcional
         Element boldMetalAttribute = xsdDocument.createElementNS(namespace, "xs:attribute");
         boldMetalAttribute.setAttribute("name", "swing.boldMetal");
+        boldMetalAttribute.setAttribute("type", "xs:boolean");
         boldMetalAttribute.setAttribute("use", "optional");
         themeComplexType.appendChild(boldMetalAttribute);
 
