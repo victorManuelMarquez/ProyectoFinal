@@ -1,6 +1,6 @@
 package ar.com.elbaden.main;
 
-import ar.com.elbaden.Settings;
+import ar.com.elbaden.gui.Settings;
 
 import javax.swing.*;
 import java.io.File;

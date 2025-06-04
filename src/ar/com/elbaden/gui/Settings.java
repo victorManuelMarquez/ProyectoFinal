@@ -1,11 +1,7 @@
 package ar.com.elbaden.gui;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.ErrorHandler;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 import javax.swing.*;
 import javax.xml.XMLConstants;
@@ -21,10 +17,13 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
+import java.awt.*;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Settings {
 
@@ -32,139 +31,260 @@ public class Settings {
     private final String rootNodeName = "settings";
     private final String themeNodeName = "theme";
     private final String classThemeNodeName = "className";
-    private final DocumentBuilderFactory builderFactory;
-    private DocumentBuilder builder;
+    private final String fontsNodeName = "fonts";
+    private final String fontNodeName = "font";
+    private final String familyNodeName = "family";
+    private final String styleNodeName = "style";
+    private final String sizeNodeName = "size";
+    private final DocumentBuilder builder;
     private Document document;
 
     public Settings() throws ParserConfigurationException {
-        builderFactory = DocumentBuilderFactory.newInstance();
-        builderFactory.setValidating(true);
+        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
         builder = builderFactory.newDocumentBuilder();
         document = builder.newDocument();
     }
 
-    public Document createSchema() {
-        Document doc = builder.newDocument();
+    @Override
+    public String toString() {
+        try {
+            return convertToString(document);
+        } catch (Exception e) {
+            return super.toString();
+        }
+    }
+
+    private Document generateXSD() {
+        String namespace = XMLConstants.W3C_XML_SCHEMA_NS_URI;
         String themeType = "LookAndFeelType";
-        String xsdNamespace = "http://www.w3.org/2001/XMLSchema";
-        Element schemaElement = doc.createElementNS(xsdNamespace, "xs:schema");
+        String fontsType = "FontsType";
+        String fontType = "FontType";
+        Document xsdDocument = builder.newDocument();
+
+        // esquema
+        Element schemaElement = xsdDocument.createElementNS(namespace, "xs:schema");
         schemaElement.setAttribute("targetNamespace", targetNamespace);
         schemaElement.setAttribute("xmlns", targetNamespace);
+        schemaElement.setAttribute("xmlns:xs", namespace);
         schemaElement.setAttribute("elementFormDefault", "qualified");
-        doc.appendChild(schemaElement);
-        // nodo raíz
-        Element rootElement = doc.createElementNS(xsdNamespace, "xs:element");
+        xsdDocument.appendChild(schemaElement);
+
+        // nodo raíz: settings
+        Element rootElement = xsdDocument.createElementNS(namespace, "xs:element");
         rootElement.setAttribute("name", rootNodeName);
-        Element rootComplexType = doc.createElementNS(xsdNamespace, "xs:complexType");
-        Element rootSequence = doc.createElementNS(xsdNamespace, "xs:sequence");
-        Element themeElement = doc.createElementNS(xsdNamespace, "xs:element");
+        Element rootComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
+        Element rootSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
+        Element themeElement = xsdDocument.createElementNS(namespace, "xs:element");
         themeElement.setAttribute("name", themeNodeName);
         themeElement.setAttribute("type", themeType);
         rootSequence.appendChild(themeElement);
+        Element fontsElement = xsdDocument.createElementNS(namespace, "xs:element");
+        fontsElement.setAttribute("name", fontsNodeName);
+        fontsElement.setAttribute("type", fontsType);
+        rootSequence.appendChild(fontsElement);
         rootComplexType.appendChild(rootSequence);
         rootElement.appendChild(rootComplexType);
         schemaElement.appendChild(rootElement);
-        // nodo tema
-        Element themeComplexType = doc.createElementNS(xsdNamespace, "xs:complexType");
+
+        // nodo tema: LookAndFeel complexType
+        Element themeComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
         themeComplexType.setAttribute("name", themeType);
-        Element themeSequence = doc.createElementNS(xsdNamespace, "xs:sequence");
-        Element classThemeElement = doc.createElementNS(xsdNamespace, "xs:element");
-        classThemeElement.setAttribute("name", "className");
+        Element themeSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
+        Element classThemeElement = xsdDocument.createElementNS(namespace, "xs:element");
+        classThemeElement.setAttribute("name", classThemeNodeName);
         classThemeElement.setAttribute("type", "xs:string");
-        Element idThemeElement = doc.createElementNS(xsdNamespace, "xs:attribute");
-        idThemeElement.setAttribute("name", "id");
-        idThemeElement.setAttribute("type", "xs:ID");
-        idThemeElement.setAttribute("use", "required");
         themeSequence.appendChild(classThemeElement);
         themeComplexType.appendChild(themeSequence);
-        themeComplexType.appendChild(idThemeElement);
+
+        // id para el tema
+        Element idThemeAttribute = xsdDocument.createElementNS(namespace, "xs:attribute");
+        idThemeAttribute.setAttribute("name", "id");
+        idThemeAttribute.setAttribute("type", "xs:ID");
+        idThemeAttribute.setAttribute("use", "required");
+        themeComplexType.appendChild(idThemeAttribute);
+
+        // atributo opcional
+        Element boldMetalAttribute = xsdDocument.createElementNS(namespace, "xs:attribute");
+        boldMetalAttribute.setAttribute("name", "swing.boldMetal");
+        boldMetalAttribute.setAttribute("type", "xs:boolean");
+        boldMetalAttribute.setAttribute("use", "optional");
+        themeComplexType.appendChild(boldMetalAttribute);
+
         schemaElement.appendChild(themeComplexType);
-        return doc;
+
+        // nodo fuentes: fonts complexType
+        Element fontsComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
+        fontsComplexType.setAttribute("name", fontsType);
+        Element fontsSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
+        Element fontElement = xsdDocument.createElementNS(namespace, "xs:element");
+        fontElement.setAttribute("name", fontNodeName);
+        fontElement.setAttribute("type", fontType);
+        fontElement.setAttribute("maxOccurs", "unbounded");
+        fontsSequence.appendChild(fontElement);
+        fontsComplexType.appendChild(fontsSequence);
+
+        schemaElement.appendChild(fontsComplexType);
+
+        // nodo fuente: font complexType
+        Element fontComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
+        fontComplexType.setAttribute("name", fontType);
+        Element fontSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
+        Element familyElement = xsdDocument.createElementNS(namespace, "xs:element");
+        familyElement.setAttribute("name", familyNodeName);
+        familyElement.setAttribute("type", "xs:string");
+        fontSequence.appendChild(familyElement);
+        Element styleElement = xsdDocument.createElementNS(namespace, "xs:element");
+        styleElement.setAttribute("name", styleNodeName);
+        styleElement.setAttribute("type", "xs:integer");
+        fontSequence.appendChild(styleElement);
+        Element sizeElement = xsdDocument.createElementNS(namespace, "xs:element");
+        sizeElement.setAttribute("name", sizeNodeName);
+        sizeElement.setAttribute("type", "xs:integer");
+        fontSequence.appendChild(sizeElement);
+        fontComplexType.appendChild(fontSequence);
+
+        // id para la fuente
+        Element idFontAttribute = xsdDocument.createElementNS(namespace, "xs:attribute");
+        idFontAttribute.setAttribute("name", "id");
+        idFontAttribute.setAttribute("type", "xs:ID");
+        idFontAttribute.setAttribute("use", "required");
+        fontComplexType.appendChild(idFontAttribute);
+
+        schemaElement.appendChild(fontComplexType);
+
+        return xsdDocument;
     }
 
-    public File restoreSchema(File outputFile, Document schema) throws TransformerException, FileNotFoundException {
+    private void rebuildXML() {
+        document = builder.newDocument(); // sobreescribo cualquier estructura anterior
+        // nodos
+        Element rootNode = document.createElementNS(targetNamespace, rootNodeName);
+        Element themeNode = document.createElementNS(targetNamespace, themeNodeName);
+        Element classThemeNode = document.createElementNS(targetNamespace, classThemeNodeName);
+        Element fontsNode = document.createElementNS(targetNamespace, fontsNodeName);
+        // recuperando datos
+        LookAndFeel theme = UIManager.getLookAndFeel();
+        classThemeNode.setTextContent(theme.getClass().getName());
+        themeNode.setAttribute("id", theme.getID());
+        if (theme.getName().equals("Metal")) {
+            themeNode.setAttribute("swing.boldMetal", "true");
+        }
+        UIDefaults defaults = UIManager.getDefaults();
+        Enumeration<Object> keys = defaults.keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = defaults.get(key);
+            if (value instanceof Font font) {
+                Element fontNode = document.createElementNS(targetNamespace, fontNodeName);
+                fontNode.setAttribute("id", key.toString());
+                Element family = document.createElementNS(targetNamespace, familyNodeName);
+                family.setTextContent(font.getFamily());
+                fontNode.appendChild(family);
+                Element style = document.createElementNS(targetNamespace, styleNodeName);
+                style.setTextContent(Integer.toString(font.getStyle()));
+                fontNode.appendChild(style);
+                Element size = document.createElementNS(targetNamespace, sizeNodeName);
+                size.setTextContent(Integer.toString(font.getSize()));
+                fontNode.appendChild(size);
+                fontsNode.appendChild(fontNode);
+            }
+        }
+        // estableciendo jerarquía entre los nodos
+        themeNode.appendChild(classThemeNode);
+        rootNode.appendChild(themeNode);
+        rootNode.appendChild(fontsNode);
+        document.appendChild(rootNode);
+    }
+
+    private String convertToString(Document document) throws TransformerException {
+        StringWriter writer = new StringWriter();
         TransformerFactory factory = TransformerFactory.newInstance();
         Transformer transformer = factory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-        DOMSource source = new DOMSource(schema);
-        StreamResult result = new StreamResult(new FileOutputStream(outputFile.getPath()));
-        transformer.transform(source, result);
-        return outputFile;
+        transformer.transform(new DOMSource(document), new StreamResult(writer));
+        return writer.toString();
     }
 
-    public File restoreDefaults(File outputFile) throws TransformerException {
-        Element rootNode = document.createElementNS(targetNamespace, rootNodeName);
-        Element themeNode = document.createElement(themeNodeName);
-        Element classTheme = document.createElement(classThemeNodeName);
-        LookAndFeel theme = UIManager.getLookAndFeel();
-        classTheme.setTextContent(theme.getClass().getName());
-        themeNode.appendChild(classTheme);
-        themeNode.setAttribute("id", theme.getID());
-        rootNode.appendChild(themeNode);
-        document.appendChild(rootNode);
+    public void saveDocument(Document document, File outputFile) throws TransformerException {
+        TransformerFactory factory = TransformerFactory.newInstance();
+        Transformer transformer = factory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         DOMSource source = new DOMSource(document);
         StreamResult result = new StreamResult(outputFile);
-        TransformerFactory factory = TransformerFactory.newInstance();
-        Transformer transformer = factory.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
         transformer.transform(source, result);
-        return outputFile;
     }
 
-    public ErrorHandler load(File xsdFile, File xmlFile) throws IOException, SAXException, ParserConfigurationException {
-        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = schemaFactory.newSchema(xsdFile);
-        builderFactory.setSchema(schema);
-        builder = builderFactory.newDocumentBuilder();
-        XSDErrorHandler errorHandler = new XSDErrorHandler();
+    public void loadDocument(File xsdFile, File xmlFile) throws IOException, SAXException {
+        Document xmlDocument = builder.parse(xmlFile);
+        SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = factory.newSchema(xsdFile);
         Validator validator = schema.newValidator();
-        validator.setErrorHandler(errorHandler);
-        document = builder.parse(xmlFile);
-        validator.validate(new DOMSource(document));
-        return errorHandler;
+        validator.validate(new DOMSource(xmlDocument));
+        document = xmlDocument;
     }
 
-    public String getClassTheme() {
-        NodeList nodeList = document.getElementsByTagNameNS(targetNamespace, themeNodeName);
-        if (nodeList.getLength() > 0) {
-            if (nodeList.item(0) instanceof Element themeNode && themeNode.hasChildNodes()) {
-                NodeList nodes = themeNode.getChildNodes();
-                String className = null;
-                for (int i = 0; i < nodes.getLength(); i++) {
-                    if (nodes.item(i) instanceof Element node && node.getNodeName().equals(classThemeNodeName)) {
-                        className = node.getTextContent();
-                        break;
-                    }
-                }
-                return className;
-            }
+    public String getTheme() {
+        NodeList elements = document.getElementsByTagNameNS(targetNamespace, classThemeNodeName);
+        if (elements.getLength() > 0) {
+            return elements.item(0).getTextContent();
         }
         return null;
     }
 
-    static class XSDErrorHandler implements ErrorHandler {
-
-        @Override
-        public void warning(SAXParseException exception) throws SAXException {
-            System.out.println(exception.getMessage());
-            throw exception;
+    private Font createFont(Node fontNode) {
+        if (fontNode != null) {
+            String family = null;
+            String style = null;
+            String size = null;
+            NodeList children = fontNode.getChildNodes();
+            for (int i = 0; i < children.getLength(); i++) {
+                if (children.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                    Element element = (Element) children.item(i);
+                    switch (element.getNodeName()) {
+                        case familyNodeName -> family = element.getTextContent();
+                        case styleNodeName -> style = element.getTextContent();
+                        case sizeNodeName -> size = element.getTextContent();
+                    }
+                }
+            }
+            int styleInt = Font.PLAIN;
+            if (style != null) {
+                switch (Integer.parseInt(style)) {
+                    case Font.BOLD | Font.ITALIC -> styleInt = Font.BOLD | Font.ITALIC;
+                    case Font.BOLD -> styleInt = Font.BOLD;
+                    case Font.ITALIC -> styleInt = Font.ITALIC;
+                }
+            }
+            int sizeInt = 12;
+            if (size != null) {
+                sizeInt = Integer.parseInt(size);
+            }
+            return new Font(family, styleInt, sizeInt);
         }
+        return null;
+    }
 
-        @Override
-        public void error(SAXParseException exception) throws SAXException {
-            System.out.println(exception.getMessage());
-            throw exception;
+    public Map<String, Font> getFontsMap() {
+        Map<String, Font> fontMap = new HashMap<>();
+        NodeList elements = document.getElementsByTagNameNS(targetNamespace, fontNodeName);
+        for (int i = 0; i < elements.getLength(); i++) {
+            Node node = elements.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element) node;
+                String id = element.getAttribute("id");
+                Font font = createFont(element);
+                fontMap.put(id, font);
+            }
         }
+        return fontMap;
+    }
 
-        @Override
-        public void fatalError(SAXParseException exception) throws SAXException {
-            System.out.println(exception.getMessage());
-            throw exception;
-        }
-
+    public void restoreDefaults(File xsdFile, File xmlFile) throws TransformerException {
+        Document xsdDocument = generateXSD();
+        rebuildXML();
+        saveDocument(xsdDocument, xsdFile);
+        saveDocument(document, xmlFile);
     }
 
 }
