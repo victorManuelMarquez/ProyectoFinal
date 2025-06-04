@@ -1,8 +1,6 @@
 package ar.com.elbaden;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import javax.swing.*;
@@ -24,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Settings {
 
@@ -230,6 +230,54 @@ public class Settings {
             return elements.item(0).getTextContent();
         }
         return null;
+    }
+
+    private Font createFont(Node fontNode) {
+        if (fontNode != null) {
+            String family = null;
+            String style = null;
+            String size = null;
+            NodeList children = fontNode.getChildNodes();
+            for (int i = 0; i < children.getLength(); i++) {
+                if (children.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                    Element element = (Element) children.item(i);
+                    switch (element.getNodeName()) {
+                        case familyNodeName -> family = element.getTextContent();
+                        case styleNodeName -> style = element.getTextContent();
+                        case sizeNodeName -> size = element.getTextContent();
+                    }
+                }
+            }
+            int styleInt = Font.PLAIN;
+            if (style != null) {
+                switch (Integer.parseInt(style)) {
+                    case Font.BOLD | Font.ITALIC -> styleInt = Font.BOLD | Font.ITALIC;
+                    case Font.BOLD -> styleInt = Font.BOLD;
+                    case Font.ITALIC -> styleInt = Font.ITALIC;
+                }
+            }
+            int sizeInt = 12;
+            if (size != null) {
+                sizeInt = Integer.parseInt(size);
+            }
+            return new Font(family, styleInt, sizeInt);
+        }
+        return null;
+    }
+
+    public Map<String, Font> getFontsMap() {
+        Map<String, Font> fontMap = new HashMap<>();
+        NodeList elements = document.getElementsByTagNameNS(targetNamespace, fontNodeName);
+        for (int i = 0; i < elements.getLength(); i++) {
+            Node node = elements.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element) node;
+                String id = element.getAttribute("id");
+                Font font = createFont(element);
+                fontMap.put(id, font);
+            }
+        }
+        return fontMap;
     }
 
     public void restoreDefaults(File xsdFile, File xmlFile) throws TransformerException {

@@ -18,8 +18,9 @@ public class App {
                 Settings settings = new Settings();
                 settings.restoreDefaults(xsdFile, xmlFile);
                 settings.loadDocument(xsdFile, xmlFile);
-                System.out.println(settings.getTheme());
                 System.out.println(settings);
+                System.out.println(settings.getTheme());
+                System.out.println(settings.getFontsMap());
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
