@@ -19,9 +19,11 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Enumeration;
 
 public class Settings {
 
@@ -120,6 +122,12 @@ public class Settings {
         Element fontSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
         fontComplexType.appendChild(fontSequence);
 
+        Element idFontAttribute = xsdDocument.createElementNS(namespace, "xs:attribute");
+        idFontAttribute.setAttribute("name", "id");
+        idFontAttribute.setAttribute("type", "xs:ID");
+        idFontAttribute.setAttribute("use", "required");
+        fontComplexType.appendChild(idFontAttribute);
+
         schemaElement.appendChild(fontComplexType);
 
         return xsdDocument;
@@ -132,15 +140,24 @@ public class Settings {
         Element themeNode = document.createElementNS(targetNamespace, themeNodeName);
         Element classThemeNode = document.createElementNS(targetNamespace, classThemeNodeName);
         Element fontsNode = document.createElementNS(targetNamespace, fontsNodeName);
-        Element fontNode = document.createElementNS(targetNamespace, fontNodeName);
         // recuperando datos
         LookAndFeel theme = UIManager.getLookAndFeel();
         classThemeNode.setTextContent(theme.getClass().getName());
         themeNode.setAttribute("id", theme.getID());
+        UIDefaults defaults = UIManager.getDefaults();
+        Enumeration<Object> keys = defaults.keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = defaults.get(key);
+            if (value instanceof Font) {
+                Element fontNode = document.createElementNS(targetNamespace, fontNodeName);
+                fontNode.setAttribute("id", key.toString());
+                fontsNode.appendChild(fontNode);
+            }
+        }
         // estableciendo jerarquía entre los nodos
         themeNode.appendChild(classThemeNode);
         rootNode.appendChild(themeNode);
-        fontsNode.appendChild(fontNode);
         rootNode.appendChild(fontsNode);
         document.appendChild(rootNode);
     }
