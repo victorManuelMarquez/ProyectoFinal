@@ -3,6 +3,7 @@ package ar.com.elbaden.gui;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -14,11 +15,13 @@ import java.util.concurrent.Future;
 
 public class AppLauncher extends SwingWorker<Void, String> implements ActionListener {
 
+    private final JTextArea textArea;
     private final Timer countdown;
     private final int totalSeconds = 11;
     private int seconds = totalSeconds;
 
-    public AppLauncher() {
+    public AppLauncher(JTextArea textArea) {
+        this.textArea = textArea;
         countdown = new Timer(1000, this);
     }
 
@@ -32,6 +35,8 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         firePropertyChange("countdown", countdownMessage(old), countdownMessage(seconds));
         if (seconds == 0) {
             countdown.stop();
+            Window ancestor = SwingUtilities.getWindowAncestor(textArea);
+            ancestor.dispose();
         }
     }
 
@@ -61,14 +66,14 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
 
     @Override
     protected void process(List<String> chunks) {
-        chunks.forEach(System.out::println);
+        chunks.forEach(textArea::append);
     }
 
     @Override
     protected void done() {
         try {
             Void ignore = get();
-            System.out.println("Finalizado.");
+            textArea.append("Finalizado.\n");
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -91,7 +96,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
             try (ExecutorService service = Executors.newSingleThreadExecutor()) {
                 Future<?> future = service.submit(checkPoint);
                 try {
-                    publish(future.get().toString());
+                    publish(future.get().toString() + System.lineSeparator());
                     value++;
                     setProgress(calculateProgress(value, total));
                 } catch (InterruptedException | ExecutionException e) {
@@ -101,6 +106,10 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
                 }
             }
         }
+    }
+
+    public Timer getCountdown() {
+        return countdown;
     }
 
 }
