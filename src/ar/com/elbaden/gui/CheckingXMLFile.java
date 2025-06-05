@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.concurrent.ExecutionException;
 
-public class CheckingXMLFile extends CheckPoint<String> {
+public class CheckingXMLFile extends CheckPoint<File> {
 
     private final File xmlFile;
 
@@ -13,13 +13,13 @@ public class CheckingXMLFile extends CheckPoint<String> {
     }
 
     @Override
-    public String call() throws Exception {
+    public File call() throws Exception {
         if (Thread.interrupted()) {
             throw new InterruptedException(Thread.currentThread().getName());
         }
         try {
             if (xmlFile.exists()) {
-                return xmlFile.getName();
+                return xmlFile;
             } else {
                 throw new FileNotFoundException(xmlFile.getPath());
             }
