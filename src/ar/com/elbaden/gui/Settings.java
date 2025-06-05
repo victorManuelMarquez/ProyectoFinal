@@ -28,6 +28,7 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class Settings {
 
+    public static final String XSD_FILE_NAME = "settings.xsd";
     private final String targetNamespace = "http://www.example.com/settings";
     private final String rootNodeName = "settings";
     private final String themeNodeName = "theme";
@@ -281,11 +282,9 @@ public class Settings {
         return fontMap;
     }
 
-    public void restoreDefaults(File xsdFile, File xmlFile) throws TransformerException {
+    public void restoreXSD(File outputFile) throws TransformerException {
         Document xsdDocument = generateXSD();
-        rebuildXML();
-        saveDocument(xsdDocument, xsdFile);
-        saveDocument(document, xmlFile);
+        saveDocument(xsdDocument, outputFile);
     }
 
 }
