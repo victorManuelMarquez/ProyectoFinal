@@ -160,9 +160,6 @@ public class Settings {
     }
 
     private void rebuildXML() {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            throw new IllegalStateException("!EDT");
-        }
         document = builder.newDocument(); // sobreescribo cualquier estructura anterior
         // nodos
         Element rootNode = document.createElementNS(targetNamespace, rootNodeName);

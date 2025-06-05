@@ -1,13 +1,17 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 
-public class RestoringXMLFile extends CheckPoint<String> {
+public class LoadingSettings extends CheckPoint<String> {
 
+    private final File xsdFile;
     private final File xmlFile;
 
-    public RestoringXMLFile(File xmlFile) {
+    public LoadingSettings(File xsdFile, File xmlFile) {
+        this.xsdFile = xsdFile;
         this.xmlFile = xmlFile;
     }
 
@@ -18,7 +22,8 @@ public class RestoringXMLFile extends CheckPoint<String> {
         }
         try {
             Settings settings = new Settings();
-            settings.restoreXML(xmlFile);
+            settings.loadDocument(xsdFile, xmlFile);
+            App.settings = settings;
             return xmlFile.getName();
         } catch (Exception e) {
             throw new ExecutionException(e);
