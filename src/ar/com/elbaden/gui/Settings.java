@@ -25,6 +25,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class Settings {
 
     private final String targetNamespace = "http://www.example.com/settings";

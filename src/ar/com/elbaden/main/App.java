@@ -1,9 +1,8 @@
 package ar.com.elbaden.main;
 
-import ar.com.elbaden.gui.Settings;
+import ar.com.elbaden.gui.AppLauncher;
 
 import javax.swing.*;
-import java.io.File;
 
 public class App {
 
@@ -12,15 +11,13 @@ public class App {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-                File outputDir = new File(System.getProperty("user.home"), FOLDER);
-                File xsdFile = new File(outputDir, "settings.xsd");
-                File xmlFile = new File(outputDir, "settings.xml");
-                Settings settings = new Settings();
-                settings.restoreDefaults(xsdFile, xmlFile);
-                settings.loadDocument(xsdFile, xmlFile);
-                System.out.println(settings);
-                System.out.println(settings.getTheme());
-                System.out.println(settings.getFontsMap());
+                AppLauncher launcher = new AppLauncher();
+                launcher.addPropertyChangeListener(evt -> {
+                    if ("countdown".equals(evt.getPropertyName())) {
+                        System.out.println(evt.getNewValue());
+                    }
+                });
+                launcher.execute();
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
