@@ -29,6 +29,7 @@ import java.util.Map;
 public class Settings {
 
     public static final String XSD_FILE_NAME = "settings.xsd";
+    public static final String XML_FILE_NAME = "settings.xml";
     private final String targetNamespace = "http://www.example.com/settings";
     private final String rootNodeName = "settings";
     private final String themeNodeName = "theme";
@@ -166,37 +167,39 @@ public class Settings {
         Element classThemeNode = document.createElementNS(targetNamespace, classThemeNodeName);
         Element fontsNode = document.createElementNS(targetNamespace, fontsNodeName);
         // recuperando datos
-        LookAndFeel theme = UIManager.getLookAndFeel();
-        classThemeNode.setTextContent(theme.getClass().getName());
-        themeNode.setAttribute("id", theme.getID());
-        if (theme.getName().equals("Metal")) {
-            themeNode.setAttribute("swing.boldMetal", "true");
-        }
-        UIDefaults defaults = UIManager.getDefaults();
-        Enumeration<Object> keys = defaults.keys();
-        while (keys.hasMoreElements()) {
-            Object key = keys.nextElement();
-            Object value = defaults.get(key);
-            if (value instanceof Font font) {
-                Element fontNode = document.createElementNS(targetNamespace, fontNodeName);
-                fontNode.setAttribute("id", key.toString());
-                Element family = document.createElementNS(targetNamespace, familyNodeName);
-                family.setTextContent(font.getFamily());
-                fontNode.appendChild(family);
-                Element style = document.createElementNS(targetNamespace, styleNodeName);
-                style.setTextContent(Integer.toString(font.getStyle()));
-                fontNode.appendChild(style);
-                Element size = document.createElementNS(targetNamespace, sizeNodeName);
-                size.setTextContent(Integer.toString(font.getSize()));
-                fontNode.appendChild(size);
-                fontsNode.appendChild(fontNode);
+        SwingUtilities.invokeLater(() -> {
+            LookAndFeel theme = UIManager.getLookAndFeel();
+            UIDefaults defaults = UIManager.getDefaults();
+            classThemeNode.setTextContent(theme.getClass().getName());
+            themeNode.setAttribute("id", theme.getID());
+            if (theme.getName().equals("Metal")) {
+                themeNode.setAttribute("swing.boldMetal", "true");
             }
-        }
-        // estableciendo jerarquía entre los nodos
-        themeNode.appendChild(classThemeNode);
-        rootNode.appendChild(themeNode);
-        rootNode.appendChild(fontsNode);
-        document.appendChild(rootNode);
+            Enumeration<Object> keys = defaults.keys();
+            while (keys.hasMoreElements()) {
+                Object key = keys.nextElement();
+                Object value = defaults.get(key);
+                if (value instanceof Font font) {
+                    Element fontNode = document.createElementNS(targetNamespace, fontNodeName);
+                    fontNode.setAttribute("id", key.toString());
+                    Element family = document.createElementNS(targetNamespace, familyNodeName);
+                    family.setTextContent(font.getFamily());
+                    fontNode.appendChild(family);
+                    Element style = document.createElementNS(targetNamespace, styleNodeName);
+                    style.setTextContent(Integer.toString(font.getStyle()));
+                    fontNode.appendChild(style);
+                    Element size = document.createElementNS(targetNamespace, sizeNodeName);
+                    size.setTextContent(Integer.toString(font.getSize()));
+                    fontNode.appendChild(size);
+                    fontsNode.appendChild(fontNode);
+                }
+            }
+            // estableciendo jerarquía entre los nodos
+            themeNode.appendChild(classThemeNode);
+            rootNode.appendChild(themeNode);
+            rootNode.appendChild(fontsNode);
+            document.appendChild(rootNode);
+        });
     }
 
     private String convertToString(Document document) throws TransformerException {
@@ -285,6 +288,11 @@ public class Settings {
     public void restoreXSD(File outputFile) throws TransformerException {
         Document xsdDocument = generateXSD();
         saveDocument(xsdDocument, outputFile);
+    }
+
+    public void restoreXML(File outputFile) throws TransformerException {
+        rebuildXML();
+        saveDocument(document, outputFile);
     }
 
 }

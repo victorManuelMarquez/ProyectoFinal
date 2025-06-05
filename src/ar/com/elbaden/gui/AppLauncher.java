@@ -39,17 +39,20 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     protected Void doInBackground() throws Exception {
         File appFolder = new File(System.getProperty("user.home"), App.FOLDER);
         File xsdFile = new File(appFolder, Settings.XSD_FILE_NAME);
+        File xmlFile = new File(appFolder, Settings.XML_FILE_NAME);
         int progressValue = 0;
         try {
             List<CheckPoint<?>> checkPoints = List.of(
                     new CheckingAppFolder(appFolder),
-                    new CheckingXSDFile(xsdFile)
+                    new CheckingXSDFile(xsdFile),
+                    new CheckingXMLFile(xmlFile)
             );
             processCheckPoint(checkPoints, progressValue);
         } catch (Exception e) {
             List<CheckPoint<?>> checkPoints = List.of(
                     new RestoringAppFolder(appFolder),
-                    new RestoringXSDFile(xsdFile)
+                    new RestoringXSDFile(xsdFile),
+                    new RestoringXMLFile(xmlFile)
             );
             processCheckPoint(checkPoints, progressValue);
         }
