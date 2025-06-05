@@ -12,6 +12,10 @@ public class LoadingScreen extends JFrame {
         // ajustes
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
+        if (UIManager.getLookAndFeel().getSupportsWindowDecorations()) {
+            setUndecorated(true);
+        }
+
         // componentes
         JTextArea textArea = new JTextArea();
         textArea.setEditable(false);
