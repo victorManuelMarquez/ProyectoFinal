@@ -13,12 +13,14 @@ import java.util.concurrent.*;
 public class AppLauncher extends SwingWorker<Void, String> implements ActionListener {
 
     private final JTextArea textArea;
+    private final Window ancestor;
     private final Timer countdown;
     private final int totalSeconds = 11;
     private int seconds = totalSeconds;
 
     public AppLauncher(JTextArea textArea) {
         this.textArea = textArea;
+        ancestor = SwingUtilities.getWindowAncestor(textArea);
         countdown = new Timer(1000, this);
     }
 
@@ -32,7 +34,6 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         firePropertyChange("countdown", countdownMessage(old), countdownMessage(seconds));
         if (seconds == 0) {
             countdown.stop();
-            Window ancestor = SwingUtilities.getWindowAncestor(textArea);
             ancestor.dispose();
         }
     }
@@ -48,7 +49,8 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
                     new CheckingAppFolder(appFolder),
                     new CheckingXSDFile(xsdFile),
                     new CheckingXMLFile(xmlFile),
-                    new LoadingSettings(xsdFile, xmlFile)
+                    new LoadingSettings(xsdFile, xmlFile),
+                    new RetrievingTheme(ancestor)
             );
             processCheckPoint(checkPoints, progressValue);
         } catch (Exception e) {
