@@ -160,6 +160,9 @@ public class Settings {
     }
 
     private void rebuildXML() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalStateException("!EDT");
+        }
         document = builder.newDocument(); // sobreescribo cualquier estructura anterior
         // nodos
         Element rootNode = document.createElementNS(targetNamespace, rootNodeName);
@@ -167,39 +170,37 @@ public class Settings {
         Element classThemeNode = document.createElementNS(targetNamespace, classThemeNodeName);
         Element fontsNode = document.createElementNS(targetNamespace, fontsNodeName);
         // recuperando datos
-        SwingUtilities.invokeLater(() -> {
-            LookAndFeel theme = UIManager.getLookAndFeel();
-            UIDefaults defaults = UIManager.getDefaults();
-            classThemeNode.setTextContent(theme.getClass().getName());
-            themeNode.setAttribute("id", theme.getID());
-            if (theme.getName().equals("Metal")) {
-                themeNode.setAttribute("swing.boldMetal", "true");
+        LookAndFeel theme = UIManager.getLookAndFeel();
+        UIDefaults defaults = UIManager.getDefaults();
+        classThemeNode.setTextContent(theme.getClass().getName());
+        themeNode.setAttribute("id", theme.getID());
+        if (theme.getName().equals("Metal")) {
+            themeNode.setAttribute("swing.boldMetal", "true");
+        }
+        Enumeration<Object> keys = defaults.keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = defaults.get(key);
+            if (value instanceof Font font) {
+                Element fontNode = document.createElementNS(targetNamespace, fontNodeName);
+                fontNode.setAttribute("id", key.toString());
+                Element family = document.createElementNS(targetNamespace, familyNodeName);
+                family.setTextContent(font.getFamily());
+                fontNode.appendChild(family);
+                Element style = document.createElementNS(targetNamespace, styleNodeName);
+                style.setTextContent(Integer.toString(font.getStyle()));
+                fontNode.appendChild(style);
+                Element size = document.createElementNS(targetNamespace, sizeNodeName);
+                size.setTextContent(Integer.toString(font.getSize()));
+                fontNode.appendChild(size);
+                fontsNode.appendChild(fontNode);
             }
-            Enumeration<Object> keys = defaults.keys();
-            while (keys.hasMoreElements()) {
-                Object key = keys.nextElement();
-                Object value = defaults.get(key);
-                if (value instanceof Font font) {
-                    Element fontNode = document.createElementNS(targetNamespace, fontNodeName);
-                    fontNode.setAttribute("id", key.toString());
-                    Element family = document.createElementNS(targetNamespace, familyNodeName);
-                    family.setTextContent(font.getFamily());
-                    fontNode.appendChild(family);
-                    Element style = document.createElementNS(targetNamespace, styleNodeName);
-                    style.setTextContent(Integer.toString(font.getStyle()));
-                    fontNode.appendChild(style);
-                    Element size = document.createElementNS(targetNamespace, sizeNodeName);
-                    size.setTextContent(Integer.toString(font.getSize()));
-                    fontNode.appendChild(size);
-                    fontsNode.appendChild(fontNode);
-                }
-            }
-            // estableciendo jerarquía entre los nodos
-            themeNode.appendChild(classThemeNode);
-            rootNode.appendChild(themeNode);
-            rootNode.appendChild(fontsNode);
-            document.appendChild(rootNode);
-        });
+        }
+        // estableciendo jerarquía entre los nodos
+        themeNode.appendChild(classThemeNode);
+        rootNode.appendChild(themeNode);
+        rootNode.appendChild(fontsNode);
+        document.appendChild(rootNode);
     }
 
     private String convertToString(Document document) throws TransformerException {

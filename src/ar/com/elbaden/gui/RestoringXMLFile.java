@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui;
 
+import javax.swing.*;
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 
@@ -18,7 +19,13 @@ public class RestoringXMLFile extends CheckPoint<String> {
         }
         try {
             Settings settings = new Settings();
-            settings.restoreXML(xmlFile);
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    settings.restoreXML(xmlFile);
+                } catch (Exception exception) {
+                    throw new RuntimeException(exception);
+                }
+            });
             return xmlFile.getName();
         } catch (Exception e) {
             throw new ExecutionException(e);
