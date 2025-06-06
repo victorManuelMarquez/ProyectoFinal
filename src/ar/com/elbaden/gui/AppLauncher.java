@@ -49,9 +49,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
                     new CheckingAppFolder(appFolder),
                     new CheckingXSDFile(xsdFile),
                     new CheckingXMLFile(xmlFile),
-                    new LoadingSettings(xsdFile, xmlFile),
-                    new RetrievingTheme(ancestor),
-                    new RetrievingFonts()
+                    new LoadingSettings(xsdFile, xmlFile)
             );
             processCheckPoint(checkPoints, progressValue);
         } catch (Exception e) {

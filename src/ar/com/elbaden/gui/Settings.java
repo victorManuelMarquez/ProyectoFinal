@@ -30,6 +30,7 @@ public class Settings {
 
     public static final String XSD_FILE_NAME = "settings.xsd";
     public static final String XML_FILE_NAME = "settings.xml";
+    public static final String THEME_KEY = "Theme";
     private final String targetNamespace = "http://www.example.com/settings";
     private final String rootNodeName = "settings";
     private final String themeNodeName = "theme";

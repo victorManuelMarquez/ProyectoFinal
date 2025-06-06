@@ -23,8 +23,9 @@ public class LoadingSettings extends CheckPoint<String> {
         try {
             Settings settings = new Settings();
             settings.loadDocument(xsdFile, xmlFile);
-            App.settings = settings;
-            return xmlFile.getName();
+            App.putDefault(Settings.THEME_KEY, settings.getTheme());
+            settings.getFontsMap().forEach(App::putDefault);
+            return String.format("%d propiedades cargadas.", App.defaults().size());
         } catch (Exception e) {
             throw new ExecutionException(e);
         }
