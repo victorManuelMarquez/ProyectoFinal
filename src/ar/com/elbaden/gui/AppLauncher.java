@@ -51,7 +51,8 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
                     new CheckingXMLFile(xmlFile),
                     new LoadingSettings(xsdFile, xmlFile),
                     new CheckingTheme(),
-                    new ApplyingTheme(ancestor)
+                    new ApplyingTheme(ancestor),
+                    new ApplyingFonts(ancestor)
             );
             processCheckPoint(checkPoints, progressValue);
         } catch (Exception e) {
