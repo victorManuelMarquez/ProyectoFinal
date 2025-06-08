@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.gui.component.MainFrame;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -77,10 +78,12 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         try {
             Void ignore = get();
             textArea.append("Finalizado.\n");
+            MainFrame.createAndShow("Bienvenido");
+            ancestor.dispose();
         } catch (Exception e) {
             e.printStackTrace(System.err);
+            countdown.start();
         }
-        countdown.start();
     }
 
     private int calculateProgress(int value, int total) {
