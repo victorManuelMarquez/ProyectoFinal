@@ -6,20 +6,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public class ApplyingFonts extends CheckPoint<Integer> {
 
     private final Window window;
     private final Map<String, Object> defaults;
-    private final Set<String> keys;
 
     public ApplyingFonts(Window window) {
         this.window = window;
         defaults = App.defaults();
-        keys = defaults.keySet();
     }
 
     @Override
@@ -49,17 +45,11 @@ public class ApplyingFonts extends CheckPoint<Integer> {
             }
         }
         if (component instanceof JComponent jComponent) {
-            String key = findKey(jComponent);
+            String key = Settings.findKey(jComponent);
             if (key != null) {
                 pendingList.put(jComponent, (Font) defaults.get(key));
             }
         }
-    }
-
-    private String findKey(JComponent component) {
-        String componentName = component.getClass().getSimpleName().substring(1);
-        Optional<String> result = keys.stream().filter(k -> k.contains(componentName)).findFirst();
-        return result.orElse(null);
     }
 
 }

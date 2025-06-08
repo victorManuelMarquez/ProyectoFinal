@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
@@ -24,6 +25,8 @@ import java.io.StringWriter;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class Settings {
@@ -292,6 +295,27 @@ public class Settings {
     public void restoreXML(File outputFile) throws TransformerException {
         rebuildXML();
         saveDocument(document, outputFile);
+    }
+
+    public static String findKey(JComponent component) {
+        String className = component.getClass().getSimpleName().substring(1);
+        Map<String, Object> defaults = App.defaults();
+        Stream<String> stream = defaults.keySet().stream().filter(k -> k.contains(className));
+        Optional<String> key = stream.findFirst();
+        return key.orElse(null);
+    }
+
+    public static void installAssignedFont(JComponent component) {
+        String key = findKey(component);
+        Map<String, Object> defaults = App.defaults();
+        if (key != null) {
+            Font font = (Font) defaults.get(key);
+            if (SwingUtilities.isEventDispatchThread()) {
+                component.setFont(font);
+            } else {
+                SwingUtilities.invokeLater(() -> component.setFont(font));
+            }
+        }
     }
 
 }
