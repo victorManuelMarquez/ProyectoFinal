@@ -1,7 +1,5 @@
 package ar.com.elbaden.gui.component;
 
-import ar.com.elbaden.gui.Settings;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -18,11 +16,8 @@ public class MainFrame extends JFrame {
 
         // componentes
         setJMenuBar(new JMenuBar());
-        Settings.installAssignedFont(getJMenuBar());
         JMenu fileMenu = new JMenu("Archivo");
-        Settings.installAssignedFont(fileMenu);
         JMenuItem exitMenuItem = new JMenuItem(createExitAction());
-        Settings.installAssignedFont(exitMenuItem);
 
         // instalando componentes
         fileMenu.add(exitMenuItem);

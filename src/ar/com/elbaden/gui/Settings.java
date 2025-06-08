@@ -305,16 +305,12 @@ public class Settings {
         return key.orElse(null);
     }
 
-    public static void installAssignedFont(JComponent component) {
+    public static void applyFont(JComponent component) {
         String key = findKey(component);
         Map<String, Object> defaults = App.defaults();
         if (key != null) {
             Font font = (Font) defaults.get(key);
-            if (SwingUtilities.isEventDispatchThread()) {
-                component.setFont(font);
-            } else {
-                SwingUtilities.invokeLater(() -> component.setFont(font));
-            }
+            component.setFont(font);
         }
     }
 
