@@ -297,7 +297,7 @@ public class Settings {
         saveDocument(document, outputFile);
     }
 
-    public static String findKey(JComponent component) {
+    public static String findKey(Component component) {
         String className = component.getClass().getSimpleName().substring(1);
         Map<String, Object> defaults = App.defaults();
         Stream<String> stream = defaults.keySet().stream().filter(k -> k.contains(className));
@@ -305,13 +305,26 @@ public class Settings {
         return key.orElse(null);
     }
 
-    public static void applyFont(JComponent component) {
+    public static void applyFont(Component component) {
         String key = findKey(component);
         Map<String, Object> defaults = App.defaults();
         if (key != null) {
             Font font = (Font) defaults.get(key);
             component.setFont(font);
         }
+    }
+
+    public static void updateAllFonts(Component component) {
+        if (component instanceof JMenu menu) {
+            for (Component c : menu.getMenuComponents()) {
+                updateAllFonts(c);
+            }
+        } else if (component instanceof Container container) {
+            for (Component c : container.getComponents()) {
+                updateAllFonts(c);
+            }
+        }
+        applyFont(component);
     }
 
 }

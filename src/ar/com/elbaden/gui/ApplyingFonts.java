@@ -24,10 +24,10 @@ public class ApplyingFonts extends CheckPoint<Integer> {
             throw new InterruptedException(Thread.currentThread().getName());
         }
         try {
-            Map<JComponent, Font> pendingList = new HashMap<>();
+            Map<Component, Font> pendingList = new HashMap<>();
             findApplicableContent(window, pendingList);
             SwingUtilities.invokeLater(() -> {
-                for (JComponent component : pendingList.keySet()) {
+                for (Component component : pendingList.keySet()) {
                     Font font = pendingList.get(component);
                     component.setFont(font);
                 }
@@ -38,17 +38,15 @@ public class ApplyingFonts extends CheckPoint<Integer> {
         }
     }
 
-    private void findApplicableContent(Component component, Map<JComponent, Font> pendingList) {
+    private void findApplicableContent(Component component, Map<Component, Font> pendingList) {
         if (component instanceof Container container) {
             for (Component c : container.getComponents()) {
                 findApplicableContent(c, pendingList);
             }
         }
-        if (component instanceof JComponent jComponent) {
-            String key = Settings.findKey(jComponent);
-            if (key != null) {
-                pendingList.put(jComponent, (Font) defaults.get(key));
-            }
+        String key = Settings.findKey(component);
+        if (key != null) {
+            pendingList.put(component, (Font) defaults.get(key));
         }
     }
 

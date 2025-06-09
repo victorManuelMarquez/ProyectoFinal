@@ -1,5 +1,7 @@
 package ar.com.elbaden.gui.component;
 
+import ar.com.elbaden.gui.Settings;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -54,6 +56,7 @@ public class MainFrame extends JFrame {
 
     public static void createAndShow(String title) {
         MainFrame frame = new MainFrame(title);
+        Settings.updateAllFonts(frame);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
