@@ -10,9 +10,11 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.logging.Logger;
 
 public class AppLauncher extends SwingWorker<Void, String> implements ActionListener {
 
+    private static final Logger LOGGER = Logger.getLogger(AppLauncher.class.getName());
     private final JTextArea textArea;
     private final Window ancestor;
     private final Timer countdown;
@@ -81,7 +83,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
             MainFrame.createAndShow("Bienvenido");
             ancestor.dispose();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOGGER.severe(e.getMessage());
             countdown.start();
         }
     }
