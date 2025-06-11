@@ -50,6 +50,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         try {
             List<CheckPoint<?>> checkPoints = List.of(
                     new CheckingAppFolder(appFolder),
+                    new InstallingFileHandler(appFolder),
                     new CheckingXSDFile(xsdFile),
                     new CheckingXMLFile(xmlFile),
                     new LoadingSettings(xsdFile, xmlFile),
@@ -61,6 +62,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         } catch (Exception e) {
             List<CheckPoint<?>> checkPoints = List.of(
                     new RestoringAppFolder(appFolder),
+                    new InstallingFileHandler(appFolder),
                     new RestoringXSDFile(xsdFile),
                     new RestoringXMLFile(xmlFile),
                     new LoadingSettings(xsdFile, xmlFile)
@@ -79,7 +81,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     protected void done() {
         try {
             Void ignore = get();
-            textArea.append("Finalizado.\n");
+            LOGGER.info("Carga finalizada");
             MainFrame.createAndShow("Bienvenido");
             ancestor.dispose();
         } catch (Exception e) {
