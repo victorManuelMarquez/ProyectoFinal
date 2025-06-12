@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
@@ -43,6 +44,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
 
     @Override
     protected Void doInBackground() throws Exception {
+        LOGGER.info(App.MESSAGES.getString("appLauncher.starting"));
         File appFolder = new File(System.getProperty("user.home"), App.FOLDER);
         File xsdFile = new File(appFolder, Settings.XSD_FILE_NAME);
         File xmlFile = new File(appFolder, Settings.XML_FILE_NAME);
@@ -81,8 +83,8 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     protected void done() {
         try {
             Void ignore = get();
-            LOGGER.info("Carga finalizada");
-            MainFrame.createAndShow("Bienvenido");
+            LOGGER.info(App.MESSAGES.getString("appLauncher.finished"));
+            MainFrame.createAndShow(App.MESSAGES.getString("mainFrame.title"));
             ancestor.dispose();
         } catch (Exception e) {
             LOGGER.severe(e.getMessage());
@@ -95,7 +97,8 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     }
 
     private String countdownMessage(int second) {
-        return String.format("Terminado, saliendo en %d segundos...", second);
+        String message = App.MESSAGES.getString("appLauncher.format.countdownMessage");
+        return MessageFormat.format(message, second);
     }
 
     private void processCheckPoint(List<CheckPoint<?>> checkPoints, int progress)

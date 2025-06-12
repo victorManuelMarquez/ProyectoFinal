@@ -1,5 +1,7 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
@@ -79,7 +81,7 @@ public class LoadingScreen extends JFrame {
     }
 
     public static void createAndShow() {
-        LoadingScreen frame = new LoadingScreen("Cargando...");
+        LoadingScreen frame = new LoadingScreen(App.MESSAGES.getString("loadingScreen.title"));
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);

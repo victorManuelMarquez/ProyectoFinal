@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui.component;
 
 import ar.com.elbaden.gui.Settings;
+import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +19,7 @@ public class MainFrame extends JFrame {
 
         // componentes
         setJMenuBar(new JMenuBar());
-        JMenu fileMenu = new JMenu("Archivo");
+        JMenu fileMenu = new JMenu(App.MESSAGES.getString("file"));
         JMenuItem exitMenuItem = new JMenuItem(createExitAction());
 
         // instalando componentes
@@ -35,7 +36,7 @@ public class MainFrame extends JFrame {
     }
 
     private AbstractAction createExitAction() {
-        return new AbstractAction("Salir") {
+        return new AbstractAction(App.MESSAGES.getString("exit")) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 showClosingDialog();
@@ -44,8 +45,8 @@ public class MainFrame extends JFrame {
     }
 
     private void showClosingDialog() {
-        String message = "¿Está seguro de que desea salir?";
-        String title = "Atención";
+        String message = App.MESSAGES.getString("closingDialog.message");
+        String title = App.MESSAGES.getString("closingDialog.title");
         int optionType = JOptionPane.YES_NO_OPTION;
         int icon = JOptionPane.QUESTION_MESSAGE;
         int response = JOptionPane.showConfirmDialog(this, message, title, optionType, icon);
