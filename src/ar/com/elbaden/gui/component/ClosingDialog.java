@@ -33,6 +33,7 @@ public class ClosingDialog extends ModalDialog {
         JButton cancelBtn = new JButton(App.MESSAGES.getString("closingDialog.cancelOption"));
 
         // instalando componentes
+        getRootPane().setDefaultButton(exitBtn);
         mainPanel.add(iconLabel, BorderLayout.WEST);
         mainPanel.add(messageLabel);
         inputPanel.add(exitBtn);
