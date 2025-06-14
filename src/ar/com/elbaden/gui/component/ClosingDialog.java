@@ -7,7 +7,7 @@ import java.awt.*;
 
 public class ClosingDialog extends ModalDialog {
 
-    private int response;
+    private int response = JOptionPane.DEFAULT_OPTION;
 
     private ClosingDialog(Window owner, String title) {
         super(owner, title);
