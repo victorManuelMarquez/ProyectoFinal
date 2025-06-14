@@ -22,7 +22,7 @@ public class ClosingDialog extends ModalDialog {
         int margin = 15;
 
         // componentes
-        JPanel mainPanel = new JPanel(new BorderLayout(1, margin));
+        JPanel mainPanel = new JPanel(new BorderLayout(hGap, margin));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(margin, margin, margin, margin));
         JLabel iconLabel = new JLabel(UIManager.getIcon("OptionPane.questionIcon"));
         JLabel messageLabel = new JLabel(App.MESSAGES.getString("closingDialog.message"));
