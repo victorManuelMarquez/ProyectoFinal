@@ -29,7 +29,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class Settings {
@@ -38,9 +37,6 @@ public class Settings {
     public static final String XML_FILE_NAME = "settings.xml";
     public static final String THEME_KEY = "Theme";
     public static final String CONFIRM_EXIT_KEY = "ConfirmExit";
-
-    private static final Logger LOGGER = Logger.getLogger(Settings.class.getName());
-
     private final String targetNamespace = "http://www.example.com/settings";
     private final String rootNodeName = "settings";
     private final String confirmExitNodeName = "confirmExit";
@@ -57,6 +53,7 @@ public class Settings {
     public Settings() throws ParserConfigurationException {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
+        builderFactory.setIgnoringElementContentWhitespace(true);
         builder = builderFactory.newDocumentBuilder();
         document = builder.newDocument();
     }
@@ -256,6 +253,10 @@ public class Settings {
         document = xmlDocument;
     }
 
+    public void save(File outputFile) throws TransformerException {
+        saveDocument(document, outputFile);
+    }
+
     public Map<String, Object> mapAll() {
         Map<String, Object> map = new HashMap<>();
         map.put(CONFIRM_EXIT_KEY, getConfirmValue());
@@ -284,13 +285,13 @@ public class Settings {
         return null;
     }
 
-    private void setConfirmValue(boolean value) {
+    public void setConfirmValue(boolean value) {
         NodeList results = document.getElementsByTagNameNS(targetNamespace, confirmExitNodeName);
         if (results.getLength() > 0) {
             Node node = results.item(0);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element confirmNode = (Element) node;
-                confirmNode.setAttribute("value", Boolean.toString(value));
+                confirmNode.getAttributes().getNamedItem("value").setTextContent(Boolean.toString(value));
             }
         }
     }
@@ -381,22 +382,6 @@ public class Settings {
             }
         }
         applyFont(component);
-    }
-
-    public static void confirmExit(boolean confirm) {
-        try {
-            Settings settings = new Settings();
-            File outputDir = new File(System.getProperty("user.home"), App.FOLDER);
-            File xsdFile = new File(outputDir, XSD_FILE_NAME);
-            File xmlFile = new File(outputDir, XML_FILE_NAME);
-            settings.loadDocument(xsdFile, xmlFile);
-            settings.setConfirmValue(confirm);
-            settings.saveDocument(settings.document, xmlFile);
-            App.putDefault(CONFIRM_EXIT_KEY, confirm);
-            LOGGER.fine(String.format("%s = %b", CONFIRM_EXIT_KEY, confirm));
-        } catch (ParserConfigurationException | IOException | SAXException | TransformerException e) {
-            LOGGER.severe(e.getMessage());
-        }
     }
 
 }

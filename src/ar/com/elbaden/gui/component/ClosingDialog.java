@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui.component;
 
+import ar.com.elbaden.gui.SavingConfirmExit;
 import ar.com.elbaden.gui.Settings;
 import ar.com.elbaden.main.App;
 
@@ -7,9 +8,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 public class ClosingDialog extends ModalDialog {
 
+    private static final Logger LOGGER = Logger.getLogger(ClosingDialog.class.getName());
     private int response = JOptionPane.DEFAULT_OPTION;
     private boolean confirmExit = true;
 
@@ -68,7 +74,7 @@ public class ClosingDialog extends ModalDialog {
         WindowAdapter windowEvents = new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                Settings.confirmExit(confirmExit);
+                saveConfirmExit();
             }
         };
         addWindowListener(windowEvents);
@@ -82,6 +88,24 @@ public class ClosingDialog extends ModalDialog {
             response = JOptionPane.CANCEL_OPTION;
             dispose();
         });
+    }
+
+    private void saveConfirmExit() {
+        if (confirmExit) {
+            return;
+        }
+        File outputDir = new File(System.getProperty("user.home"), App.FOLDER);
+        File xsdFile = new File(outputDir, Settings.XSD_FILE_NAME);
+        File xmlFile = new File(outputDir, Settings.XML_FILE_NAME);
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        try (service) {
+            Object result = service.submit(new SavingConfirmExit(xsdFile, xmlFile, confirmExit)).get();
+            LOGGER.info(String.format("%s = %s", Settings.CONFIRM_EXIT_KEY, result));
+        } catch (Exception e) {
+            LOGGER.severe(e.getMessage());
+        } finally {
+            service.shutdownNow();
+        }
     }
 
     public static int createAndShow(Window owner) {
