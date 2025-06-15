@@ -21,7 +21,7 @@ public class InstallingFileHandler extends CheckPoint<FileHandler> {
         }
         try {
             File logFile = new File(outputDir, "log.txt");
-            FileHandler fileHandler = new FileHandler(logFile.getPath(), false);
+            FileHandler fileHandler = new FileHandler(logFile.getPath(), true);
             LOGGER.addHandler(fileHandler);
             return fileHandler;
         } catch (Exception e) {
