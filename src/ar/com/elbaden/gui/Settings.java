@@ -256,6 +256,14 @@ public class Settings {
         document = xmlDocument;
     }
 
+    public Map<String, Object> mapAll() {
+        Map<String, Object> map = new HashMap<>();
+        map.put(CONFIRM_EXIT_KEY, getConfirmValue());
+        map.put(THEME_KEY, getTheme());
+        map.putAll(getFontsMap());
+        return map;
+    }
+
     public String getTheme() {
         NodeList elements = document.getElementsByTagNameNS(targetNamespace, classThemeNodeName);
         if (elements.getLength() > 0) {
