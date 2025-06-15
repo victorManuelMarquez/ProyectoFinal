@@ -1,7 +1,10 @@
 package ar.com.elbaden.gui;
 
 import ar.com.elbaden.main.App;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.swing.*;
@@ -26,16 +29,21 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-@SuppressWarnings("unused")
 public class Settings {
 
     public static final String XSD_FILE_NAME = "settings.xsd";
     public static final String XML_FILE_NAME = "settings.xml";
     public static final String THEME_KEY = "Theme";
+    public static final String CONFIRM_EXIT_KEY = "ConfirmExit";
+
+    private static final Logger LOGGER = Logger.getLogger(Settings.class.getName());
+
     private final String targetNamespace = "http://www.example.com/settings";
     private final String rootNodeName = "settings";
+    private final String confirmExitNodeName = "confirmExit";
     private final String themeNodeName = "theme";
     private final String classThemeNodeName = "className";
     private final String fontsNodeName = "fonts";
@@ -64,6 +72,7 @@ public class Settings {
 
     private Document generateXSD() {
         String namespace = XMLConstants.W3C_XML_SCHEMA_NS_URI;
+        String confirmType = "ConfirmExitType";
         String themeType = "LookAndFeelType";
         String fontsType = "FontsType";
         String fontType = "FontType";
@@ -82,6 +91,10 @@ public class Settings {
         rootElement.setAttribute("name", rootNodeName);
         Element rootComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
         Element rootSequence = xsdDocument.createElementNS(namespace, "xs:sequence");
+        Element confirmElement = xsdDocument.createElementNS(namespace, "xs:element");
+        confirmElement.setAttribute("name", confirmExitNodeName);
+        confirmElement.setAttribute("type", confirmType);
+        rootSequence.appendChild(confirmElement);
         Element themeElement = xsdDocument.createElementNS(namespace, "xs:element");
         themeElement.setAttribute("name", themeNodeName);
         themeElement.setAttribute("type", themeType);
@@ -93,6 +106,15 @@ public class Settings {
         rootComplexType.appendChild(rootSequence);
         rootElement.appendChild(rootComplexType);
         schemaElement.appendChild(rootElement);
+
+        // nodo confirmar para salir: confirmExit complexType
+        Element confirmComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
+        confirmComplexType.setAttribute("name", confirmType);
+        Element confirmAttribute = xsdDocument.createElementNS(namespace, "xs:attribute");
+        confirmAttribute.setAttribute("name", "value");
+        confirmAttribute.setAttribute("type", "xs:boolean");
+        confirmComplexType.appendChild(confirmAttribute);
+        schemaElement.appendChild(confirmComplexType);
 
         // nodo tema: LookAndFeel complexType
         Element themeComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
@@ -167,6 +189,8 @@ public class Settings {
         document = builder.newDocument(); // sobreescribo cualquier estructura anterior
         // nodos
         Element rootNode = document.createElementNS(targetNamespace, rootNodeName);
+        Element confirmNode = document.createElementNS(targetNamespace, confirmExitNodeName);
+        confirmNode.setAttribute("value", "true");
         Element themeNode = document.createElementNS(targetNamespace, themeNodeName);
         Element classThemeNode = document.createElementNS(targetNamespace, classThemeNodeName);
         Element fontsNode = document.createElementNS(targetNamespace, fontsNodeName);
@@ -198,6 +222,7 @@ public class Settings {
             }
         }
         // estableciendo jerarquía entre los nodos
+        rootNode.appendChild(confirmNode);
         themeNode.appendChild(classThemeNode);
         rootNode.appendChild(themeNode);
         rootNode.appendChild(fontsNode);
@@ -237,6 +262,29 @@ public class Settings {
             return elements.item(0).getTextContent();
         }
         return null;
+    }
+
+    public String getConfirmValue() {
+        NodeList results = document.getElementsByTagNameNS(targetNamespace, confirmExitNodeName);
+        if (results.getLength() > 0) {
+            Node confirmNode = results.item(0);
+            if (confirmNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element node = (Element) confirmNode;
+                return node.getAttribute("value");
+            }
+        }
+        return null;
+    }
+
+    private void setConfirmValue(boolean value) {
+        NodeList results = document.getElementsByTagNameNS(targetNamespace, confirmExitNodeName);
+        if (results.getLength() > 0) {
+            Node node = results.item(0);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element confirmNode = (Element) node;
+                confirmNode.setAttribute("value", Boolean.toString(value));
+            }
+        }
     }
 
     private Font createFont(Node fontNode) {
@@ -325,6 +373,22 @@ public class Settings {
             }
         }
         applyFont(component);
+    }
+
+    public static void confirmExit(boolean confirm) {
+        try {
+            Settings settings = new Settings();
+            File outputDir = new File(System.getProperty("user.home"), App.FOLDER);
+            File xsdFile = new File(outputDir, XSD_FILE_NAME);
+            File xmlFile = new File(outputDir, XML_FILE_NAME);
+            settings.loadDocument(xsdFile, xmlFile);
+            settings.setConfirmValue(confirm);
+            settings.saveDocument(settings.document, xmlFile);
+            App.putDefault(CONFIRM_EXIT_KEY, confirm);
+            LOGGER.fine(String.format("%s = %b", CONFIRM_EXIT_KEY, confirm));
+        } catch (ParserConfigurationException | IOException | SAXException | TransformerException e) {
+            LOGGER.severe(e.getMessage());
+        }
     }
 
 }

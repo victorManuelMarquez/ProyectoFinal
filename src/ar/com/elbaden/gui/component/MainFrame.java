@@ -48,8 +48,13 @@ public class MainFrame extends JFrame {
     }
 
     private void showClosingDialog() {
-        int response = ClosingDialog.createAndShow(this);
-        if (response == JOptionPane.OK_OPTION) {
+        String confirm = App.defaults().getOrDefault(Settings.CONFIRM_EXIT_KEY, "true").toString();
+        if (Boolean.parseBoolean(confirm)) {
+            int response = ClosingDialog.createAndShow(this);
+            if (response == JOptionPane.OK_OPTION) {
+                dispose();
+            }
+        } else {
             dispose();
         }
     }
