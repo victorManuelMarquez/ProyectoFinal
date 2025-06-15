@@ -30,7 +30,6 @@ public class ClosingDialog extends ModalDialog {
         JLabel iconLabel = new JLabel(UIManager.getIcon("OptionPane.questionIcon"));
         JLabel messageLabel = new JLabel(App.MESSAGES.getString("closingDialog.message"));
         messageLabel.setHorizontalAlignment(SwingConstants.TRAILING);
-        messageLabel.setBorder(BorderFactory.createEmptyBorder(vGap, 0, vGap, 0));
         JCheckBox displayCheckBox = new JCheckBox(App.MESSAGES.getString("closingDialog.doNotAskAgain"));
         JPanel inputPanel = new JPanel(flowLayout);
         JButton exitBtn = new JButton(App.MESSAGES.getString("closingDialog.exitOption"));
@@ -53,10 +52,12 @@ public class ClosingDialog extends ModalDialog {
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.gridx = 1;
         gbc.gridy = row;
+        gbc.ipady = margin;
         mainPanel.add(displayCheckBox, gbc);
         row++;
         gbc.gridx = GridBagConstraints.RELATIVE;
         gbc.gridy = row;
+        gbc.ipady = 0;
         mainPanel.add(inputPanel, gbc);
         getContentPane().add(mainPanel);
 
