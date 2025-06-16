@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui.component;
 
+import ar.com.elbaden.gui.MnemonicFinder;
 import ar.com.elbaden.gui.SavingConfirmExit;
 import ar.com.elbaden.gui.Settings;
 import ar.com.elbaden.main.App;
@@ -110,6 +111,7 @@ public class ClosingDialog extends ModalDialog {
     public static int createAndShow(Window owner) {
         ClosingDialog dialog = new ClosingDialog(owner, App.MESSAGES.getString("closingDialog.title"));
         Settings.updateAllFonts(dialog);
+        MnemonicFinder.automaticMnemonics(dialog);
         dialog.pack();
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
