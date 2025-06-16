@@ -9,11 +9,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -22,6 +25,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     private final JTextArea textArea;
     private final Window ancestor;
     private final Timer countdown;
+    private final List<LogRecord> records;
     private final int totalSeconds = 11;
     private int seconds = totalSeconds;
 
@@ -29,6 +33,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         this.textArea = textArea;
         ancestor = SwingUtilities.getWindowAncestor(textArea);
         countdown = new Timer(1000, this);
+        records = new ArrayList<>();
     }
 
     @Override
@@ -48,6 +53,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     @Override
     protected Void doInBackground() throws Exception {
         LogRecord initialRecord = new LogRecord(Level.INFO, App.MESSAGES.getString("appLauncher.starting"));
+        records.add(initialRecord);
         App.LOGGER.log(initialRecord);
         File appFolder = new File(System.getProperty("user.home"), App.FOLDER);
         File xsdFile = new File(appFolder, Settings.XSD_FILE_NAME);
@@ -57,7 +63,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         try {
             List<CheckPoint<?>> checkPoints = List.of(
                     new CheckingAppFolder(appFolder),
-                    new InstallingFileHandler(appFolder, initialRecord),
+                    new InstallingFileHandler(appFolder),
                     new CheckingXSDFile(xsdFile),
                     new CheckingXSLFile(xslFile),
                     new CheckingXMLFile(xmlFile),
@@ -70,7 +76,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         } catch (Exception e) {
             List<CheckPoint<?>> checkPoints = List.of(
                     new RestoringAppFolder(appFolder),
-                    new InstallingFileHandler(appFolder, initialRecord),
+                    new InstallingFileHandler(appFolder),
                     new RestoringXSDFile(xsdFile),
                     new RestoringXSLFile(xslFile),
                     new RestoringXMLFile(xmlFile),
@@ -90,6 +96,11 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     protected void done() {
         try {
             Void ignore = get();
+            for (Handler handler : App.LOGGER.getHandlers()) {
+                if (handler instanceof FileHandler fileHandler) {
+                    records.forEach(fileHandler::publish);
+                }
+            }
             App.LOGGER.info(App.MESSAGES.getString("appLauncher.finished"));
             MainFrame.createAndShow(App.MESSAGES.getString("mainFrame.title"));
             ancestor.dispose();
@@ -118,10 +129,16 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
                 Future<?> future = service.submit(checkPoint);
                 try {
                     Object result = future.get();
-                    publish(result.toString() + System.lineSeparator());
+                    if (result instanceof String stringValue) {
+                        records.add(new LogRecord(Level.FINE, stringValue));
+                    } else if (result != null) {
+                        records.add(new LogRecord(Level.FINE, result.toString()));
+                        publish(result + System.lineSeparator());
+                    }
                     value++;
                     setProgress(calculateProgress(value, total));
                 } catch (InterruptedException | ExecutionException e) {
+                    records.add(new LogRecord(Level.SEVERE, e.getMessage()));
                     publish(e.getMessage());
                     throw e;
                 }
