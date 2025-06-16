@@ -10,12 +10,15 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.concurrent.*;
-import java.util.logging.Logger;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 public class AppLauncher extends SwingWorker<Void, String> implements ActionListener {
 
-    private static final Logger LOGGER = Logger.getLogger(AppLauncher.class.getName());
     private final JTextArea textArea;
     private final Window ancestor;
     private final Timer countdown;
@@ -44,18 +47,21 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
 
     @Override
     protected Void doInBackground() throws Exception {
-        LOGGER.info(App.MESSAGES.getString("appLauncher.starting"));
+        LogRecord initialRecord = new LogRecord(Level.INFO, App.MESSAGES.getString("appLauncher.starting"));
+        App.LOGGER.log(initialRecord);
         File appFolder = new File(System.getProperty("user.home"), App.FOLDER);
         File xsdFile = new File(appFolder, Settings.XSD_FILE_NAME);
         File xmlFile = new File(appFolder, Settings.XML_FILE_NAME);
+        File xslFile = new File(appFolder, Settings.XSL_FILE_NAME);
         int progressValue = 0;
         try {
             List<CheckPoint<?>> checkPoints = List.of(
                     new CheckingAppFolder(appFolder),
-                    new InstallingFileHandler(appFolder),
+                    new InstallingFileHandler(appFolder, initialRecord),
                     new CheckingXSDFile(xsdFile),
+                    new CheckingXSLFile(xslFile),
                     new CheckingXMLFile(xmlFile),
-                    new LoadingSettings(xsdFile, xmlFile),
+                    new LoadingSettings(xsdFile, xslFile, xmlFile),
                     new CheckingTheme(),
                     new ApplyingTheme(ancestor),
                     new ApplyingFonts(ancestor)
@@ -64,10 +70,11 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         } catch (Exception e) {
             List<CheckPoint<?>> checkPoints = List.of(
                     new RestoringAppFolder(appFolder),
-                    new InstallingFileHandler(appFolder),
+                    new InstallingFileHandler(appFolder, initialRecord),
                     new RestoringXSDFile(xsdFile),
+                    new RestoringXSLFile(xslFile),
                     new RestoringXMLFile(xmlFile),
-                    new LoadingSettings(xsdFile, xmlFile)
+                    new LoadingSettings(xsdFile, xslFile, xmlFile)
             );
             processCheckPoint(checkPoints, progressValue);
         }
@@ -83,11 +90,11 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     protected void done() {
         try {
             Void ignore = get();
-            LOGGER.info(App.MESSAGES.getString("appLauncher.finished"));
+            App.LOGGER.info(App.MESSAGES.getString("appLauncher.finished"));
             MainFrame.createAndShow(App.MESSAGES.getString("mainFrame.title"));
             ancestor.dispose();
         } catch (Exception e) {
-            LOGGER.severe(e.getMessage());
+            App.LOGGER.severe(e.getMessage());
             countdown.start();
         }
     }

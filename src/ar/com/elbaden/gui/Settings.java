@@ -12,12 +12,10 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
@@ -33,8 +31,10 @@ import java.util.stream.Stream;
 
 public class Settings {
 
-    public static final String XSD_FILE_NAME = "settings.xsd";
-    public static final String XML_FILE_NAME = "settings.xml";
+    public static final String BASE_FILE_NAME = "config";
+    public static final String XSD_FILE_NAME = BASE_FILE_NAME + ".xsd";
+    public static final String XSL_FILE_NAME = BASE_FILE_NAME + ".xsl";
+    public static final String XML_FILE_NAME = BASE_FILE_NAME + ".xml";
     public static final String THEME_KEY = "Theme";
     public static final String CONFIRM_EXIT_KEY = "ConfirmExit";
     private final String targetNamespace = "http://www.example.com/settings";
@@ -49,11 +49,11 @@ public class Settings {
     private final String sizeNodeName = "size";
     private final DocumentBuilder builder;
     private Document document;
+    private Source xslSource;
 
     public Settings() throws ParserConfigurationException {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
-        builderFactory.setIgnoringElementContentWhitespace(true);
         builder = builderFactory.newDocumentBuilder();
         document = builder.newDocument();
     }
@@ -226,6 +226,40 @@ public class Settings {
         document.appendChild(rootNode);
     }
 
+    private Document generateXSL() {
+        String namespace = "http://www.w3.org/1999/XSL/Transform";
+
+        Document xslDocument = builder.newDocument();
+        xslDocument.setXmlStandalone(true);
+
+        Element styleSheet = xslDocument.createElementNS(namespace, "xsl:stylesheet");
+        styleSheet.setAttribute("version", "1.0");
+        xslDocument.appendChild(styleSheet);
+
+        Element output = xslDocument.createElementNS(namespace, "xsl:output");
+        output.setAttribute("method", "xml");
+        output.setAttribute("indent", "yes");
+        output.setAttribute("encoding", "UTF-8");
+        styleSheet.appendChild(output);
+
+        Element stripSpace = xslDocument.createElementNS(namespace, "xsl:strip-space");
+        stripSpace.setAttribute("elements", "*");
+        styleSheet.appendChild(stripSpace);
+
+        Element identityTemplate = xslDocument.createElementNS(namespace, "xsl:template");
+        identityTemplate.setAttribute("match", "@*|node()");
+        styleSheet.appendChild(identityTemplate);
+
+        Element xslCopy = xslDocument.createElementNS(namespace, "xsl:copy");
+        identityTemplate.appendChild(xslCopy);
+
+        Element applyTemplates = xslDocument.createElementNS(namespace, "xsl:apply-templates");
+        applyTemplates.setAttribute("select", "@*|node()");
+        xslCopy.appendChild(applyTemplates);
+
+        return xslDocument;
+    }
+
     private String convertToString(Document document) throws TransformerException {
         StringWriter writer = new StringWriter();
         TransformerFactory factory = TransformerFactory.newInstance();
@@ -235,17 +269,22 @@ public class Settings {
         return writer.toString();
     }
 
-    public void saveDocument(Document document, File outputFile) throws TransformerException {
+    public void saveDocument(Document document, File outputFile, int indent) throws TransformerException {
         TransformerFactory factory = TransformerFactory.newInstance();
+        factory.setAttribute("indent-number", Integer.toString(indent));
         Transformer transformer = factory.newTransformer();
+        if (xslSource != null) {
+            transformer = factory.newTransformer(xslSource);
+        }
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         DOMSource source = new DOMSource(document);
         StreamResult result = new StreamResult(outputFile);
         transformer.transform(source, result);
     }
 
-    public void loadDocument(File xsdFile, File xmlFile) throws IOException, SAXException {
+    public void loadDocument(File xsdFile, File xslFile, File xmlFile) throws IOException, SAXException {
         Document xmlDocument = builder.parse(xmlFile);
+        xslSource = new StreamSource(xslFile);
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(xsdFile);
         Validator validator = schema.newValidator();
@@ -254,7 +293,7 @@ public class Settings {
     }
 
     public void save(File outputFile) throws TransformerException {
-        saveDocument(document, outputFile);
+        saveDocument(document, outputFile, 4);
     }
 
     public Map<String, Object> mapAll() {
@@ -346,12 +385,17 @@ public class Settings {
 
     public void restoreXSD(File outputFile) throws TransformerException {
         Document xsdDocument = generateXSD();
-        saveDocument(xsdDocument, outputFile);
+        saveDocument(xsdDocument, outputFile, 4);
     }
 
     public void restoreXML(File outputFile) throws TransformerException {
         rebuildXML();
-        saveDocument(document, outputFile);
+        saveDocument(document, outputFile, 4);
+    }
+
+    public void restoreXSL(File outputFile) throws TransformerException {
+        Document xslDocument = generateXSL();
+        saveDocument(xslDocument, outputFile, 2);
     }
 
     public static String findKey(Component component) {

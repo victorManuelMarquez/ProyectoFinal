@@ -1,20 +1,14 @@
 package ar.com.elbaden.gui;
 
-import ar.com.elbaden.main.App;
-
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 
-public class LoadingSettings extends CheckPoint<String> {
+public class RestoringXSLFile extends CheckPoint<String> {
 
-    private final File xsdFile;
     private final File xslFile;
-    private final File xmlFile;
 
-    public LoadingSettings(File xsdFile, File xslFile, File xmlFile) {
-        this.xsdFile = xsdFile;
+    public RestoringXSLFile(File xslFile) {
         this.xslFile = xslFile;
-        this.xmlFile = xmlFile;
     }
 
     @Override
@@ -24,9 +18,8 @@ public class LoadingSettings extends CheckPoint<String> {
         }
         try {
             Settings settings = new Settings();
-            settings.loadDocument(xsdFile, xslFile, xmlFile);
-            settings.mapAll().forEach(App::putDefault);
-            return String.format("%d propiedades cargadas.", App.defaults().size());
+            settings.restoreXSL(xslFile);
+            return xslFile.getName();
         } catch (Exception e) {
             throw new ExecutionException(e);
         }

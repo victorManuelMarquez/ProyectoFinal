@@ -11,11 +11,9 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Logger;
 
 public class ClosingDialog extends ModalDialog {
 
-    private static final Logger LOGGER = Logger.getLogger(ClosingDialog.class.getName());
     private int response = JOptionPane.DEFAULT_OPTION;
     private boolean confirmExit = true;
 
@@ -96,13 +94,14 @@ public class ClosingDialog extends ModalDialog {
         }
         File outputDir = new File(System.getProperty("user.home"), App.FOLDER);
         File xsdFile = new File(outputDir, Settings.XSD_FILE_NAME);
+        File xslFile = new File(outputDir, Settings.XSL_FILE_NAME);
         File xmlFile = new File(outputDir, Settings.XML_FILE_NAME);
         ExecutorService service = Executors.newSingleThreadExecutor();
         try (service) {
-            Object result = service.submit(new SavingConfirmExit(xsdFile, xmlFile, confirmExit)).get();
-            LOGGER.info(String.format("%s = %s", Settings.CONFIRM_EXIT_KEY, result));
+            Object result = service.submit(new SavingConfirmExit(xsdFile, xslFile, xmlFile, confirmExit)).get();
+            App.LOGGER.info(String.format("%s = %s", Settings.CONFIRM_EXIT_KEY, result));
         } catch (Exception e) {
-            LOGGER.severe(e.getMessage());
+            App.LOGGER.severe(e.getMessage());
         } finally {
             service.shutdownNow();
         }

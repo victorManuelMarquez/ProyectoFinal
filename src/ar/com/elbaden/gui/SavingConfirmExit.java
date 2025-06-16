@@ -8,11 +8,13 @@ import java.util.concurrent.ExecutionException;
 public class SavingConfirmExit extends CheckPoint<Object> {
 
     private final File xsdFile;
+    private final File xslFile;
     private final File xmlFile;
     private final boolean confirm;
 
-    public SavingConfirmExit(File xsdFile, File xmlFile, boolean confirm) {
+    public SavingConfirmExit(File xsdFile, File xslFile, File xmlFile, boolean confirm) {
         this.xsdFile = xsdFile;
+        this.xslFile = xslFile;
         this.xmlFile = xmlFile;
         this.confirm = confirm;
     }
@@ -24,7 +26,7 @@ public class SavingConfirmExit extends CheckPoint<Object> {
         }
         try {
             Settings settings = new Settings();
-            settings.loadDocument(xsdFile, xmlFile);
+            settings.loadDocument(xsdFile, xslFile, xmlFile);
             settings.setConfirmValue(confirm);
             settings.save(xmlFile);
             App.putDefault(Settings.CONFIRM_EXIT_KEY, Boolean.toString(confirm));
