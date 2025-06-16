@@ -61,7 +61,7 @@ public class ClosingDialog extends ModalDialog {
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.gridx = 1;
         gbc.gridy = row;
-        gbc.ipady = margin;
+        gbc.ipady = vGap;
         mainPanel.add(noShowAgain, gbc);
         row++;
         gbc.gridx = GridBagConstraints.RELATIVE;
