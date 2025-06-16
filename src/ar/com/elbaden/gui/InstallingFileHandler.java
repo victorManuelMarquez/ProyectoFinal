@@ -1,13 +1,14 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.FileHandler;
-import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class InstallingFileHandler extends CheckPoint<FileHandler> {
 
-    private static final Logger LOGGER = Logger.getLogger(InstallingFileHandler.class.getName());
     private final File outputDir;
 
     public InstallingFileHandler(File outputDir) {
@@ -21,8 +22,10 @@ public class InstallingFileHandler extends CheckPoint<FileHandler> {
         }
         try {
             File logFile = new File(outputDir, "log.txt");
+            SimpleFormatter formatter = new SimpleFormatter();
             FileHandler fileHandler = new FileHandler(logFile.getPath(), true);
-            LOGGER.addHandler(fileHandler);
+            fileHandler.setFormatter(formatter);
+            App.LOGGER.addHandler(fileHandler);
             return fileHandler;
         } catch (Exception e) {
             throw new ExecutionException(e);
