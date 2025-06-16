@@ -96,17 +96,21 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     protected void done() {
         try {
             Void ignore = get();
-            for (Handler handler : App.LOGGER.getHandlers()) {
-                if (handler instanceof FileHandler fileHandler) {
-                    records.forEach(fileHandler::publish);
-                }
-            }
+            publishAllRecords();
             App.LOGGER.info(App.MESSAGES.getString("appLauncher.finished"));
             MainFrame.createAndShow(App.MESSAGES.getString("mainFrame.title"));
             ancestor.dispose();
         } catch (Exception e) {
             App.LOGGER.severe(e.getMessage());
             countdown.start();
+        }
+    }
+
+    private void publishAllRecords() {
+        for (Handler handler : App.LOGGER.getHandlers()) {
+            if (handler instanceof FileHandler fileHandler) {
+                records.forEach(fileHandler::publish);
+            }
         }
     }
 
