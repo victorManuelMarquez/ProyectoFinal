@@ -11,9 +11,9 @@ import java.util.logging.Logger;
 
 public class App {
 
+    public static final Logger LOGGER = Logger.getLogger(App.class.getName());
     public static final String FOLDER = ".baden";
     public static ResourceBundle MESSAGES;
-    private static final Logger LOGGER = Logger.getLogger(App.class.getName());
     private static final Map<String, Object> defaults;
 
     static {
