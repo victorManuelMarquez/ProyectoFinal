@@ -1,15 +1,23 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.concurrent.ExecutionException;
 
 public class RestoringAppFolder extends CheckPoint<String> {
 
     private final File appFolder;
+    private final String appFolderCreated;
+    private final String appFolderExists;
 
     public RestoringAppFolder(File appFolder) {
         this.appFolder = appFolder;
+        // localización
+        appFolderCreated = App.MESSAGES.getString("f.restoring.appFolder");
+        appFolderExists = App.MESSAGES.getString("f.checking.appFolder");
     }
 
     @Override
@@ -19,10 +27,10 @@ public class RestoringAppFolder extends CheckPoint<String> {
         }
         try {
             if (appFolder.mkdir()) {
-                return appFolder.getPath();
+                return MessageFormat.format(appFolderCreated, appFolder);
             } else {
                 if (appFolder.exists()) {
-                    return appFolder.getName();
+                    return MessageFormat.format(appFolderExists, appFolder);
                 } else {
                     throw new IOException(appFolder.getPath());
                 }

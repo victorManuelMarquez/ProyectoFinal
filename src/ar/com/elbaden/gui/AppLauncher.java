@@ -41,7 +41,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         // localización
         startingMessage = App.MESSAGES.getString("appLauncher.starting");
         finishedMessage = App.MESSAGES.getString("appLauncher.finished");
-        countdownMessage = App.MESSAGES.getString("appLauncher.format.countdownMessage");
+        countdownMessage = App.MESSAGES.getString("f.appLauncher.countdownMessage");
         mainFrameTitle = App.MESSAGES.getString("mainFrame.title");
     }
 
@@ -111,6 +111,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
             ancestor.dispose();
         } catch (Exception e) {
             App.LOGGER.severe(e.getMessage());
+            textArea.append(e.getMessage());
             countdown.start();
         }
     }
@@ -141,16 +142,21 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
                 Future<?> future = service.submit(checkPoint);
                 try {
                     Object result = future.get();
-                    if (result instanceof String stringValue) {
-                        records.add(new LogRecord(Level.FINE, stringValue));
-                    } else if (result != null) {
-                        records.add(new LogRecord(Level.FINE, result.toString()));
-                        publish(result + System.lineSeparator());
+                    if (result != null) {
+                        LogRecord logRecord = new LogRecord(Level.FINE, result.toString());
+                        logRecord.setSourceClassName(checkPoint.getClass().getName());
+                        logRecord.setSourceMethodName("get");
+                        String newLine = logRecord.getMessage() + System.lineSeparator();
+                        publish(newLine);
+                        records.add(logRecord);
                     }
                     value++;
                     setProgress(calculateProgress(value, total));
                 } catch (InterruptedException | ExecutionException e) {
-                    records.add(new LogRecord(Level.SEVERE, e.getMessage()));
+                    LogRecord logRecord = new LogRecord(Level.SEVERE, e.getMessage());
+                    logRecord.setSourceClassName(checkPoint.getClass().getSimpleName());
+                    logRecord.setSourceMethodName("get");
+                    records.add(logRecord);
                     publish(e.getMessage());
                     throw e;
                 }
