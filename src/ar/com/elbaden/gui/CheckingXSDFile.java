@@ -15,7 +15,7 @@ public class CheckingXSDFile extends CheckPoint<String> {
     public CheckingXSDFile(File xsdFile) {
         this.xsdFile = xsdFile;
         // localización
-        xsdFileFound = App.MESSAGES.getString("f.checking.xsdFile");
+        xsdFileFound = App.MESSAGES.getString("f.checking.file");
     }
 
     @Override

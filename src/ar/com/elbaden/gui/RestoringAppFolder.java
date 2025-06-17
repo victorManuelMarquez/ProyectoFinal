@@ -16,8 +16,8 @@ public class RestoringAppFolder extends CheckPoint<String> {
     public RestoringAppFolder(File appFolder) {
         this.appFolder = appFolder;
         // localización
-        appFolderCreated = App.MESSAGES.getString("f.restoring.appFolder");
-        appFolderExists = App.MESSAGES.getString("f.checking.appFolder");
+        appFolderCreated = App.MESSAGES.getString("f.restoring.file");
+        appFolderExists = App.MESSAGES.getString("f.checking.file");
     }
 
     @Override

@@ -14,7 +14,7 @@ public class RestoringXSDFile extends CheckPoint<String> {
     public RestoringXSDFile(File xsdFile) {
         this.xsdFile = xsdFile;
         // localización
-        xsdFileRestored = App.MESSAGES.getString("f.restoring.xsdFile");
+        xsdFileRestored = App.MESSAGES.getString("f.restoring.file");
     }
 
     @Override

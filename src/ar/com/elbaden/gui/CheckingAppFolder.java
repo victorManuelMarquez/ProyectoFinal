@@ -15,7 +15,7 @@ public class CheckingAppFolder extends CheckPoint<String> {
     public CheckingAppFolder(File appFolder) {
         this.appFolder = appFolder;
         // localización
-        appFolderExists = App.MESSAGES.getString("f.checking.appFolder");
+        appFolderExists = App.MESSAGES.getString("f.checking.file");
     }
 
     @Override
