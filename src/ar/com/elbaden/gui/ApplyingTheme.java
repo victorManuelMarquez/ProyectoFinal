@@ -4,14 +4,18 @@ import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.MessageFormat;
 import java.util.concurrent.ExecutionException;
 
 public class ApplyingTheme extends CheckPoint<String> {
 
     private final Window window;
+    private final String appliedTheme;
 
     public ApplyingTheme(Window window) {
         this.window = window;
+        // localización
+        appliedTheme = App.MESSAGES.getString("f.actualTheme");
     }
 
     @Override
@@ -33,7 +37,7 @@ public class ApplyingTheme extends CheckPoint<String> {
                     throw new RuntimeException(e);
                 }
             });
-            return classTheme;
+            return MessageFormat.format(appliedTheme, classTheme);
         } catch (RuntimeException e) {
             throw new ExecutionException(e);
         }
