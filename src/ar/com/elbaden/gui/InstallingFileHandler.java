@@ -18,7 +18,7 @@ public class InstallingFileHandler extends CheckPoint<String> {
     public InstallingFileHandler(File outputDir) {
         this.outputDir = outputDir;
         // localización
-        fileHandlerInstalled = App.MESSAGES.getString("f.fileHandlerInstalled");
+        fileHandlerInstalled = App.MESSAGES.getString("f.installingFileHandler");
     }
 
     @Override
