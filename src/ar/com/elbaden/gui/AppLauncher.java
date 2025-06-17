@@ -140,12 +140,11 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         try (service) {
             for (CheckPoint<?> checkPoint : checkPoints) {
                 Future<?> future = service.submit(checkPoint);
+                String className = checkPoint.getClass().getName();
                 try {
                     Object result = future.get();
                     if (result != null) {
-                        LogRecord logRecord = new LogRecord(Level.FINE, result.toString());
-                        logRecord.setSourceClassName(checkPoint.getClass().getName());
-                        logRecord.setSourceMethodName("get");
+                        LogRecord logRecord = createCheckpointLogRecord(Level.FINE, result.toString(), className);
                         String newLine = logRecord.getMessage() + System.lineSeparator();
                         publish(newLine);
                         records.add(logRecord);
@@ -153,9 +152,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
                     value++;
                     setProgress(calculateProgress(value, total));
                 } catch (InterruptedException | ExecutionException e) {
-                    LogRecord logRecord = new LogRecord(Level.SEVERE, e.getMessage());
-                    logRecord.setSourceClassName(checkPoint.getClass().getSimpleName());
-                    logRecord.setSourceMethodName("get");
+                    LogRecord logRecord = createCheckpointLogRecord(Level.SEVERE, e.getMessage(), className);
                     records.add(logRecord);
                     publish(e.getMessage());
                     throw e;
@@ -164,6 +161,13 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         } finally {
             service.shutdownNow();
         }
+    }
+
+    private LogRecord createCheckpointLogRecord(Level level, String msg, String sourceClassName) {
+        LogRecord logRecord = new LogRecord(level, msg);
+        logRecord.setSourceClassName(sourceClassName);
+        logRecord.setSourceMethodName("get");
+        return logRecord;
     }
 
     public Timer getCountdown() {
