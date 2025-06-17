@@ -20,6 +20,12 @@ public class ClosingDialog extends ModalDialog {
 
     private ClosingDialog(Window owner, String title) {
         super(owner, title);
+        // localización
+        String closingMessage = App.MESSAGES.getString("closingDialog.message");
+        String confirmMessage = App.MESSAGES.getString("closingDialog.doNotAskAgain");
+        String exitString = App.MESSAGES.getString("closingDialog.exitOption");
+        String cancelString = App.MESSAGES.getString("closingDialog.cancelOption");
+        
         // ajustes
         setResizable(false);
 
@@ -36,13 +42,13 @@ public class ClosingDialog extends ModalDialog {
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(margin, margin, margin, margin));
         JLabel iconLabel = new JLabel(UIManager.getIcon("OptionPane.questionIcon"));
-        JLabel messageLabel = new JLabel(App.MESSAGES.getString("closingDialog.message"));
+        JLabel messageLabel = new JLabel(closingMessage);
         messageLabel.setHorizontalAlignment(SwingConstants.TRAILING);
-        JCheckBox noShowAgain = new JCheckBox(App.MESSAGES.getString("closingDialog.doNotAskAgain"));
+        JCheckBox noShowAgain = new JCheckBox(confirmMessage);
         JPanel inputPanel = new JPanel(flowLayout);
-        JButton exitBtn = new JButton(App.MESSAGES.getString("closingDialog.exitOption"));
+        JButton exitBtn = new JButton(exitString);
         getRootPane().setDefaultButton(exitBtn);
-        JButton cancelBtn = new JButton(App.MESSAGES.getString("closingDialog.cancelOption"));
+        JButton cancelBtn = new JButton(cancelString);
 
         // instalando componentes
         inputPanel.add(exitBtn);
@@ -109,9 +115,10 @@ public class ClosingDialog extends ModalDialog {
     }
 
     public static int createAndShow(Window owner) {
-        ClosingDialog dialog = new ClosingDialog(owner, App.MESSAGES.getString("closingDialog.title"));
-        Settings.updateAllFonts(dialog);
+        String title = App.MESSAGES.getString("closingDialog.title");
+        ClosingDialog dialog = new ClosingDialog(owner, title);
         MnemonicFinder.automaticMnemonics(dialog);
+        Settings.updateAllFonts(dialog);
         dialog.pack();
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);

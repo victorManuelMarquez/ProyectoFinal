@@ -14,14 +14,18 @@ public class MainFrame extends JFrame {
 
     private MainFrame(String title) throws HeadlessException {
         super(title);
+        // localización
+        String exitString = App.MESSAGES.getString("exit");
+        String fileString = App.MESSAGES.getString("file");
+
         // ajustes
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setExtendedState(MAXIMIZED_BOTH);
 
         // componentes
         setJMenuBar(new JMenuBar());
-        JMenu fileMenu = new JMenu(App.MESSAGES.getString("file"));
-        JMenuItem exitMenuItem = new JMenuItem(createExitAction());
+        JMenu fileMenu = new JMenu(fileString);
+        JMenuItem exitMenuItem = new JMenuItem(createExitAction(exitString));
 
         // instalando componentes
         fileMenu.add(exitMenuItem);
@@ -36,8 +40,8 @@ public class MainFrame extends JFrame {
         });
     }
 
-    private AbstractAction createExitAction() {
-        return new AbstractAction(App.MESSAGES.getString("exit")) {
+    private AbstractAction createExitAction(String name) {
+        return new AbstractAction(name) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 showClosingDialog();

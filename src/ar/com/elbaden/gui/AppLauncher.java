@@ -26,6 +26,10 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     private final Window ancestor;
     private final Timer countdown;
     private final List<LogRecord> records;
+    private final String startingMessage;
+    private final String finishedMessage;
+    private final String countdownMessage;
+    private final String mainFrameTitle;
     private final int totalSeconds = 11;
     private int seconds = totalSeconds;
 
@@ -34,6 +38,11 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         ancestor = SwingUtilities.getWindowAncestor(textArea);
         countdown = new Timer(1000, this);
         records = new ArrayList<>();
+        // localización
+        startingMessage = App.MESSAGES.getString("appLauncher.starting");
+        finishedMessage = App.MESSAGES.getString("appLauncher.finished");
+        countdownMessage = App.MESSAGES.getString("appLauncher.format.countdownMessage");
+        mainFrameTitle = App.MESSAGES.getString("mainFrame.title");
     }
 
     @Override
@@ -52,7 +61,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
 
     @Override
     protected Void doInBackground() throws Exception {
-        LogRecord initialRecord = new LogRecord(Level.INFO, App.MESSAGES.getString("appLauncher.starting"));
+        LogRecord initialRecord = new LogRecord(Level.INFO, startingMessage);
         records.add(initialRecord);
         App.LOGGER.log(initialRecord);
         File appFolder = new File(System.getProperty("user.home"), App.FOLDER);
@@ -97,8 +106,8 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
         try {
             Void ignore = get();
             publishAllRecords();
-            App.LOGGER.info(App.MESSAGES.getString("appLauncher.finished"));
-            MainFrame.createAndShow(App.MESSAGES.getString("mainFrame.title"));
+            App.LOGGER.info(finishedMessage);
+            MainFrame.createAndShow(mainFrameTitle);
             ancestor.dispose();
         } catch (Exception e) {
             App.LOGGER.severe(e.getMessage());
@@ -119,8 +128,7 @@ public class AppLauncher extends SwingWorker<Void, String> implements ActionList
     }
 
     private String countdownMessage(int second) {
-        String message = App.MESSAGES.getString("appLauncher.format.countdownMessage");
-        return MessageFormat.format(message, second);
+        return MessageFormat.format(countdownMessage, second);
     }
 
     private void processCheckPoint(List<CheckPoint<?>> checkPoints, int progress)
