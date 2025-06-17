@@ -4,33 +4,37 @@ import ar.com.elbaden.main.App;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.SimpleFormatter;
 
-public class InstallingFileHandler extends CheckPoint<FileHandler> {
+public class InstallingFileHandler extends CheckPoint<String> {
 
     private final File outputDir;
+    private final String fileHandlerInstalled;
 
     public InstallingFileHandler(File outputDir) {
         this.outputDir = outputDir;
+        // localización
+        fileHandlerInstalled = App.MESSAGES.getString("f.fileHandlerInstalled");
     }
 
     @Override
-    public FileHandler call() throws Exception {
+    public String call() throws Exception {
         if (Thread.interrupted()) {
             throw new InterruptedException(Thread.currentThread().getName());
         }
         try {
             FileHandler fileHandler = fileHandlerExists();
             if (fileHandler != null) {
-                return fileHandler;
+                return MessageFormat.format(fileHandlerInstalled, fileHandler);
             }
             File logFile = new File(outputDir, "log.txt");
-            fileHandler = new TxtFileHandler(logFile.getPath());
+            fileHandler = new TxtFileHandler(logFile);
             App.LOGGER.addHandler(fileHandler);
-            return fileHandler;
+            return MessageFormat.format(fileHandlerInstalled, fileHandler);
         } catch (Exception e) {
             throw new ExecutionException(e);
         }
@@ -49,9 +53,17 @@ public class InstallingFileHandler extends CheckPoint<FileHandler> {
 
     static class TxtFileHandler extends FileHandler {
 
-        public TxtFileHandler(String pattern) throws IOException, SecurityException {
-            super(pattern, false);
+        private final File outputFile;
+
+        public TxtFileHandler(File outputFile) throws IOException, SecurityException {
+            super(outputFile.getPath(), false);
+            this.outputFile = outputFile;
             setFormatter(new SimpleFormatter());
+        }
+
+        @Override
+        public String toString() {
+            return outputFile.getName();
         }
 
     }
