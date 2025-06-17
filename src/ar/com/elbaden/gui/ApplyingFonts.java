@@ -4,22 +4,26 @@ import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class ApplyingFonts extends CheckPoint<Integer> {
+public class ApplyingFonts extends CheckPoint<String> {
 
     private final Window window;
     private final Map<String, Object> defaults;
+    private final String totalUpdated;
 
     public ApplyingFonts(Window window) {
         this.window = window;
         defaults = App.defaults();
+        // localización
+        totalUpdated = App.MESSAGES.getString("cf.totalFontsUpdated");
     }
 
     @Override
-    public Integer call() throws Exception {
+    public String call() throws Exception {
         if (Thread.interrupted()) {
             throw new InterruptedException(Thread.currentThread().getName());
         }
@@ -32,7 +36,7 @@ public class ApplyingFonts extends CheckPoint<Integer> {
                     component.setFont(font);
                 }
             });
-            return pendingList.size();
+            return MessageFormat.format(totalUpdated, pendingList.size());
         } catch (Exception e) {
             throw new ExecutionException(e);
         }
