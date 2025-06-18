@@ -3,7 +3,6 @@ package ar.com.elbaden.gui;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -20,10 +19,9 @@ public class LoadingScreen extends JFrame {
         }
 
         // componentes
-        JTextArea textArea = new JTextArea();
+        JTextArea textArea = new JTextArea(12, 32);
         textArea.setEditable(false);
         textArea.setFocusable(false);
-        recalculatePreferredSize(textArea);
         JScrollPane scrollPane = new JScrollPane(textArea);
         JProgressBar progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
@@ -65,19 +63,6 @@ public class LoadingScreen extends JFrame {
             }
         });
         return launcher;
-    }
-
-    private void recalculatePreferredSize(JTextComponent component) {
-        Dimension preferred = component.getPreferredSize();
-        FontMetrics metrics = component.getFontMetrics(component.getFont());
-        Insets insets = component.getInsets();
-        preferred.width += metrics.charWidth('m') * 24;
-        preferred.height += metrics.getHeight() * 6;
-        if (insets != null) {
-            preferred.width += insets.left + insets.right;
-            preferred.height += insets.top + insets.bottom;
-        }
-        component.setPreferredSize(preferred);
     }
 
     public static void createAndShow() {
