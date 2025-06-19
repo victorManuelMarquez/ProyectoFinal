@@ -1,7 +1,5 @@
-package ar.com.elbaden.gui.component;
+package ar.com.elbaden.gui;
 
-import ar.com.elbaden.gui.MnemonicFinder;
-import ar.com.elbaden.gui.Settings;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -9,27 +7,26 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ResourceBundle;
 
 public class MainFrame extends JFrame {
 
+    public static ResourceBundle messages;
+
     private MainFrame(String title) throws HeadlessException {
         super(title);
-        // localización
-        String exitString = App.MESSAGES.getString("exit");
-        String fileString = App.MESSAGES.getString("file");
+        // componentes
+        setJMenuBar(new JMenuBar());
+        JMenu fileMenu = new JMenu(messages.getString("file"));
+        JMenuItem exitItem = new JMenuItem(createExitAction(messages.getString("exit")));
+
+        // instalando componentes
+        fileMenu.add(exitItem);
+        getJMenuBar().add(fileMenu);
 
         // ajustes
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setExtendedState(MAXIMIZED_BOTH);
-
-        // componentes
-        setJMenuBar(new JMenuBar());
-        JMenu fileMenu = new JMenu(fileString);
-        JMenuItem exitMenuItem = new JMenuItem(createExitAction(exitString));
-
-        // instalando componentes
-        fileMenu.add(exitMenuItem);
-        getJMenuBar().add(fileMenu);
 
         // eventos
         addWindowListener(new WindowAdapter() {
@@ -50,9 +47,13 @@ public class MainFrame extends JFrame {
     }
 
     private void showClosingDialog() {
-        String confirm = App.defaults().getOrDefault(Settings.CONFIRM_EXIT_KEY, "true").toString();
+        String confirm = App.getProperties().getOrDefault("settings.confirmExit", "true").toString();
         if (Boolean.parseBoolean(confirm)) {
-            int response = ClosingDialog.createAndShow(this);
+            String message = messages.getString("closingDialog.message");
+            String title = messages.getString("closingDialog.title");
+            int optionType = JOptionPane.OK_CANCEL_OPTION;
+            int icon = JOptionPane.QUESTION_MESSAGE;
+            int response = JOptionPane.showConfirmDialog(this, message, title, optionType, icon);
             if (response == JOptionPane.OK_OPTION) {
                 dispose();
             }
@@ -61,10 +62,11 @@ public class MainFrame extends JFrame {
         }
     }
 
-    public static void createAndShow(String title) {
-        MainFrame frame = new MainFrame(title);
-        MnemonicFinder.automaticMnemonics(frame.getJMenuBar());
-        Settings.updateAllFonts(frame);
+    public static void createAndShow() {
+        messages = ResourceBundle.getBundle(App.BUNDLE_NAME);
+        MainFrame frame = new MainFrame(messages.getString("mainFrame.title"));
+        Settings.applyFont(App.getProperties(), frame, 0);
+        MnemonicFinder.automaticMnemonics(frame);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);

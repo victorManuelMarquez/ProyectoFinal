@@ -2,24 +2,19 @@ package ar.com.elbaden.gui;
 
 import ar.com.elbaden.main.App;
 
-import javax.swing.*;
 import java.awt.*;
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 
-public class ApplyingFonts extends CheckPoint<String> {
+public class ApplyingFonts extends CheckPoint {
 
     private final Window window;
-    private final Map<String, Object> defaults;
-    private final String totalUpdated;
 
-    public ApplyingFonts(Window window) {
+    public ApplyingFonts(ResourceBundle messages, Window window) {
+        super(messages);
         this.window = window;
-        defaults = App.defaults();
-        // localización
-        totalUpdated = App.MESSAGES.getString("cf.totalFontsUpdated");
     }
 
     @Override
@@ -28,29 +23,16 @@ public class ApplyingFonts extends CheckPoint<String> {
             throw new InterruptedException(Thread.currentThread().getName());
         }
         try {
-            Map<Component, Font> pendingList = new HashMap<>();
-            findApplicableContent(window, pendingList);
-            SwingUtilities.invokeLater(() -> {
-                for (Component component : pendingList.keySet()) {
-                    Font font = pendingList.get(component);
-                    component.setFont(font);
-                }
-            });
-            return MessageFormat.format(totalUpdated, pendingList.size());
+            int total = 0;
+            total = Settings.applyFont(App.getProperties(), window, total);
+            String pattern = getMessages().getString("applyingFonts.formatChoice");
+            String message = MessageFormat.format(pattern, total);
+            getRecord().setLevel(Level.INFO);
+            getRecord().setMessage(message);
+            getRecord().setParameters(new Object[] { total });
+            return message;
         } catch (Exception e) {
             throw new ExecutionException(e);
-        }
-    }
-
-    private void findApplicableContent(Component component, Map<Component, Font> pendingList) {
-        if (component instanceof Container container) {
-            for (Component c : container.getComponents()) {
-                findApplicableContent(c, pendingList);
-            }
-        }
-        String key = Settings.findKey(component);
-        if (key != null) {
-            pendingList.put(component, (Font) defaults.get(key));
         }
     }
 

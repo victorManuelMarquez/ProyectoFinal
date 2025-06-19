@@ -1,6 +1,5 @@
 package ar.com.elbaden.gui;
 
-import ar.com.elbaden.main.App;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -22,12 +21,11 @@ import javax.xml.validation.Validator;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Settings {
 
@@ -35,10 +33,9 @@ public class Settings {
     public static final String XSD_FILE_NAME = BASE_FILE_NAME + ".xsd";
     public static final String XSL_FILE_NAME = BASE_FILE_NAME + ".xsl";
     public static final String XML_FILE_NAME = BASE_FILE_NAME + ".xml";
-    public static final String THEME_KEY = "Theme";
-    public static final String CONFIRM_EXIT_KEY = "ConfirmExit";
+    public static final String BASE_KEY = "settings";
     private final String targetNamespace = "http://www.example.com/settings";
-    private final String rootNodeName = "settings";
+    private final String rootNodeName = BASE_KEY;
     private final String confirmExitNodeName = "confirmExit";
     private final String themeNodeName = "theme";
     private final String classThemeNodeName = "className";
@@ -49,6 +46,7 @@ public class Settings {
     private final String sizeNodeName = "size";
     private final DocumentBuilder builder;
     private Document document;
+    private Validator validator;
     private Source xslSource;
 
     public Settings() throws ParserConfigurationException {
@@ -58,21 +56,13 @@ public class Settings {
         document = builder.newDocument();
     }
 
-    @Override
-    public String toString() {
-        try {
-            return convertToString(document);
-        } catch (Exception e) {
-            return super.toString();
-        }
-    }
-
     private Document generateXSD() {
         String namespace = XMLConstants.W3C_XML_SCHEMA_NS_URI;
         String confirmType = "ConfirmExitType";
         String themeType = "LookAndFeelType";
         String fontsType = "FontsType";
         String fontType = "FontType";
+
         Document xsdDocument = builder.newDocument();
 
         // esquema
@@ -182,6 +172,40 @@ public class Settings {
         return xsdDocument;
     }
 
+    private Document generateXSL() {
+        String namespace = "http://www.w3.org/1999/XSL/Transform";
+
+        Document xslDocument = builder.newDocument();
+        xslDocument.setXmlStandalone(true);
+
+        Element styleSheet = xslDocument.createElementNS(namespace, "xsl:stylesheet");
+        styleSheet.setAttribute("version", "1.0");
+        xslDocument.appendChild(styleSheet);
+
+        Element output = xslDocument.createElementNS(namespace, "xsl:output");
+        output.setAttribute("method", "xml");
+        output.setAttribute("indent", "yes");
+        output.setAttribute("encoding", "UTF-8");
+        styleSheet.appendChild(output);
+
+        Element stripSpace = xslDocument.createElementNS(namespace, "xsl:strip-space");
+        stripSpace.setAttribute("elements", "*");
+        styleSheet.appendChild(stripSpace);
+
+        Element identityTemplate = xslDocument.createElementNS(namespace, "xsl:template");
+        identityTemplate.setAttribute("match", "@*|node()");
+        styleSheet.appendChild(identityTemplate);
+
+        Element xslCopy = xslDocument.createElementNS(namespace, "xsl:copy");
+        identityTemplate.appendChild(xslCopy);
+
+        Element applyTemplates = xslDocument.createElementNS(namespace, "xsl:apply-templates");
+        applyTemplates.setAttribute("select", "@*|node()");
+        xslCopy.appendChild(applyTemplates);
+
+        return xslDocument;
+    }
+
     private void rebuildXML() {
         document = builder.newDocument(); // sobreescribo cualquier estructura anterior
         // nodos
@@ -226,47 +250,19 @@ public class Settings {
         document.appendChild(rootNode);
     }
 
-    private Document generateXSL() {
-        String namespace = "http://www.w3.org/1999/XSL/Transform";
-
-        Document xslDocument = builder.newDocument();
-        xslDocument.setXmlStandalone(true);
-
-        Element styleSheet = xslDocument.createElementNS(namespace, "xsl:stylesheet");
-        styleSheet.setAttribute("version", "1.0");
-        xslDocument.appendChild(styleSheet);
-
-        Element output = xslDocument.createElementNS(namespace, "xsl:output");
-        output.setAttribute("method", "xml");
-        output.setAttribute("indent", "yes");
-        output.setAttribute("encoding", "UTF-8");
-        styleSheet.appendChild(output);
-
-        Element stripSpace = xslDocument.createElementNS(namespace, "xsl:strip-space");
-        stripSpace.setAttribute("elements", "*");
-        styleSheet.appendChild(stripSpace);
-
-        Element identityTemplate = xslDocument.createElementNS(namespace, "xsl:template");
-        identityTemplate.setAttribute("match", "@*|node()");
-        styleSheet.appendChild(identityTemplate);
-
-        Element xslCopy = xslDocument.createElementNS(namespace, "xsl:copy");
-        identityTemplate.appendChild(xslCopy);
-
-        Element applyTemplates = xslDocument.createElementNS(namespace, "xsl:apply-templates");
-        applyTemplates.setAttribute("select", "@*|node()");
-        xslCopy.appendChild(applyTemplates);
-
-        return xslDocument;
+    public void restoreXSD(File xsd, int indent) throws TransformerException {
+        Document xsdDocument = generateXSD();
+        saveDocument(xsdDocument, xsd, indent);
     }
 
-    private String convertToString(Document document) throws TransformerException {
-        StringWriter writer = new StringWriter();
-        TransformerFactory factory = TransformerFactory.newInstance();
-        Transformer transformer = factory.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.transform(new DOMSource(document), new StreamResult(writer));
-        return writer.toString();
+    public void restoreXSL(File xsl, int indent) throws TransformerException {
+        Document xslDocument = generateXSL();
+        saveDocument(xslDocument, xsl, indent);
+    }
+
+    public void restoreXML(File xml, int indent) throws TransformerException {
+        rebuildXML();
+        saveDocument(document, xml, indent);
     }
 
     public void saveDocument(Document document, File outputFile, int indent) throws TransformerException {
@@ -282,37 +278,47 @@ public class Settings {
         transformer.transform(source, result);
     }
 
-    public void loadDocument(File xsdFile, File xslFile, File xmlFile) throws IOException, SAXException {
-        Document xmlDocument = builder.parse(xmlFile);
-        xslSource = new StreamSource(xslFile);
+    public void loadXSD(File xsd) throws SAXException {
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = factory.newSchema(xsdFile);
-        Validator validator = schema.newValidator();
-        validator.validate(new DOMSource(xmlDocument));
-        document = xmlDocument;
+        Schema schema = factory.newSchema(xsd);
+        validator = schema.newValidator();
     }
 
-    public void save(File outputFile) throws TransformerException {
-        saveDocument(document, outputFile, 4);
+    public void loadXSL(File xsl) {
+        xslSource = new StreamSource(xsl);
     }
 
-    public Map<String, Object> mapAll() {
-        Map<String, Object> map = new HashMap<>();
-        map.put(CONFIRM_EXIT_KEY, getConfirmValue());
-        map.put(THEME_KEY, getTheme());
-        map.putAll(getFontsMap());
-        return map;
+    public void loadXML(File xml) throws IOException, SAXException {
+        Document temp = builder.parse(xml);
+        if (validator != null) {
+            validator.validate(new DOMSource(temp));
+            document = temp;
+        }
+    }
+
+    public void loadDocument(File inputFile) throws SAXException, IOException {
+        switch (inputFile.getName()) {
+            case XSD_FILE_NAME -> loadXSD(inputFile);
+            case XSL_FILE_NAME -> loadXSL(inputFile);
+            case XML_FILE_NAME -> loadXML(inputFile);
+        }
     }
 
     public String getTheme() {
-        NodeList elements = document.getElementsByTagNameNS(targetNamespace, classThemeNodeName);
-        if (elements.getLength() > 0) {
-            return elements.item(0).getTextContent();
+        if (document == null) {
+            throw new IllegalStateException("xmlDocument.isNull");
+        }
+        NodeList results = document.getElementsByTagNameNS(targetNamespace, classThemeNodeName);
+        if (results.getLength() > 0) {
+            return results.item(0).getTextContent();
         }
         return null;
     }
 
     public String getConfirmValue() {
+        if (document == null) {
+            throw new IllegalStateException("xmlDocument.isNull");
+        }
         NodeList results = document.getElementsByTagNameNS(targetNamespace, confirmExitNodeName);
         if (results.getLength() > 0) {
             Node confirmNode = results.item(0);
@@ -324,108 +330,124 @@ public class Settings {
         return null;
     }
 
-    public void setConfirmValue(boolean value) {
-        NodeList results = document.getElementsByTagNameNS(targetNamespace, confirmExitNodeName);
-        if (results.getLength() > 0) {
-            Node node = results.item(0);
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                Element confirmNode = (Element) node;
-                confirmNode.getAttributes().getNamedItem("value").setTextContent(Boolean.toString(value));
-            }
+    public Map<String, Font> getFonts() {
+        if (document == null) {
+            throw new IllegalStateException("xmlDocument.isNull");
         }
-    }
-
-    private Font createFont(Node fontNode) {
-        if (fontNode != null) {
-            String family = null;
-            String style = null;
-            String size = null;
-            NodeList children = fontNode.getChildNodes();
-            for (int i = 0; i < children.getLength(); i++) {
-                if (children.item(i).getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) children.item(i);
-                    switch (element.getNodeName()) {
-                        case familyNodeName -> family = element.getTextContent();
-                        case styleNodeName -> style = element.getTextContent();
-                        case sizeNodeName -> size = element.getTextContent();
+        Map<String, Font> map = new HashMap<>();
+        NodeList results = document.getElementsByTagNameNS(targetNamespace, fontsNodeName);
+        if (results.getLength() > 0) {
+            if (results.item(0).getNodeType() == Node.ELEMENT_NODE) {
+                Element fontsNode = (Element) results.item(0);
+                NodeList nodes = fontsNode.getChildNodes();
+                for (int i = 0; i < nodes.getLength(); i++) {
+                    if (nodes.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                        Element fontNode = (Element) nodes.item(i);
+                        String id = fontNode.getAttribute("id");
+                        Font font = UIManager.getFont(id);
+                        if (font != null) {
+                            font = alterFont(font, fontNode);
+                            map.put(createKey(id), font);
+                        }
                     }
                 }
             }
-            int styleInt = Font.PLAIN;
-            if (style != null) {
-                switch (Integer.parseInt(style)) {
-                    case Font.BOLD | Font.ITALIC -> styleInt = Font.BOLD | Font.ITALIC;
-                    case Font.BOLD -> styleInt = Font.BOLD;
-                    case Font.ITALIC -> styleInt = Font.ITALIC;
+        }
+        return map;
+    }
+
+    private Font alterFont(Font font, Element fontNode) {
+        NodeList nodes = fontNode.getChildNodes();
+        Font temp = font;
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            switch (node.getNodeName()) {
+                case familyNodeName -> temp = new Font(node.getTextContent(), temp.getStyle(), temp.getSize());
+                case styleNodeName -> {
+                    switch (Integer.parseInt(node.getTextContent())) {
+                        case Font.PLAIN -> temp = temp.deriveFont(Font.PLAIN);
+                        case Font.ITALIC -> temp = temp.deriveFont(Font.ITALIC);
+                        case Font.BOLD -> temp = temp.deriveFont(Font.BOLD);
+                        case Font.BOLD|Font.ITALIC -> temp = temp.deriveFont(Font.BOLD|Font.ITALIC);
+                    }
+                }
+                case sizeNodeName -> temp = temp.deriveFont(Float.parseFloat(node.getTextContent()));
+            }
+        }
+        return temp;
+    }
+
+    private String createKey(String nodeName) {
+        return BASE_KEY + "." + nodeName;
+    }
+
+    public Map<String, Object> mapAll() {
+        Map<String, Object> map = new HashMap<>(getFonts());
+        map.put(createKey(themeNodeName), getTheme());
+        map.put(createKey(confirmExitNodeName), Boolean.parseBoolean(getConfirmValue()));
+        return map;
+    }
+
+    public static int applyFont(Map<String, Object> fonts, Component origin, int counter) {
+        if (origin instanceof JMenuItem item) {
+            for (MenuElement element : item.getSubElements()) {
+                counter = applyFont(fonts, (Component) element, counter);
+            }
+        }
+        if (origin instanceof Container container) {
+            for (Component component : container.getComponents()) {
+                counter = applyFont(fonts, component, counter);
+            }
+        }
+        String key = getValue(origin);
+        if (key != null) {
+            key = BASE_KEY + "." + key + ".font";
+            if (fonts.containsKey(key)) {
+                Object value = fonts.get(key);
+                if (value instanceof Font font) {
+                    SwingUtilities.invokeLater(() -> origin.setFont(font));
+                    counter = counter + 1;
                 }
             }
-            int sizeInt = 12;
-            if (size != null) {
-                sizeInt = Integer.parseInt(size);
+        }
+        return counter;
+    }
+
+    public static String getValue(Component component) {
+        if (component instanceof JComponent) {
+            String className = component.getClass().getName();
+            Pattern pattern = Pattern.compile("\\.J[^.]*");
+            Matcher matcher = pattern.matcher(className);
+            if (matcher.find()) {
+                String result = matcher.group();
+                if (result.length() > 1) {
+                    return result.substring(2);
+                }
             }
-            return new Font(family, styleInt, sizeInt);
         }
         return null;
     }
 
-    public Map<String, Font> getFontsMap() {
-        Map<String, Font> fontMap = new HashMap<>();
-        NodeList elements = document.getElementsByTagNameNS(targetNamespace, fontNodeName);
-        for (int i = 0; i < elements.getLength(); i++) {
-            Node node = elements.item(i);
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                Element element = (Element) node;
-                String id = element.getAttribute("id");
-                Font font = createFont(element);
-                fontMap.put(id, font);
+    public static String applyTheme(Window source, String className) {
+        String name = null;
+        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+            if (info.getClassName().equals(className)) {
+                name = info.getName();
+                break;
             }
         }
-        return fontMap;
-    }
-
-    public void restoreXSD(File outputFile) throws TransformerException {
-        Document xsdDocument = generateXSD();
-        saveDocument(xsdDocument, outputFile, 4);
-    }
-
-    public void restoreXML(File outputFile) throws TransformerException {
-        rebuildXML();
-        saveDocument(document, outputFile, 4);
-    }
-
-    public void restoreXSL(File outputFile) throws TransformerException {
-        Document xslDocument = generateXSL();
-        saveDocument(xslDocument, outputFile, 2);
-    }
-
-    public static String findKey(Component component) {
-        String className = component.getClass().getSimpleName().substring(1);
-        Map<String, Object> defaults = App.defaults();
-        Stream<String> stream = defaults.keySet().stream().filter(k -> k.contains(className));
-        Optional<String> key = stream.findFirst();
-        return key.orElse(null);
-    }
-
-    public static void applyFont(Component component) {
-        String key = findKey(component);
-        Map<String, Object> defaults = App.defaults();
-        if (key != null) {
-            Font font = (Font) defaults.get(key);
-            component.setFont(font);
+        if (UIManager.getLookAndFeel().getClass().getName().equals(className)) {
+            return name;
         }
-    }
-
-    public static void updateAllFonts(Component component) {
-        if (component instanceof JMenu menu) {
-            for (Component c : menu.getMenuComponents()) {
-                updateAllFonts(c);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(className);
+                SwingUtilities.updateComponentTreeUI(source);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        } else if (component instanceof Container container) {
-            for (Component c : container.getComponents()) {
-                updateAllFonts(c);
-            }
-        }
-        applyFont(component);
+        });
+        return name;
     }
 
 }

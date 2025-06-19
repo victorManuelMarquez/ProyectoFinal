@@ -1,28 +1,24 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.gui.component.DisplayPane;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.MessageFormat;
+import java.util.ResourceBundle;
 
 public class LoadingScreen extends JFrame {
 
+    private static ResourceBundle messages;
+
     private LoadingScreen(String title) throws HeadlessException {
         super(title);
-        // ajustes
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
-        if (UIManager.getLookAndFeel().getSupportsWindowDecorations()) {
-            setUndecorated(true);
-        }
-
         // componentes
-        JTextArea textArea = new JTextArea(12, 32);
-        textArea.setEditable(false);
-        textArea.setFocusable(false);
-        JScrollPane scrollPane = new JScrollPane(textArea);
+        DisplayPane displayPane = new DisplayPane(8, 24);
+        JScrollPane scrollPane = new JScrollPane(displayPane);
         JProgressBar progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
 
@@ -30,10 +26,14 @@ public class LoadingScreen extends JFrame {
         getContentPane().add(scrollPane);
         getContentPane().add(progressBar, BorderLayout.SOUTH);
 
-        // creo el lanzador
-        AppLauncher launcher = createLauncher(textArea, progressBar);
+        // ajustes
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        if (UIManager.getLookAndFeel().getSupportsWindowDecorations()) {
+            setUndecorated(true);
+        }
 
         // eventos
+        Launcher launcher = createLauncher(displayPane, progressBar);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -43,22 +43,24 @@ public class LoadingScreen extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 launcher.cancel(true);
-                if (launcher.getCountdown().isRunning()) {
-                    launcher.getCountdown().stop();
-                }
+                launcher.stopCountdown();
             }
         });
     }
 
-    private AppLauncher createLauncher(JTextArea textArea, JProgressBar progressBar) {
-        AppLauncher launcher = new AppLauncher(textArea);
+    private static Launcher createLauncher(DisplayPane displayPane, JProgressBar progressBar) {
+        Launcher launcher = new Launcher(displayPane);
         launcher.addPropertyChangeListener(evt -> {
             if ("progress".equals(evt.getPropertyName())) {
-                Integer value = (Integer) evt.getNewValue();
-                progressBar.setValue(value);
+                if (evt.getNewValue() instanceof Integer integer) {
+                    progressBar.setValue(integer);
+                    String pattern = messages.getString("loadingScreen.loading.format");
+                    progressBar.setString(MessageFormat.format(pattern, integer));
+                }
             } else if ("countdown".equals(evt.getPropertyName())) {
-                if (evt.getNewValue() instanceof String value) {
-                    progressBar.setString(value);
+                if (evt.getNewValue() instanceof Integer integer) {
+                    String pattern = messages.getString("loadingScreen.countdown.format");
+                    progressBar.setString(MessageFormat.format(pattern, integer));
                 }
             }
         });
@@ -66,10 +68,11 @@ public class LoadingScreen extends JFrame {
     }
 
     public static void createAndShow() {
-        LoadingScreen frame = new LoadingScreen(App.MESSAGES.getString("loadingScreen.title"));
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+        messages = ResourceBundle.getBundle(App.BUNDLE_NAME);
+        LoadingScreen loadingScreen = new LoadingScreen(messages.getString("loadingScreen.title"));
+        loadingScreen.pack();
+        loadingScreen.setLocationRelativeTo(null);
+        loadingScreen.setVisible(true);
     }
 
 }

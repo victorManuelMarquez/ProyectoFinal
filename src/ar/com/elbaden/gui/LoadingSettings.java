@@ -4,20 +4,15 @@ import ar.com.elbaden.main.App;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 
-public class LoadingSettings extends CheckPoint<String> {
+public class LoadingSettings extends CheckPoint {
 
-    private final File xsdFile;
-    private final File xslFile;
-    private final File xmlFile;
-    private final String totalLoaded;
-
-    public LoadingSettings(File xsdFile, File xslFile, File xmlFile) {
-        this.xsdFile = xsdFile;
-        this.xslFile = xslFile;
-        this.xmlFile = xmlFile;
-        totalLoaded = App.MESSAGES.getString("f.totalSettingsLoaded");
+    public LoadingSettings(ResourceBundle messages, Object... files) {
+        super(messages, files);
     }
 
     @Override
@@ -27,9 +22,18 @@ public class LoadingSettings extends CheckPoint<String> {
         }
         try {
             Settings settings = new Settings();
-            settings.loadDocument(xsdFile, xslFile, xmlFile);
-            settings.mapAll().forEach(App::putDefault);
-            return MessageFormat.format(totalLoaded, App.defaults().size());
+            String pattern = getMessages().getString("propertiesLoad.formatChoice");
+            for (Object value : getValues()) {
+                if (value instanceof File file) {
+                    settings.loadDocument(file);
+                }
+            }
+            Map<String, Object> values = settings.mapAll();
+            values.forEach(App::setDefault);
+            String message = MessageFormat.format(pattern, App.getProperties().size());
+            getRecord().setLevel(Level.FINE);
+            getRecord().setMessage(message);
+            return message;
         } catch (Exception e) {
             throw new ExecutionException(e);
         }
