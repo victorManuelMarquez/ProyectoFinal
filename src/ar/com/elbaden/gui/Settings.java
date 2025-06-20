@@ -34,9 +34,11 @@ public class Settings {
     public static final String XSL_FILE_NAME = BASE_FILE_NAME + ".xsl";
     public static final String XML_FILE_NAME = BASE_FILE_NAME + ".xml";
     public static final String BASE_KEY = "settings";
+    public static final String JOIN_DOT = ".";
     private final String targetNamespace = "http://www.example.com/settings";
     private final String rootNodeName = BASE_KEY;
     private final String confirmExitNodeName = "confirmExit";
+    private final String confirmAttributeName = "value";
     private final String themeNodeName = "theme";
     private final String classThemeNodeName = "className";
     private final String fontsNodeName = "fonts";
@@ -44,16 +46,16 @@ public class Settings {
     private final String familyNodeName = "family";
     private final String styleNodeName = "style";
     private final String sizeNodeName = "size";
-    private final DocumentBuilder builder;
+    private final DocumentBuilderFactory builderFactory;
+    private DocumentBuilder builder;
     private Document document;
     private Validator validator;
     private Source xslSource;
 
     public Settings() throws ParserConfigurationException {
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+        builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
         builder = builderFactory.newDocumentBuilder();
-        document = builder.newDocument();
     }
 
     private Document generateXSD() {
@@ -98,7 +100,7 @@ public class Settings {
         Element confirmComplexType = xsdDocument.createElementNS(namespace, "xs:complexType");
         confirmComplexType.setAttribute("name", confirmType);
         Element confirmAttribute = xsdDocument.createElementNS(namespace, "xs:attribute");
-        confirmAttribute.setAttribute("name", "value");
+        confirmAttribute.setAttribute("name", confirmAttributeName);
         confirmAttribute.setAttribute("type", "xs:boolean");
         confirmComplexType.appendChild(confirmAttribute);
         schemaElement.appendChild(confirmComplexType);
@@ -207,11 +209,11 @@ public class Settings {
     }
 
     private void rebuildXML() {
-        document = builder.newDocument(); // sobreescribo cualquier estructura anterior
+        document = builder.newDocument();
         // nodos
         Element rootNode = document.createElementNS(targetNamespace, rootNodeName);
         Element confirmNode = document.createElementNS(targetNamespace, confirmExitNodeName);
-        confirmNode.setAttribute("value", "true");
+        confirmNode.setAttribute(confirmAttributeName, "true");
         Element themeNode = document.createElementNS(targetNamespace, themeNodeName);
         Element classThemeNode = document.createElementNS(targetNamespace, classThemeNodeName);
         Element fontsNode = document.createElementNS(targetNamespace, fontsNodeName);
@@ -281,6 +283,7 @@ public class Settings {
     public void loadXSD(File xsd) throws SAXException {
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(xsd);
+        builderFactory.setSchema(schema);
         validator = schema.newValidator();
     }
 
@@ -288,7 +291,8 @@ public class Settings {
         xslSource = new StreamSource(xsl);
     }
 
-    public void loadXML(File xml) throws IOException, SAXException {
+    public void loadXML(File xml) throws IOException, SAXException, ParserConfigurationException {
+        builder = builderFactory.newDocumentBuilder();
         Document temp = builder.parse(xml);
         if (validator != null) {
             validator.validate(new DOMSource(temp));
@@ -296,7 +300,7 @@ public class Settings {
         }
     }
 
-    public void loadDocument(File inputFile) throws SAXException, IOException {
+    public void loadDocument(File inputFile) throws SAXException, IOException, ParserConfigurationException {
         switch (inputFile.getName()) {
             case XSD_FILE_NAME -> loadXSD(inputFile);
             case XSL_FILE_NAME -> loadXSL(inputFile);
@@ -324,7 +328,7 @@ public class Settings {
             Node confirmNode = results.item(0);
             if (confirmNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element node = (Element) confirmNode;
-                return node.getAttribute("value");
+                return node.getAttribute(confirmAttributeName);
             }
         }
         return null;
@@ -377,8 +381,58 @@ public class Settings {
         return temp;
     }
 
+    public void setConfirmExit(Object value) {
+        if (document == null) {
+            throw new IllegalStateException("xmlDocument.isNull");
+        }
+        NodeList results = document.getElementsByTagNameNS(targetNamespace, confirmExitNodeName);
+        for (int i = 0; i < results.getLength(); i++) {
+            Node node = results.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element) node;
+                if (element.hasAttribute(confirmAttributeName)) {
+                    element.setAttribute(confirmAttributeName, value.toString());
+                }
+            }
+        }
+    }
+
+    public void setTheme(Object value) {
+        if (document == null) {
+            throw new IllegalStateException("xmlDocument.isNull");
+        }
+        NodeList results = document.getElementsByTagNameNS(targetNamespace, classThemeNodeName);
+        for (int i = 0; i < results.getLength(); i++) {
+            Node node = results.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element) node;
+                element.setTextContent(value.toString());
+            }
+        }
+    }
+
+    public void changeFont(String id, Object value) {
+        if (document == null) {
+            throw new IllegalStateException("xmlDocument.isNull");
+        }
+        if (value instanceof Font font) {
+            Element fontNode = document.getElementById(id);
+            if (fontNode != null) {
+                NodeList nodes = fontNode.getChildNodes();
+                for (int i = 0; i < nodes.getLength(); i++) {
+                    Node node = nodes.item(i);
+                    switch (node.getNodeName()) {
+                        case familyNodeName -> node.setTextContent(font.getFamily());
+                        case styleNodeName -> node.setTextContent(Integer.toString(font.getStyle()));
+                        case sizeNodeName -> node.setTextContent(Integer.toString(font.getSize()));
+                    }
+                }
+            }
+        }
+    }
+
     private String createKey(String nodeName) {
-        return BASE_KEY + "." + nodeName;
+        return BASE_KEY + JOIN_DOT + nodeName;
     }
 
     public Map<String, Object> mapAll() {
@@ -386,6 +440,27 @@ public class Settings {
         map.put(createKey(themeNodeName), getTheme());
         map.put(createKey(confirmExitNodeName), Boolean.parseBoolean(getConfirmValue()));
         return map;
+    }
+
+    public void storeAll(Map<String, Object> map) {
+        if (map.isEmpty()) {
+            return;
+        }
+        map.forEach((key,value) -> {
+            if (key.startsWith(rootNodeName)) {
+                int beginIndex = (rootNodeName + JOIN_DOT).length();
+                if (beginIndex >= key.length()) {
+                    // en teoría no debería pasar pero por si acaso
+                    return;
+                }
+                String k = key.substring(beginIndex);
+                switch (k) {
+                    case confirmExitNodeName -> setConfirmExit(value);
+                    case themeNodeName -> setTheme(value);
+                    default -> changeFont(k, value); // se presume que sea la clave de una fuente
+                }
+            }
+        });
     }
 
     public static int applyFont(Map<String, Object> fonts, Component origin, int counter) {
@@ -401,7 +476,7 @@ public class Settings {
         }
         String key = getValue(origin);
         if (key != null) {
-            key = BASE_KEY + "." + key + ".font";
+            key = BASE_KEY + JOIN_DOT + key + ".font";
             if (fonts.containsKey(key)) {
                 Object value = fonts.get(key);
                 if (value instanceof Font font) {
@@ -448,6 +523,16 @@ public class Settings {
             }
         });
         return name;
+    }
+
+    public static void save(Map<String, Object> values, File xsd, File xsl, File xml)
+            throws ParserConfigurationException, IOException, SAXException, TransformerException {
+        Settings settings = new Settings();
+        settings.loadXSD(xsd);
+        settings.loadXML(xml);
+        settings.loadXSL(xsl);
+        settings.storeAll(values);
+        settings.saveDocument(settings.document, xml, 4);
     }
 
 }

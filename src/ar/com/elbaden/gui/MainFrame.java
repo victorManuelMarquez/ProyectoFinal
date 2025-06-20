@@ -49,11 +49,8 @@ public class MainFrame extends JFrame {
     private void showClosingDialog() {
         String confirm = App.getProperties().getOrDefault("settings.confirmExit", "true").toString();
         if (Boolean.parseBoolean(confirm)) {
-            String message = messages.getString("closingDialog.message");
             String title = messages.getString("closingDialog.title");
-            int optionType = JOptionPane.OK_CANCEL_OPTION;
-            int icon = JOptionPane.QUESTION_MESSAGE;
-            int response = JOptionPane.showConfirmDialog(this, message, title, optionType, icon);
+            int response = ClosingDialog.createAndShow(this, title);
             if (response == JOptionPane.OK_OPTION) {
                 dispose();
             }
