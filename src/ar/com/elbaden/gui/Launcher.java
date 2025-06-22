@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
-public class Launcher extends SwingWorker<Void, String> {
+public class Launcher extends SwingWorker<Void, Void> {
 
     private static final Logger LOGGER = Logger.getLogger(Launcher.class.getName());
     private final DisplayPane displayPane;
@@ -33,7 +33,6 @@ public class Launcher extends SwingWorker<Void, String> {
             // rutina normal
             List<CheckPoint> checkPoints = List.of(
                     new CheckingDirectory(Settings.getAppFolder()),
-                    new CheckingFile(Settings.getXSDFile()),
                     new CheckingFile(Settings.getXMLFile()),
                     new ReadingSettings()
             );
@@ -46,9 +45,11 @@ public class Launcher extends SwingWorker<Void, String> {
             // rutina de restauración
             publishMessage(App.messages.getString("retrying"), Color.BLUE);
             List<CheckPoint> checkPoints = List.of(
-                    new RestoringDirectory(Settings.getAppFolder())
+                    new RestoringDirectory(Settings.getAppFolder()),
+                    new RestoringSettings(),
+                    new ReadingSettings()
             );
-            total += checkPoints.size();
+            total = checkPoints.size();
             processCheckPoints(checkPoints, total);
         }
         publishMessage(App.messages.getString("finished"), null);

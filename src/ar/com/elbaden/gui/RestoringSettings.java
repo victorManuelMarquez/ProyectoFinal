@@ -5,7 +5,7 @@ import ar.com.elbaden.main.App;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
-public class ReadingSettings extends CheckPoint {
+public class RestoringSettings extends CheckPoint {
 
     @Override
     public String call() throws Exception {
@@ -14,12 +14,11 @@ public class ReadingSettings extends CheckPoint {
         }
         try {
             Settings settings = new Settings();
-            settings.loadXML(Settings.getXMLFile());
-            App.properties.putAll(settings.collectAsMap());
-            return buildMessages(Level.FINEST, "settingsLoadedSuccessfully");
+            settings.restoreXML(Settings.getXMLFile(), 4);
+            String pattern = App.messages.getString("settingsRestoredSuccessfully");
+            return buildMessages(Level.INFO, pattern);
         } catch (Exception e) {
             throw new ExecutionException(e);
         }
     }
-
 }
