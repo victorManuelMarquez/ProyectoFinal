@@ -37,8 +37,8 @@ public abstract class CheckPoint implements Callable<String> {
                 for (Object parameter : parameters) {
                     if (parameter instanceof File file) {
                         objects[i] = file.getName();
-                    } else if (parameter instanceof LookAndFeel lookAndFeel) {
-                        objects[i] = lookAndFeel.getName();
+                    } else if (parameter instanceof UIManager.LookAndFeelInfo info) {
+                        objects[i] = info.getName();
                     } else {
                         objects[i] = parameter;
                     }

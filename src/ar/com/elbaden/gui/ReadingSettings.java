@@ -15,7 +15,8 @@ public class ReadingSettings extends CheckPoint {
         try {
             Settings settings = new Settings();
             settings.loadXML(Settings.getXMLFile());
-            App.properties.putAll(settings.collectAsMap());
+            App.properties.putAll(settings.collectNodes());
+            App.fontMap.putAll(settings.collectFonts());
             return buildMessage(Level.FINEST, "settingsLoadedSuccessfully");
         } catch (Exception e) {
             throw new ExecutionException(e);

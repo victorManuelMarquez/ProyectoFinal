@@ -4,10 +4,9 @@ import ar.com.elbaden.gui.Settings;
 import ar.com.elbaden.gui.window.LoadingScreen;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,10 +17,12 @@ public class App {
     private static final Logger LOGGER = Logger.getLogger(App.class.getName());
     public static ResourceBundle messages;
     public static Properties properties;
+    public static Map<String, Font> fontMap;
 
     static {
         try {
             properties = new Properties();
+            fontMap = new HashMap<>();
             // cargo la localización
             messages = ResourceBundle.getBundle("i18n/messages", Locale.getDefault());
             LOGGER.setResourceBundle(messages);

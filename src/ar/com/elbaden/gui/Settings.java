@@ -30,6 +30,7 @@ public class Settings {
     public static final String FILE_BASENAME = "config";
     public static final String XML_FILE_NAME = FILE_BASENAME + ".xml";
     public static final String BASE_KEY = "settings";
+    public static final String BOLD_METAL = "swing.boldMetal";
     private final String targetNamespace = "http://www.elbaden.com.ar/app/settings";
     private final String rootNodeName = BASE_KEY;
     private final String closingDialogTagName = "showClosingDialog";
@@ -62,7 +63,7 @@ public class Settings {
         xmlDocument.normalize();
     }
 
-    public Map<String, Object> collectAsMap() {
+    public Map<String, Object> collectNodes() {
         if (xmlDocument == null) {
             return Collections.emptyMap();
         }
@@ -74,11 +75,7 @@ public class Settings {
             mapping(closingDialogNode, map, rootNode.getTagName());
             // mapeo el tema
             Element lookAndFeelNode = getElementsByTagName(plafTagName).getFirst();
-            mapping(lookAndFeelNode, map, rootNode.getTagName());
-            // mapeo las fuentes
-            for (Element fontElement : getElementsByTagName(fontTagName)) {
-                mapFontNode(fontElement, map, rootNode.getTagName());
-            }
+            mapLookAndFeelNode(lookAndFeelNode, map, rootNode.getTagName());
         }
         return map;
     }
@@ -109,19 +106,64 @@ public class Settings {
         }
     }
 
-    protected void mapFontNode(Element fontNode, Map<String, Object> map, String baseName) {
-        String id = fontNode.getAttribute("id");
+    protected void mapLookAndFeelNode(Element lookAndFeelNode, Map<String, Object> map, String baseName) {
+        String id = lookAndFeelNode.getAttribute("id");
         if (id.isBlank()) {
             return;
         }
-        String key = baseName + "." + id;
-        NodeList childNodes = fontNode.getChildNodes();
+        String key = baseName + "." + lookAndFeelNode.getTagName();
+        String idKey = key + ".id";
+        map.put(idKey, id);
+        String boldValue = lookAndFeelNode.getAttribute(BOLD_METAL);
+        if (!boldValue.isBlank()) {
+            String boldKey = key + "." + BOLD_METAL;
+            map.put(boldKey, boldValue);
+        }
+        NodeList childNodes = lookAndFeelNode.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node child = childNodes.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 mapping((Element) child, map, key);
             }
         }
+    }
+
+    protected Map<String, Font> collectFonts() {
+        if (xmlDocument == null) {
+            return Collections.emptyMap();
+        }
+        Map<String, Font> map = new HashMap<>();
+        List<Element> fontsNode = getElementsByTagName(fontTagName);
+        for (Element fontNode : fontsNode) {
+            String id = fontNode.getAttribute("id");
+            if (!id.isBlank()) {
+                Font font = UIManager.getFont(id);
+                if (font != null) {
+                    List<Element> childElements = retrieveElements(fontNode.getChildNodes());
+                    for (Element child : childElements) {
+                        font = deriveFont(child, font);
+                    }
+                    map.put(id, font);
+                }
+            }
+        }
+        return map;
+    }
+
+    protected Font deriveFont(Element element, Font font) {
+        switch (element.getTagName()) {
+            case "family" -> font = new Font(element.getTextContent(), font.getStyle(), font.getSize());
+            case "style" -> {
+                switch (Integer.parseInt(element.getTextContent())) {
+                    case Font.PLAIN -> font = font.deriveFont(Font.PLAIN);
+                    case Font.BOLD -> font = font.deriveFont(Font.BOLD);
+                    case Font.ITALIC -> font = font.deriveFont(Font.ITALIC);
+                    case Font.BOLD|Font.ITALIC -> font = font.deriveFont(Font.BOLD|Font.ITALIC);
+                }
+            }
+            case "size" -> font = font.deriveFont(Float.parseFloat(element.getTextContent()));
+        }
+        return font;
     }
 
     protected List<Element> getElementsByTagName(String tagName) {
@@ -215,6 +257,12 @@ public class Settings {
         plafIdAttribute.setAttribute("use", "required");
         plafComplexType.appendChild(plafIdAttribute);
 
+        Element boldMetalAttribute = xsd.createElementNS(namespace, "xs:attribute");
+        boldMetalAttribute.setAttribute("name", BOLD_METAL);
+        boldMetalAttribute.setAttribute("type", "xs:boolean");
+        boldMetalAttribute.setAttribute("use", "optional");
+        plafComplexType.appendChild(boldMetalAttribute);
+
         schema.appendChild(plafComplexType);
 
         // fonts
@@ -275,6 +323,10 @@ public class Settings {
         LookAndFeel laf = UIManager.getLookAndFeel();
         className.setTextContent(laf.getClass().getName());
         lookAndFeel.setAttribute("id", laf.getID());
+        if (laf.getName().equals("Metal")) {
+            // esta característica solo es aplicable en este tema
+            lookAndFeel.setAttribute(BOLD_METAL, Boolean.toString(true));
+        }
         // fuentes
         UIDefaults defaults = UIManager.getDefaults();
         Enumeration<Object> keys = defaults.keys();

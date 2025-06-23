@@ -16,6 +16,7 @@ public class Launcher extends SwingWorker<Void, Void> {
 
     private static final Logger LOGGER = Logger.getLogger(Launcher.class.getName());
     private final DisplayPane displayPane;
+    private final Window ancestor;
 
     static {
         LOGGER.setParent(Logger.getLogger(App.class.getName()));
@@ -23,6 +24,7 @@ public class Launcher extends SwingWorker<Void, Void> {
 
     public Launcher(DisplayPane displayPane) {
         this.displayPane = displayPane;
+        ancestor = SwingUtilities.getWindowAncestor(displayPane);
     }
 
     @Override
@@ -34,7 +36,8 @@ public class Launcher extends SwingWorker<Void, Void> {
             List<CheckPoint> checkPoints = List.of(
                     new CheckingDirectory(Settings.getAppFolder()),
                     new CheckingFile(Settings.getXMLFile()),
-                    new ReadingSettings()
+                    new ReadingSettings(),
+                    new ApplyingLookAndFeel(ancestor)
             );
             total += checkPoints.size();
             processCheckPoints(checkPoints, total);
