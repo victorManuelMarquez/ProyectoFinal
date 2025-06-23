@@ -3,6 +3,7 @@ package ar.com.elbaden.gui;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
+import javax.swing.*;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -31,6 +32,8 @@ public class Settings {
     private final String rootNodeName = BASE_KEY;
     private final String closingDialogTagName = "showClosingDialog";
     private final String closingDialogAttrName = "value";
+    private final String plafTagName = "lookAndFeel";
+    private final String plafChildNodeName = "className";
     private final DocumentBuilderFactory builderFactory;
     private final Validator validator;
     private DocumentBuilder builder;
@@ -121,6 +124,7 @@ public class Settings {
         // variables
         String namespace = XMLConstants.W3C_XML_SCHEMA_NS_URI;
         String closingDialogComplexTypeName = "closingDialogType";
+        String plafComplexTypeName = "plafType";
 
         // definición del esquema
         Document xsd = builder.newDocument();
@@ -138,17 +142,24 @@ public class Settings {
         root.setAttribute("name", rootNodeName);
         Element rootComplexType = xsd.createElementNS(namespace, "xs:complexType");
         Element rootSequence = xsd.createElementNS(namespace, "xs:sequence");
+
         // elementos en el nodo raíz
         Element closingDialogElement = xsd.createElementNS(namespace, "xs:element");
         closingDialogElement.setAttribute("name", closingDialogTagName);
         closingDialogElement.setAttribute("type", closingDialogComplexTypeName);
         rootSequence.appendChild(closingDialogElement);
+
+        Element plafElement = xsd.createElementNS(namespace, "xs:element");
+        plafElement.setAttribute("name", plafTagName);
+        plafElement.setAttribute("type", plafComplexTypeName);
+        rootSequence.appendChild(plafElement);
         // fin de los elementos en el nodo raíz
+
         rootComplexType.appendChild(rootSequence);
         root.appendChild(rootComplexType);
         schema.appendChild(root);
 
-        // tipos
+        // closingDialog
         Element closingDialogComplexType = xsd.createElementNS(namespace, "xs:complexType");
         closingDialogComplexType.setAttribute("name", closingDialogComplexTypeName);
         Element showDialogAttribute = xsd.createElementNS(namespace, "xs:attribute");
@@ -157,18 +168,50 @@ public class Settings {
         closingDialogComplexType.appendChild(showDialogAttribute);
         schema.appendChild(closingDialogComplexType);
 
+        // lookAndFeel
+        Element plafComplexType = xsd.createElementNS(namespace, "xs:complexType");
+        plafComplexType.setAttribute("name", plafComplexTypeName);
+
+        Element plafSequence = xsd.createElementNS(namespace, "xs:sequence");
+        Element classNameElement = xsd.createElementNS(namespace, "xs:element");
+        classNameElement.setAttribute("name", plafChildNodeName);
+        classNameElement.setAttribute("type", "xs:string");
+        plafSequence.appendChild(classNameElement);
+        plafComplexType.appendChild(plafSequence);
+
+        Element plafIdAttribute = xsd.createElementNS(namespace, "xs:attribute");
+        plafIdAttribute.setAttribute("name", "id");
+        plafIdAttribute.setAttribute("type", "xs:ID");
+        plafIdAttribute.setAttribute("use", "required");
+        plafComplexType.appendChild(plafIdAttribute);
+
+        schema.appendChild(plafComplexType);
+
         return xsd;
     }
 
     protected Document generateXML() {
         // esquema
         Document xml = builder.newDocument();
+
         // definición del esquema
         Element root = xml.createElementNS(targetNamespace, rootNodeName);
         Element showClosingDialog = xml.createElementNS(targetNamespace, closingDialogTagName);
         showClosingDialog.setAttribute(closingDialogAttrName, Boolean.toString(true));
+        Element lookAndFeel = xml.createElementNS(targetNamespace, plafTagName);
+        Element className = xml.createElementNS(targetNamespace, plafChildNodeName);
+
+        // relevamiento de datos
+        LookAndFeel laf = UIManager.getLookAndFeel();
+        className.setTextContent(laf.getClass().getName());
+        lookAndFeel.setAttribute("id", laf.getID());
+
+        // estableciendo la jerarquía
         root.appendChild(showClosingDialog);
+        lookAndFeel.appendChild(className);
+        root.appendChild(lookAndFeel);
         xml.appendChild(root);
+
         return xml;
     }
 
