@@ -1,7 +1,5 @@
 package ar.com.elbaden.gui;
 
-import ar.com.elbaden.main.App;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -22,14 +20,11 @@ public class RestoringDirectory extends CheckPoint {
         }
         try {
             if (file.exists()) {
-                String pattern = App.messages.getString("directoryFound");
-                return buildMessages(Level.FINE, pattern, file);
+                return buildMessage(Level.FINE, "directoryFound", file);
             } else if (file.mkdir()) {
-                String pattern = App.messages.getString("directoryCreated");
-                return buildMessages(Level.INFO, pattern, file);
+                return buildMessage(Level.INFO, "directoryCreated", file);
             } else {
-                String pattern = App.messages.getString("directoryCannotCreated");
-                throw new IOException(buildSimpleMessage(pattern, file));
+                throw new IOException(buildPublicMessage("directoryCannotCreated", file));
             }
         } catch (Exception e) {
             throw new ExecutionException(e);

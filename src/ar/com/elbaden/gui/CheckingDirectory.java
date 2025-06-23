@@ -1,7 +1,5 @@
 package ar.com.elbaden.gui;
 
-import ar.com.elbaden.main.App;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.concurrent.ExecutionException;
@@ -22,11 +20,9 @@ public class CheckingDirectory extends CheckPoint {
         }
         try {
             if (file.exists()) {
-                String pattern = App.messages.getString("directoryFound");
-                return buildMessages(Level.FINEST, pattern, file);
+                return buildMessage(Level.FINEST, "directoryFound", file);
             } else {
-                String pattern = App.messages.getString("directoryNotFound");
-                throw new FileNotFoundException(buildSimpleMessage(pattern, file));
+                throw new FileNotFoundException(buildPublicMessage("directoryNotFound", file));
             }
         } catch (Exception e) {
             throw new ExecutionException(e);
