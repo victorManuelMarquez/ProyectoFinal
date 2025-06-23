@@ -17,9 +17,11 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 
 public class Settings {
 
@@ -28,12 +30,14 @@ public class Settings {
     public static final String FILE_BASENAME = "config";
     public static final String XML_FILE_NAME = FILE_BASENAME + ".xml";
     public static final String BASE_KEY = "settings";
-    private final String targetNamespace = "http://www.elbaden.com.ar/settings";
+    private final String targetNamespace = "http://www.elbaden.com.ar/app/settings";
     private final String rootNodeName = BASE_KEY;
     private final String closingDialogTagName = "showClosingDialog";
     private final String closingDialogAttrName = "value";
     private final String plafTagName = "lookAndFeel";
     private final String plafChildNodeName = "className";
+    private final String fontsTagName = "fonts";
+    private final String fontTagName = "font";
     private final DocumentBuilderFactory builderFactory;
     private final Validator validator;
     private DocumentBuilder builder;
@@ -59,25 +63,37 @@ public class Settings {
     }
 
     public Map<String, Object> collectAsMap() {
-        if (xmlDocument != null) {
-            Map<String, Object> map = new HashMap<>();
-            Element rootNode = getRootNode();
-            if (rootNode != null) {
-                mapping(rootNode, map, rootNode.getTagName());
-            }
-            return map;
-        } else {
+        if (xmlDocument == null) {
             return Collections.emptyMap();
         }
+        Map<String, Object> map = new HashMap<>();
+        Element rootNode = getElementsByTagName(rootNodeName).getFirst();
+        if (rootNode != null) {
+            // mapeo la confirmación de cierre
+            Element closingDialogNode = getElementsByTagName(closingDialogTagName).getFirst();
+            mapping(closingDialogNode, map, rootNode.getTagName());
+            // mapeo el tema
+            Element lookAndFeelNode = getElementsByTagName(plafTagName).getFirst();
+            mapping(lookAndFeelNode, map, rootNode.getTagName());
+            // mapeo las fuentes
+            for (Element fontElement : getElementsByTagName(fontTagName)) {
+                mapFontNode(fontElement, map, rootNode.getTagName());
+            }
+        }
+        return map;
     }
 
     protected void mapping(Element element, Map<String, Object> map, String key) {
+        key += "." + element.getTagName();
+        if (element.hasAttribute("id")) {
+            key += "." + element.getAttribute("id");
+        }
         if (element.hasChildNodes()) {
             NodeList nodeList = element.getChildNodes();
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node child = nodeList.item(i);
                 if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    mapping((Element) child, map, key + "." + child.getNodeName());
+                    mapping((Element) child, map, key);
                 }
             }
         }
@@ -93,23 +109,30 @@ public class Settings {
         }
     }
 
-    protected Element getRootNode() {
-        if (xmlDocument == null) {
-            return null;
+    protected void mapFontNode(Element fontNode, Map<String, Object> map, String baseName) {
+        String id = fontNode.getAttribute("id");
+        if (id.isBlank()) {
+            return;
         }
-        NodeList nodeList = xmlDocument.getElementsByTagNameNS(targetNamespace, rootNodeName);
-        List<Element> elements = retrieveElements(nodeList);
-        if (elements.isEmpty()) {
-            return null;
-        } else {
-            return elements.getFirst();
+        String key = baseName + "." + id;
+        NodeList childNodes = fontNode.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node child = childNodes.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                mapping((Element) child, map, key);
+            }
         }
     }
 
-    protected List<Element> retrieveElements(NodeList nodeList) {
-        if (nodeList == null) {
+    protected List<Element> getElementsByTagName(String tagName) {
+        if (xmlDocument == null) {
             return Collections.emptyList();
         }
+        NodeList nodeList = xmlDocument.getElementsByTagNameNS(targetNamespace, tagName);
+        return retrieveElements(nodeList);
+    }
+
+    protected List<Element> retrieveElements(NodeList nodeList) {
         List<Element> elements = new ArrayList<>(nodeList.getLength());
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node node = nodeList.item(i);
@@ -123,8 +146,10 @@ public class Settings {
     protected Document generateXSD() {
         // variables
         String namespace = XMLConstants.W3C_XML_SCHEMA_NS_URI;
-        String closingDialogComplexTypeName = "closingDialogType";
-        String plafComplexTypeName = "plafType";
+        String closingDialogTypeName = "closingDialogType";
+        String plafTypeName = "plafType";
+        String fontsTypeName = "fontsType";
+        String fontTypeName = "fontType";
 
         // definición del esquema
         Document xsd = builder.newDocument();
@@ -146,13 +171,18 @@ public class Settings {
         // elementos en el nodo raíz
         Element closingDialogElement = xsd.createElementNS(namespace, "xs:element");
         closingDialogElement.setAttribute("name", closingDialogTagName);
-        closingDialogElement.setAttribute("type", closingDialogComplexTypeName);
+        closingDialogElement.setAttribute("type", closingDialogTypeName);
         rootSequence.appendChild(closingDialogElement);
 
         Element plafElement = xsd.createElementNS(namespace, "xs:element");
         plafElement.setAttribute("name", plafTagName);
-        plafElement.setAttribute("type", plafComplexTypeName);
+        plafElement.setAttribute("type", plafTypeName);
         rootSequence.appendChild(plafElement);
+
+        Element fontsElement = xsd.createElementNS(namespace, "xs:element");
+        fontsElement.setAttribute("name", fontsTagName);
+        fontsElement.setAttribute("type", fontsTypeName);
+        rootSequence.appendChild(fontsElement);
         // fin de los elementos en el nodo raíz
 
         rootComplexType.appendChild(rootSequence);
@@ -161,7 +191,7 @@ public class Settings {
 
         // closingDialog
         Element closingDialogComplexType = xsd.createElementNS(namespace, "xs:complexType");
-        closingDialogComplexType.setAttribute("name", closingDialogComplexTypeName);
+        closingDialogComplexType.setAttribute("name", closingDialogTypeName);
         Element showDialogAttribute = xsd.createElementNS(namespace, "xs:attribute");
         showDialogAttribute.setAttribute("name", closingDialogAttrName);
         showDialogAttribute.setAttribute("type", "xs:boolean");
@@ -170,7 +200,7 @@ public class Settings {
 
         // lookAndFeel
         Element plafComplexType = xsd.createElementNS(namespace, "xs:complexType");
-        plafComplexType.setAttribute("name", plafComplexTypeName);
+        plafComplexType.setAttribute("name", plafTypeName);
 
         Element plafSequence = xsd.createElementNS(namespace, "xs:sequence");
         Element classNameElement = xsd.createElementNS(namespace, "xs:element");
@@ -187,6 +217,44 @@ public class Settings {
 
         schema.appendChild(plafComplexType);
 
+        // fonts
+        Element fontsComplexType = xsd.createElementNS(namespace, "xs:complexType");
+        fontsComplexType.setAttribute("name", fontsTypeName);
+        Element fontsSequence = xsd.createElementNS(namespace, "xs:sequence");
+        Element fontElement = xsd.createElementNS(namespace, "xs:element");
+        fontElement.setAttribute("name", fontTagName);
+        fontElement.setAttribute("type", fontTypeName);
+        fontElement.setAttribute("maxOccurs", "unbounded");
+        fontsSequence.appendChild(fontElement);
+        fontsComplexType.appendChild(fontsSequence);
+        schema.appendChild(fontsComplexType);
+
+        // font
+        Element fontComplexType = xsd.createElementNS(namespace, "xs:complexType");
+        fontComplexType.setAttribute("name", fontTypeName);
+        Element fontSequence = xsd.createElementNS(namespace, "xs:sequence");
+        Element familyElement = xsd.createElementNS(namespace, "xs:element");
+        familyElement.setAttribute("name", "family");
+        familyElement.setAttribute("type", "xs:string");
+        fontSequence.appendChild(familyElement);
+        Element styleElement = xsd.createElementNS(namespace, "xs:element");
+        styleElement.setAttribute("name", "style");
+        styleElement.setAttribute("type", "xs:integer");
+        fontSequence.appendChild(styleElement);
+        Element sizeElement = xsd.createElementNS(namespace, "xs:element");
+        sizeElement.setAttribute("name", "size");
+        sizeElement.setAttribute("type", "xs:integer");
+        fontSequence.appendChild(sizeElement);
+        fontComplexType.appendChild(fontSequence);
+
+        Element fontIdAttribute = xsd.createElementNS(namespace, "xs:attribute");
+        fontIdAttribute.setAttribute("name", "id");
+        fontIdAttribute.setAttribute("type", "xs:ID");
+        fontIdAttribute.setAttribute("use", "required");
+        fontComplexType.appendChild(fontIdAttribute);
+
+        schema.appendChild(fontComplexType);
+
         return xsd;
     }
 
@@ -200,19 +268,47 @@ public class Settings {
         showClosingDialog.setAttribute(closingDialogAttrName, Boolean.toString(true));
         Element lookAndFeel = xml.createElementNS(targetNamespace, plafTagName);
         Element className = xml.createElementNS(targetNamespace, plafChildNodeName);
+        Element fonts = xml.createElementNS(targetNamespace, fontsTagName);
 
-        // relevamiento de datos
+        // recolección de datos
+        // tema
         LookAndFeel laf = UIManager.getLookAndFeel();
         className.setTextContent(laf.getClass().getName());
         lookAndFeel.setAttribute("id", laf.getID());
+        // fuentes
+        UIDefaults defaults = UIManager.getDefaults();
+        Enumeration<Object> keys = defaults.keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            if (defaults.get(key) instanceof Font font) {
+                fonts.appendChild(createFontNode(xml, key.toString(), font));
+            }
+        }
+        // fin de la recolección
 
         // estableciendo la jerarquía
         root.appendChild(showClosingDialog);
         lookAndFeel.appendChild(className);
         root.appendChild(lookAndFeel);
+        root.appendChild(fonts);
         xml.appendChild(root);
 
         return xml;
+    }
+
+    protected Element createFontNode(Document xml, String id, Font font) {
+        Element fontNode = xml.createElementNS(targetNamespace, fontTagName);
+        fontNode.setAttribute("id", id);
+        Element family = xml.createElementNS(targetNamespace, "family");
+        family.setTextContent(font.getFamily());
+        Element style = xml.createElementNS(targetNamespace, "style");
+        style.setTextContent(Integer.toString(font.getStyle()));
+        Element size = xml.createElementNS(targetNamespace, "size");
+        size.setTextContent(Integer.toString(font.getSize()));
+        fontNode.appendChild(family);
+        fontNode.appendChild(style);
+        fontNode.appendChild(size);
+        return fontNode;
     }
 
     protected void saveDocument(Document document, File outputFile, int indent) throws TransformerException {
