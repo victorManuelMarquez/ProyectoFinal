@@ -110,7 +110,11 @@ public class Launcher extends SwingWorker<Void, Void> {
     }
 
     protected void publishError(Exception exception) {
-        String message = findCause(exception.getCause(), exception.getMessage()).concat(System.lineSeparator());
+        String message = findCause(exception.getCause(), exception.getMessage());
+        if (message == null) {
+            message = exception.getMessage();
+        }
+        message = message.concat(System.lineSeparator());
         publishMessage(message, Color.RED);
     }
 
