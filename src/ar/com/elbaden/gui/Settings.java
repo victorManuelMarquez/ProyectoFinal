@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
@@ -22,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class Settings {
 
@@ -375,6 +378,68 @@ public class Settings {
 
     public void restoreXML(File xml, int indent) throws TransformerException {
         saveDocument(generateXML(), xml, indent);
+    }
+
+    protected static String swingComponentClassName(Class<?> clazz) {
+        if (clazz.getName().startsWith("javax.swing.")) {
+            return clazz.getName();
+        }
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass == null) {
+            return null;
+        } else if (superClass.getName().startsWith("javax.swing.")) {
+            return superClass.getName();
+        } else {
+            return swingComponentClassName(superClass);
+        }
+    }
+
+    protected static int applyFont(String swingComponentClassName, Component component) {
+        String simpleName = swingComponentClassName.replace("javax.swing.J", "");
+        Set<String> keySet = App.fontMap.keySet();
+        Predicate<String> fontProperty = k -> k.startsWith(simpleName) && k.endsWith(".font");
+        Stream<String> fontPropertyResult = keySet.stream().filter(fontProperty);
+        Optional<String> optional = fontPropertyResult.findFirst();
+        if (optional.isPresent()) {
+            String key = optional.get();
+            Font font = App.fontMap.get(key);
+            SwingUtilities.invokeLater(() -> component.setFont(font));
+            return 1;
+        }
+        return 0;
+    }
+
+    public static int updateFont(Component origin) {
+        int totalUpdated = 0; // valor inicial
+        if (origin instanceof JMenuItem item) {
+            for (MenuElement element : item.getSubElements()) {
+                totalUpdated += updateFont((Component) element); // acumulo el resultado de la recursión
+            }
+        } else if (origin instanceof Container container) {
+            for (Component component : container.getComponents()) {
+                totalUpdated += updateFont(component); // acumulo el resultado de la recursión
+            }
+        }
+        String className = swingComponentClassName(origin.getClass());
+        if (className != null) {
+            totalUpdated += applyFont(className, origin); // acumulo el resultado
+        }
+        return totalUpdated;
+    }
+
+    public static int updateExclusiveFonts(LookAndFeel lookAndFeel) {
+        Set<String> keySet = App.fontMap.keySet();
+        Stream<String> filteredKeys = keySet.stream().filter(k -> k.endsWith("Font"));
+        List<String> keys = filteredKeys.toList();
+        UIDefaults defaults = lookAndFeel.getDefaults();
+        int total = 0;
+        for (String key : keys) {
+            if (defaults.containsKey(key)) {
+                UIManager.put(key, App.fontMap.get(key));
+                total++;
+            }
+        }
+        return total;
     }
 
     public static File getAppFolder() {

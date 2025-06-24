@@ -37,7 +37,8 @@ public class Launcher extends SwingWorker<Void, Void> {
                     new CheckingDirectory(Settings.getAppFolder()),
                     new CheckingFile(Settings.getXMLFile()),
                     new ReadingSettings(),
-                    new ApplyingLookAndFeel(ancestor)
+                    new ApplyingLookAndFeel(ancestor),
+                    new ApplyingFonts(ancestor)
             );
             total += checkPoints.size();
             processCheckPoints(checkPoints, total);
