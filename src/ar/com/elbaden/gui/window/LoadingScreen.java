@@ -34,14 +34,7 @@ public class LoadingScreen extends JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         // eventos
-        Launcher launcher = new Launcher(displayPane);
-        launcher.addPropertyChangeListener(evt -> {
-            if ("progress".equals(evt.getPropertyName())) {
-                if (evt.getNewValue() instanceof Integer integer) {
-                    progressBar.setValue(integer);
-                }
-            }
-        });
+        Launcher launcher = createLauncher(displayPane, progressBar);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -50,9 +43,29 @@ public class LoadingScreen extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                launcher.cancel(true);
+                launcher.stop();
             }
         });
+    }
+
+    private Launcher createLauncher(DisplayPane displayPane, JProgressBar progressBar) {
+        Launcher launcher = new Launcher(displayPane);
+        launcher.addPropertyChangeListener(evt -> {
+            if ("progress".equals(evt.getPropertyName())) {
+                if (evt.getNewValue() instanceof Integer integer) {
+                    progressBar.setValue(integer);
+                }
+            } else if ("countdown".equals(evt.getPropertyName())) {
+                if (evt.getNewValue() instanceof String value) {
+                    progressBar.setString(value);
+                }
+            } else if ("errorBackgroundColor".equals(evt.getPropertyName())) {
+                if (evt.getNewValue() instanceof Color color) {
+                    progressBar.setBackground(color);
+                }
+            }
+        });
+        return launcher;
     }
 
     public static void createAndShow() {
