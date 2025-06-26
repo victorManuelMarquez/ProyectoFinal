@@ -87,6 +87,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
     protected void done() {
         try {
             Object ignore = get();
+            App.messages.getString("fix");
         } catch (Exception e) {
             // manejo del error
             LOGGER.severe(e.getMessage());

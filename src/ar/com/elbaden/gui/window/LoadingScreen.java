@@ -2,6 +2,7 @@ package ar.com.elbaden.gui.window;
 
 import ar.com.elbaden.gui.Launcher;
 import ar.com.elbaden.gui.component.DisplayPane;
+import ar.com.elbaden.gui.component.InfoProgressBar;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -23,8 +24,7 @@ public class LoadingScreen extends JFrame {
         // componentes
         DisplayPane displayPane = new DisplayPane(12, 40);
         JScrollPane scrollPane = new JScrollPane(displayPane);
-        JProgressBar progressBar = new JProgressBar();
-        progressBar.setStringPainted(true);
+        InfoProgressBar progressBar = new InfoProgressBar();
 
         // instalando componentes
         getContentPane().add(scrollPane);
@@ -48,7 +48,7 @@ public class LoadingScreen extends JFrame {
         });
     }
 
-    private Launcher createLauncher(DisplayPane displayPane, JProgressBar progressBar) {
+    private Launcher createLauncher(DisplayPane displayPane, InfoProgressBar progressBar) {
         Launcher launcher = new Launcher(displayPane);
         launcher.addPropertyChangeListener(evt -> {
             if ("progress".equals(evt.getPropertyName())) {
@@ -57,6 +57,7 @@ public class LoadingScreen extends JFrame {
                 }
             } else if ("countdown".equals(evt.getPropertyName())) {
                 if (evt.getNewValue() instanceof String value) {
+                    progressBar.setShowingError(true);
                     progressBar.setString(value);
                 }
             }
