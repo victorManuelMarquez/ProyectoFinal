@@ -59,10 +59,6 @@ public class LoadingScreen extends JFrame {
                 if (evt.getNewValue() instanceof String value) {
                     progressBar.setString(value);
                 }
-            } else if ("errorBackgroundColor".equals(evt.getPropertyName())) {
-                if (evt.getNewValue() instanceof Color color) {
-                    progressBar.setBackground(color);
-                }
             }
         });
         return launcher;
