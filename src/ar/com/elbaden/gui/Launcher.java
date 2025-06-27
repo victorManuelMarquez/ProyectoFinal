@@ -140,10 +140,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
 
     protected void publishMessage(String message, Color foregroundColor) {
         String line = message.contains(System.lineSeparator()) ? message : message.concat(System.lineSeparator());
-        SwingUtilities.invokeLater(() -> {
-            displayPane.setStyleForeground(foregroundColor);
-            displayPane.appendText(line);
-        });
+        SwingUtilities.invokeLater(() -> displayPane.appendTextColor(line, foregroundColor));
     }
 
     protected void publishError(Exception exception) {

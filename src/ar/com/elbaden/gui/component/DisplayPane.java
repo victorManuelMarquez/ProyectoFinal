@@ -51,6 +51,9 @@ public class DisplayPane extends JTextPane {
     }
 
     public void appendText(String text) {
+        if (text == null) {
+            return;
+        }
         try {
             StyledDocument document = getStyledDocument();
             int offset = document.getLength();
@@ -61,13 +64,14 @@ public class DisplayPane extends JTextPane {
         }
     }
 
+    public void appendTextColor(String text, Color foreground) {
+        StyleConstants.setForeground(attributeSet, foreground == null ? getForeground() : foreground);
+        appendText(text);
+    }
+
     protected void addMargins(Dimension size, Insets insets) {
         size.width += insets.left + insets.right;
         size.height += insets.top + insets.bottom;
-    }
-
-    public void setStyleForeground(Color color) {
-        StyleConstants.setForeground(attributeSet, color == null ? getForeground() : color);
     }
 
 }
