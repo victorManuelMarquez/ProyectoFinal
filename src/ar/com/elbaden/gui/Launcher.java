@@ -21,6 +21,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
     private final DisplayPane displayPane;
     private final Window ancestor;
     private final Timer countdown;
+    private final Cursor defaultCursor;
     private final int totalSeconds = 16;
     private int seconds = totalSeconds;
 
@@ -32,6 +33,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
         this.displayPane = displayPane;
         ancestor = SwingUtilities.getWindowAncestor(displayPane);
         countdown = new Timer(1000, this);
+        defaultCursor = ancestor.getCursor();
     }
 
     @Override
@@ -52,6 +54,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
 
     @Override
     protected Void doInBackground() throws Exception {
+        ancestor.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         publishMessage(App.messages.getString("loading"), null);
         int total = 0;
         try {
@@ -85,9 +88,9 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
 
     @Override
     protected void done() {
+        ancestor.setCursor(defaultCursor);
         try {
             Object ignore = get();
-            App.messages.getString("fix");
         } catch (Exception e) {
             // manejo del error
             LOGGER.severe(e.getMessage());
