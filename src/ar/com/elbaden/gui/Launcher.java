@@ -91,11 +91,14 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
         ancestor.setCursor(defaultCursor);
         try {
             Object ignore = get();
+            App.messages.getString("fix"); // error intencional
         } catch (Exception e) {
             // manejo del error
             LOGGER.severe(e.getMessage());
             publishError(e);
             countdown.start();
+            // demostración de la función (se reemplazará próximamente)
+            SwingUtilities.invokeLater(() -> displayPane.appendFile(Settings.getLogFile()));
         }
     }
 
