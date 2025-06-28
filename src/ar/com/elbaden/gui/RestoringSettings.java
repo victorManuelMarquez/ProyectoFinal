@@ -1,7 +1,6 @@
 package ar.com.elbaden.gui;
 
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 
 public class RestoringSettings extends CheckPoint {
 
@@ -13,7 +12,7 @@ public class RestoringSettings extends CheckPoint {
         try {
             Settings settings = new Settings();
             settings.restoreXML(Settings.getXMLFile(), 4);
-            return buildMessage(Level.INFO, "settingsRestoredSuccessfully");
+            return buildMessage("settingsRestoredSuccessfully");
         } catch (Exception e) {
             throw new ExecutionException(e);
         }

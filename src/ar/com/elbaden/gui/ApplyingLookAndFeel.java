@@ -5,7 +5,6 @@ import ar.com.elbaden.main.App;
 import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 
 public class ApplyingLookAndFeel extends CheckPoint {
 
@@ -23,12 +22,16 @@ public class ApplyingLookAndFeel extends CheckPoint {
         try {
             LookAndFeel lookAndFeel = UIManager.getLookAndFeel();
             String className = App.properties.getProperty("settings.lookAndFeel.className");
+            String id = App.properties.getProperty("settings.lookAndFeel.id");
             UIManager.LookAndFeelInfo lookAndFeelInfo = null;
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if (info.getClassName().equals(className)) {
                     lookAndFeelInfo = info;
                     break;
                 }
+            }
+            if (lookAndFeelInfo == null) {
+                throw new UnsupportedLookAndFeelException(buildMessage("lookAndFeelNotFound", id));
             }
             if (lookAndFeel.getID().equals("Metal")) {
                 String boldMetal = App.properties.getProperty("settings.lookAndFeel.swing.boldMetal");
@@ -44,7 +47,7 @@ public class ApplyingLookAndFeel extends CheckPoint {
                     throw new RuntimeException(e);
                 }
             });
-            return buildMessage(Level.FINEST, "actualLookAndFeel", lookAndFeelInfo);
+            return buildMessage("actualLookAndFeel", lookAndFeelInfo.getName());
         } catch (Exception e) {
             throw new ExecutionException(e);
         }

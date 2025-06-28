@@ -91,14 +91,11 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
         ancestor.setCursor(defaultCursor);
         try {
             Object ignore = get();
-            App.messages.getString("fix"); // error intencional
         } catch (Exception e) {
             // manejo del error
             LOGGER.severe(e.getMessage());
             publishError(e);
             countdown.start();
-            // demostración de la función (se reemplazará próximamente)
-            SwingUtilities.invokeLater(() -> displayPane.appendFile(Settings.getLogFile()));
         }
     }
 
@@ -116,7 +113,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
                 try {
                     String result = future.get();
                     publishMessage(result, null);
-                    LOGGER.log(checkPoint.getLogRecord());
+                    LOGGER.finest(result);
                     item++;
                     setProgress(calculateProgress(item, total));
                 } catch (InterruptedException | ExecutionException e) {

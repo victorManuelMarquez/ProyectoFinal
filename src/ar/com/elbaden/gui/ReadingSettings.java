@@ -3,7 +3,6 @@ package ar.com.elbaden.gui;
 import ar.com.elbaden.main.App;
 
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 
 public class ReadingSettings extends CheckPoint {
 
@@ -17,7 +16,7 @@ public class ReadingSettings extends CheckPoint {
             settings.loadXML(Settings.getXMLFile());
             App.properties.putAll(settings.collectNodes());
             App.fontMap.putAll(settings.collectFonts());
-            return buildMessage(Level.FINEST, "settingsLoadedSuccessfully");
+            return buildMessage("settingsLoadedSuccessfully");
         } catch (Exception e) {
             throw new ExecutionException(e);
         }

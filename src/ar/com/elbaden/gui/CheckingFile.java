@@ -3,7 +3,6 @@ package ar.com.elbaden.gui;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 
 public class CheckingFile extends CheckPoint {
 
@@ -20,9 +19,9 @@ public class CheckingFile extends CheckPoint {
         }
         try {
             if (file.exists()) {
-                return buildMessage(Level.FINEST, "fileFound", file);
+                return buildMessage("fileFound", file);
             } else {
-                throw new FileNotFoundException(buildPublicMessage("fileNotFound", file));
+                throw new FileNotFoundException(buildMessage("fileNotFound", file));
             }
         } catch (Exception e) {
             throw new ExecutionException(e);

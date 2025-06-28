@@ -3,7 +3,6 @@ package ar.com.elbaden.gui;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 
 public class RestoringDirectory extends CheckPoint {
 
@@ -20,11 +19,11 @@ public class RestoringDirectory extends CheckPoint {
         }
         try {
             if (file.exists()) {
-                return buildMessage(Level.FINE, "directoryFound", file);
+                return buildMessage("directoryFound", file);
             } else if (file.mkdir()) {
-                return buildMessage(Level.INFO, "directoryCreated", file);
+                return buildMessage("directoryCreated", file);
             } else {
-                throw new IOException(buildPublicMessage("directoryCannotCreated", file));
+                throw new IOException(buildMessage("directoryCannotCreated", file));
             }
         } catch (Exception e) {
             throw new ExecutionException(e);

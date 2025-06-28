@@ -3,7 +3,6 @@ package ar.com.elbaden.gui;
 import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 
 public class ApplyingFonts extends CheckPoint {
 
@@ -23,7 +22,7 @@ public class ApplyingFonts extends CheckPoint {
             int total = Settings.updateExclusiveFonts(lookAndFeel);
             total += Settings.updateFont(master);
             SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(master));
-            return buildMessage(Level.FINEST, "updatedFonts", total);
+            return buildMessage("updatedFonts", total);
         } catch (Exception e) {
             throw new ExecutionException(e);
         }
