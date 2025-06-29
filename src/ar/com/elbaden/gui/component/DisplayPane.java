@@ -14,8 +14,8 @@ import java.util.logging.Logger;
 public class DisplayPane extends JTextPane {
 
     private static final Logger LOGGER = Logger.getLogger(DisplayPane.class.getName());
-    public static final String INFO_FG_STYLE = "infoForeground";
-    public static final String ERROR_FG_STYLE = "errorForeground";
+    public static final String INFO_STYLE = "infoStyle";
+    public static final String ERROR_STYLE = "errorStyle";
     private final int rows;
     private final int cols;
 
@@ -28,9 +28,9 @@ public class DisplayPane extends JTextPane {
         this.cols = cols;
 
         // registro cada estilo
-        Style style = addStyle(INFO_FG_STYLE, null);
+        Style style = addStyle(INFO_STYLE, null);
         StyleConstants.setForeground(style, Color.BLUE);
-        style = addStyle(ERROR_FG_STYLE, null);
+        style = addStyle(ERROR_STYLE, null);
         StyleConstants.setForeground(style, Color.RED);
 
         // ajustes

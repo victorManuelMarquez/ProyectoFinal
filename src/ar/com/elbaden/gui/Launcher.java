@@ -73,7 +73,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
             LOGGER.severe(e.getMessage());
             publishError(e);
             // rutina de restauración
-            publishMessage(App.messages.getString("retrying"), DisplayPane.INFO_FG_STYLE, true);
+            publishMessage(App.messages.getString("retrying"), DisplayPane.INFO_STYLE, true);
             List<CheckPoint> checkPoints = List.of(
                     new RestoringDirectory(Settings.getAppFolder()),
                     new RestoringSettings(),
@@ -148,7 +148,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
                 publishMessage(line.substring(0, index), null, false);
                 line = line.substring(index + value.length());
                 // muestro el valor encontrado
-                publishMessage(value, DisplayPane.INFO_FG_STYLE, false);
+                publishMessage(value, DisplayPane.INFO_STYLE, false);
             }
         }
         // muestro lo quede de la cadena original
@@ -168,7 +168,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
         if (message == null) {
             message = exception.getMessage();
         }
-        publishMessage(message, DisplayPane.ERROR_FG_STYLE, true);
+        publishMessage(message, DisplayPane.ERROR_STYLE, true);
     }
 
     protected String buildCountdownMessage(int second) {
