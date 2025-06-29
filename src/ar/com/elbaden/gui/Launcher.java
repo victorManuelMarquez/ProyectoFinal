@@ -55,7 +55,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
     @Override
     protected Void doInBackground() throws Exception {
         ancestor.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        publishMessage(App.messages.getString("loading"), null);
+        publishMessage(App.messages.getString("loading"), null, true);
         int total = 0;
         try {
             // rutina normal
@@ -73,7 +73,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
             LOGGER.severe(e.getMessage());
             publishError(e);
             // rutina de restauración
-            publishMessage(App.messages.getString("retrying"), Color.BLUE);
+            publishMessage(App.messages.getString("retrying"), Color.BLUE, true);
             List<CheckPoint> checkPoints = List.of(
                     new RestoringDirectory(Settings.getAppFolder()),
                     new RestoringSettings(),
@@ -82,7 +82,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
             total = checkPoints.size();
             processCheckPoints(checkPoints, total);
         }
-        publishMessage(App.messages.getString("finished"), null);
+        publishMessage(App.messages.getString("finished"), null, true);
         return null;
     }
 
@@ -112,7 +112,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
                 Future<String> future = service.submit(checkPoint);
                 try {
                     String result = future.get();
-                    publishMessage(result, null);
+                    applyStyleAndPublish(checkPoint.getMessage(), result);
                     LOGGER.finest(result);
                     item++;
                     setProgress(calculateProgress(item, total));
@@ -138,8 +138,32 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
         }
     }
 
-    protected void publishMessage(String message, Color foregroundColor) {
-        String line = message.contains(System.lineSeparator()) ? message : message.concat(System.lineSeparator());
+    protected void applyStyleAndPublish(CheckPoint.Message message, String result) {
+        if (message.getPattern().equals(result)) {
+            publishMessage(result, null, true);
+            return;
+        }
+        String line = result;
+        for (Object parameter : message.getParameters()) {
+            String value = parameter.toString();
+            int index = line.indexOf(value);
+            if (index >= 0) {
+                // muestro el contenido previo
+                publishMessage(line.substring(0, index), null, false);
+                line = line.substring(index + value.length());
+                // muestro el valor encontrado
+                publishMessage(value, Color.BLUE, false);
+            }
+        }
+        // muestro lo quede de la cadena original
+        publishMessage(line, null, true);
+    }
+
+    protected void publishMessage(String message, Color foregroundColor, boolean appendNewLine) {
+        if (message == null) {
+            return;
+        }
+        String line = appendNewLine ? message.concat(System.lineSeparator()) : message;
         SwingUtilities.invokeLater(() -> displayPane.appendTextColor(line, foregroundColor));
     }
 
@@ -148,8 +172,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
         if (message == null) {
             message = exception.getMessage();
         }
-        message = message.concat(System.lineSeparator());
-        publishMessage(message, Color.RED);
+        publishMessage(message, Color.RED, true);
     }
 
     protected String buildCountdownMessage(int second) {
