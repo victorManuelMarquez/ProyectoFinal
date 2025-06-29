@@ -5,7 +5,7 @@ import ar.com.elbaden.main.App;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
@@ -14,7 +14,8 @@ import java.util.logging.Logger;
 public class DisplayPane extends JTextPane {
 
     private static final Logger LOGGER = Logger.getLogger(DisplayPane.class.getName());
-    private final SimpleAttributeSet attributeSet;
+    public static final String INFO_FG_STYLE = "infoForeground";
+    public static final String ERROR_FG_STYLE = "errorForeground";
     private final int rows;
     private final int cols;
 
@@ -23,9 +24,15 @@ public class DisplayPane extends JTextPane {
     }
 
     public DisplayPane(int rows, int cols) {
-        this.attributeSet = new SimpleAttributeSet();
         this.rows = rows;
         this.cols = cols;
+
+        // registro cada estilo
+        Style style = addStyle(INFO_FG_STYLE, null);
+        StyleConstants.setForeground(style, Color.BLUE);
+        style = addStyle(ERROR_FG_STYLE, null);
+        StyleConstants.setForeground(style, Color.RED);
+
         // ajustes
         calculatePreferredSize();
         setEditable(false);
@@ -50,23 +57,19 @@ public class DisplayPane extends JTextPane {
         setPreferredSize(size);
     }
 
-    public void appendText(String text) {
+    public void appendText(String text, String styleName) {
         if (text == null) {
             return;
         }
         try {
             StyledDocument document = getStyledDocument();
             int offset = document.getLength();
-            document.insertString(offset, text, attributeSet);
+            Style style = styleName != null ? getStyle(styleName) : null;
+            document.insertString(offset, text, style);
             moveCaretPosition(document.getLength());
         } catch (BadLocationException e) {
             LOGGER.severe(e.getMessage());
         }
-    }
-
-    public void appendTextColor(String text, Color foreground) {
-        StyleConstants.setForeground(attributeSet, foreground == null ? getForeground() : foreground);
-        appendText(text);
     }
 
     protected void addMargins(Dimension size, Insets insets) {

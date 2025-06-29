@@ -73,7 +73,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
             LOGGER.severe(e.getMessage());
             publishError(e);
             // rutina de restauración
-            publishMessage(App.messages.getString("retrying"), Color.BLUE, true);
+            publishMessage(App.messages.getString("retrying"), DisplayPane.INFO_FG_STYLE, true);
             List<CheckPoint> checkPoints = List.of(
                     new RestoringDirectory(Settings.getAppFolder()),
                     new RestoringSettings(),
@@ -139,10 +139,6 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
     }
 
     protected void applyStyleAndPublish(CheckPoint.Message message, String result) {
-        if (message.getPattern().equals(result)) {
-            publishMessage(result, null, true);
-            return;
-        }
         String line = result;
         for (Object parameter : message.getParameters()) {
             String value = parameter.toString();
@@ -152,19 +148,19 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
                 publishMessage(line.substring(0, index), null, false);
                 line = line.substring(index + value.length());
                 // muestro el valor encontrado
-                publishMessage(value, Color.BLUE, false);
+                publishMessage(value, DisplayPane.INFO_FG_STYLE, false);
             }
         }
         // muestro lo quede de la cadena original
         publishMessage(line, null, true);
     }
 
-    protected void publishMessage(String message, Color foregroundColor, boolean appendNewLine) {
+    protected void publishMessage(String message, String foregroundStyle, boolean appendNewLine) {
         if (message == null) {
             return;
         }
         String line = appendNewLine ? message.concat(System.lineSeparator()) : message;
-        SwingUtilities.invokeLater(() -> displayPane.appendTextColor(line, foregroundColor));
+        SwingUtilities.invokeLater(() -> displayPane.appendText(line, foregroundStyle));
     }
 
     protected void publishError(Exception exception) {
@@ -172,7 +168,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
         if (message == null) {
             message = exception.getMessage();
         }
-        publishMessage(message, Color.RED, true);
+        publishMessage(message, DisplayPane.ERROR_FG_STYLE, true);
     }
 
     protected String buildCountdownMessage(int second) {
