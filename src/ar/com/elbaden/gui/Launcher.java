@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -148,7 +149,11 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
                 publishMessage(line.substring(0, index), null, false);
                 line = line.substring(index + value.length());
                 // muestro el valor encontrado
-                publishMessage(value, DisplayPane.INFO_STYLE, false);
+                if (parameter instanceof File file) {
+                    publishMessage(file.getName(), DisplayPane.INFO_STYLE, false);
+                } else {
+                    publishMessage(value, DisplayPane.INFO_STYLE, false);
+                }
             }
         }
         // muestro lo quede de la cadena original
