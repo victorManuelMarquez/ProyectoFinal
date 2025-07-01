@@ -74,7 +74,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
             LOGGER.severe(e.getMessage());
             publishError(e);
             // rutina de restauración
-            publishMessage(App.messages.getString("retrying"), DisplayPane.INFO_STYLE, true);
+            publishInfo(App.messages.getString("retrying"), true);
             List<CheckPoint> checkPoints = List.of(
                     new RestoringDirectory(Settings.getAppFolder()),
                     new RestoringSettings(),
@@ -150,9 +150,9 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
                 line = line.substring(index + value.length());
                 // muestro el valor encontrado
                 if (parameter instanceof File file) {
-                    publishMessage(file.getName(), DisplayPane.INFO_STYLE, false);
+                    publishInfo(file.getName(), false);
                 } else {
-                    publishMessage(value, DisplayPane.INFO_STYLE, false);
+                    publishInfo(value, false);
                 }
             }
         }
@@ -174,6 +174,10 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
             message = exception.getMessage();
         }
         publishMessage(message, DisplayPane.ERROR_STYLE, true);
+    }
+
+    protected void publishInfo(String message, boolean newLine) {
+        publishMessage(message, DisplayPane.INFO_STYLE, newLine);
     }
 
     protected String buildCountdownMessage(int second) {
