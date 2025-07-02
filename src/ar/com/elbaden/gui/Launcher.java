@@ -7,7 +7,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -16,7 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
-public class Launcher extends SwingWorker<Void, Void> implements ActionListener {
+public class Launcher extends SwingWorker<Void, String> implements ActionListener {
 
     private static final Logger LOGGER = Logger.getLogger(Launcher.class.getName());
     private final DisplayPane displayPane;
@@ -56,7 +55,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
     @Override
     protected Void doInBackground() throws Exception {
         ancestor.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        publishMessage(App.messages.getString("loading"), null, true);
+        publish(App.messages.getString("loading"));
         int total = 0;
         try {
             // rutina normal
@@ -74,7 +73,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
             LOGGER.severe(e.getMessage());
             publishError(e);
             // rutina de restauración
-            publishInfo(App.messages.getString("retrying"), true);
+            publish(App.messages.getString("retrying"));
             List<CheckPoint> checkPoints = List.of(
                     new RestoringDirectory(Settings.getAppFolder()),
                     new RestoringSettings(),
@@ -83,8 +82,13 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
             total = checkPoints.size();
             processCheckPoints(checkPoints, total);
         }
-        publishMessage(App.messages.getString("finished"), null, true);
+        publish(App.messages.getString("finished"));
         return null;
+    }
+
+    @Override
+    protected void process(List<String> chunks) {
+        chunks.forEach(chunk -> displayPane.appendText(chunk.concat(System.lineSeparator()), null));
     }
 
     @Override
@@ -113,7 +117,7 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
                 Future<String> future = service.submit(checkPoint);
                 try {
                     String result = future.get();
-                    applyStyleAndPublish(checkPoint.getMessage(), result);
+                    publish(result);
                     LOGGER.finest(result);
                     item++;
                     setProgress(calculateProgress(item, total));
@@ -139,45 +143,10 @@ public class Launcher extends SwingWorker<Void, Void> implements ActionListener 
         }
     }
 
-    protected void applyStyleAndPublish(CheckPoint.Message message, String result) {
-        String line = result;
-        for (Object parameter : message.getParameters()) {
-            String value = parameter.toString();
-            int index = line.indexOf(value);
-            if (index >= 0) {
-                // muestro el contenido previo
-                publishMessage(line.substring(0, index), null, false);
-                line = line.substring(index + value.length());
-                // muestro el valor encontrado
-                if (parameter instanceof File file) {
-                    publishInfo(file.getName(), false);
-                } else {
-                    publishInfo(value, false);
-                }
-            }
-        }
-        // muestro lo quede de la cadena original
-        publishMessage(line, null, true);
-    }
-
-    protected void publishMessage(String message, String foregroundStyle, boolean appendNewLine) {
-        if (message == null) {
-            return;
-        }
-        String line = appendNewLine ? message.concat(System.lineSeparator()) : message;
-        SwingUtilities.invokeLater(() -> displayPane.appendText(line, foregroundStyle));
-    }
-
     protected void publishError(Exception exception) {
-        String message = findCause(exception.getCause(), exception.getMessage());
-        if (message == null) {
-            message = exception.getMessage();
-        }
-        publishMessage(message, DisplayPane.ERROR_STYLE, true);
-    }
-
-    protected void publishInfo(String message, boolean newLine) {
-        publishMessage(message, DisplayPane.INFO_STYLE, newLine);
+        String cause = findCause(exception.getCause(), exception.getMessage());
+        String message = cause == null ? exception.getMessage() : cause;
+        SwingUtilities.invokeLater(() -> displayPane.appendText(message, DisplayPane.ERROR_STYLE));
     }
 
     protected String buildCountdownMessage(int second) {
