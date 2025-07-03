@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui;
 
 import ar.com.elbaden.gui.component.DisplayPane;
+import ar.com.elbaden.gui.window.MainFrame;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -96,6 +97,8 @@ public class Launcher extends SwingWorker<Void, String> implements ActionListene
         ancestor.setCursor(defaultCursor);
         try {
             Object ignore = get();
+            MainFrame.createAndShow();
+            ancestor.dispose();
         } catch (Exception e) {
             // manejo del error
             LOGGER.severe(e.getMessage());
