@@ -6,6 +6,8 @@ import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.logging.Logger;
 
 public class MainFrame extends JFrame {
@@ -28,11 +30,25 @@ public class MainFrame extends JFrame {
         getJMenuBar().add(fileMenu);
 
         // ajustes
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setExtendedState(MAXIMIZED_BOTH);
 
         // eventos
-        exitMenuItem.addActionListener(_ -> dispose());
+        WindowAdapter windowAdapter = new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                showClosingDialog();
+            }
+        };
+        addWindowListener(windowAdapter);
+        exitMenuItem.addActionListener(_ -> showClosingDialog());
+    }
+
+    private void showClosingDialog() {
+        int result = ClosingDialog.createAndShow(this);
+        if (result == JOptionPane.OK_OPTION) {
+            dispose();
+        }
     }
 
     public static void createAndShow() {
