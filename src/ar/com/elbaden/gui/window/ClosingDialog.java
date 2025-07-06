@@ -32,6 +32,7 @@ public class ClosingDialog extends ModalDialog {
         groupLayout.setAutoCreateContainerGaps(true);
         JLabel iconLabel = new JLabel(UIManager.getIcon("OptionPane.questionIcon"));
         JLabel messageLabel = new JLabel(App.messages.getString("closingMessage"));
+        JCheckBox confirmExitBtn = new JCheckBox(App.messages.getString("confirmExit"));
         JButton exitBtn = new JButton(App.messages.getString("exit"));
         JButton cancelBtn = new JButton(App.messages.getString("cancel"));
 
@@ -41,23 +42,25 @@ public class ClosingDialog extends ModalDialog {
                 .addComponent(iconLabel)
                 .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                         .addComponent(messageLabel)
+                        .addComponent(confirmExitBtn)
                         .addGroup(groupLayout.createSequentialGroup()
                                 .addPreferredGap(ComponentPlacement.UNRELATED, PREFERRED_SIZE, Short.MAX_VALUE)
-                                .addComponent(exitBtn)
-                                .addComponent(cancelBtn)))
-        );
+                                .addComponent(exitBtn)))
+                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(cancelBtn)));
         groupLayout.setVerticalGroup(groupLayout.createSequentialGroup()
                 .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(iconLabel)
                         .addComponent(messageLabel))
                 .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-                                .addComponent(exitBtn)
-                                .addComponent(cancelBtn)))
-        );
+                        .addComponent(confirmExitBtn))
+                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(exitBtn)
+                        .addComponent(cancelBtn)));
         getContentPane().add(mainPanel);
 
         // eventos
+        SwingUtilities.invokeLater(exitBtn::requestFocusInWindow);
         exitBtn.addActionListener(_ -> {
             exitOption = JOptionPane.OK_OPTION;
             dispose();
