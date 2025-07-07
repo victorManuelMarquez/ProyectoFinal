@@ -6,6 +6,10 @@ import ar.com.elbaden.main.App;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
 import java.util.logging.Logger;
 import javax.swing.GroupLayout.*;
 import javax.swing.LayoutStyle.*;
@@ -61,6 +65,17 @@ public class ClosingDialog extends ModalDialog {
 
         // eventos
         SwingUtilities.invokeLater(exitBtn::requestFocusInWindow);
+        confirmExitBtn.addActionListener(_ -> {
+            boolean checked = confirmExitBtn.isSelected();
+            Properties properties = App.properties;
+            File propertiesFile = new File(Settings.getAppFolder(), "settings.properties");
+            try (FileOutputStream outputStream = new FileOutputStream(propertiesFile)) {
+                properties.store(outputStream, "settings");
+                App.properties.setProperty("settings.showClosingDialog.value", Boolean.toString(!checked));
+            } catch (IOException e) {
+                LOGGER.severe(e.getMessage());
+            }
+        });
         exitBtn.addActionListener(_ -> {
             exitOption = JOptionPane.OK_OPTION;
             dispose();
@@ -72,6 +87,13 @@ public class ClosingDialog extends ModalDialog {
     }
 
     public static int createAndShow(Window owner) {
+        String key = "settings.showClosingDialog.value";
+        if (App.properties.containsKey(key)) {
+            String bool = App.properties.getProperty(key);
+            if (!Boolean.parseBoolean(bool)) {
+                return JOptionPane.OK_OPTION;
+            }
+        }
         try {
             ClosingDialog dialog = new ClosingDialog(owner, App.messages.getString("attention"));
             Settings.updateFont(dialog);
