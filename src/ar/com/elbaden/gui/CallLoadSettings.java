@@ -1,8 +1,11 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
-public class RestoringSettings extends CheckPoint {
+public class CallLoadSettings implements Callable<String> {
 
     @Override
     public String call() throws Exception {
@@ -10,11 +13,11 @@ public class RestoringSettings extends CheckPoint {
             throw new InterruptedException(Thread.currentThread().getName());
         }
         try {
-            Settings settings = new Settings();
-            settings.restoreXML(Settings.getXMLFile(), 4);
-            return buildMessage("settingsRestoredSuccessfully");
+            Settings settings = App.settings;
+            return settings.load();
         } catch (Exception e) {
             throw new ExecutionException(e);
         }
     }
+
 }

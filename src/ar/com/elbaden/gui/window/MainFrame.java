@@ -1,7 +1,6 @@
 package ar.com.elbaden.gui.window;
 
 import ar.com.elbaden.gui.MnemonicFinder;
-import ar.com.elbaden.gui.Settings;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -34,27 +33,32 @@ public class MainFrame extends JFrame {
         setExtendedState(MAXIMIZED_BOTH);
 
         // eventos
-        WindowAdapter windowAdapter = new WindowAdapter() {
+        addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                showClosingDialog();
+                close();
             }
-        };
-        addWindowListener(windowAdapter);
-        exitMenuItem.addActionListener(_ -> showClosingDialog());
+        });
+        exitMenuItem.addActionListener(_ -> close());
     }
 
-    private void showClosingDialog() {
-        int result = ClosingDialog.createAndShow(this);
-        if (result == JOptionPane.OK_OPTION) {
-            dispose();
+    private void close() {
+        String key = "settings.showClosingDialog";
+        if (App.settings.containsKey(key)) {
+            String bool = App.settings.getProperty(key);
+            if (Boolean.parseBoolean(bool)) {
+                int response = ClosingDialog.createAndShow(this);
+                if (response != JOptionPane.OK_OPTION) {
+                    return;
+                }
+            }
         }
+        dispose();
     }
 
     public static void createAndShow() {
         try {
             MainFrame frame = new MainFrame(App.messages.getString("mainFrame.title"));
-            Settings.updateFont(frame);
             MnemonicFinder.automaticMnemonics(frame);
             frame.pack();
             frame.setLocationRelativeTo(null);

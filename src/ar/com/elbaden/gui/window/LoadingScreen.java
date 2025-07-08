@@ -21,8 +21,9 @@ public class LoadingScreen extends JFrame {
 
     private LoadingScreen(String title) throws HeadlessException {
         super(title);
+
         // componentes
-        DisplayPane displayPane = new DisplayPane(12, 40);
+        DisplayPane displayPane = new DisplayPane(8, 24);
         JScrollPane scrollPane = new JScrollPane(displayPane);
         InfoProgressBar progressBar = new InfoProgressBar();
 
@@ -32,6 +33,9 @@ public class LoadingScreen extends JFrame {
 
         // ajustes
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        if (UIManager.getLookAndFeel().getSupportsWindowDecorations()) {
+            setUndecorated(true);
+        }
 
         // eventos
         Launcher launcher = createLauncher(displayPane, progressBar);
@@ -67,19 +71,12 @@ public class LoadingScreen extends JFrame {
 
     public static void createAndShow() {
         try {
-            String title = App.messages.getString("loadingScreen.title");
-            LoadingScreen loadingScreen = new LoadingScreen(title);
+            LoadingScreen loadingScreen = new LoadingScreen(App.messages.getString("loadingScreen.title"));
             loadingScreen.pack();
             loadingScreen.setLocationRelativeTo(null);
             loadingScreen.setVisible(true);
         } catch (RuntimeException e) {
-            String message = e.getMessage();
-            // registro el evento
-            LOGGER.warning(message);
-            // muestro gráficamente el error
-            String title = e.getClass().getSimpleName();
-            int icon = JOptionPane.ERROR_MESSAGE;
-            JOptionPane.showMessageDialog(null, message, title, icon);
+            LOGGER.severe(e.getMessage());
         }
     }
 
