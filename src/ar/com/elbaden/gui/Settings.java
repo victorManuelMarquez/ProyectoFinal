@@ -9,10 +9,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class Settings extends Properties {
 
@@ -35,30 +34,39 @@ public class Settings extends Properties {
         return new File(getAppFolder(), BASE_KEY + ".properties");
     }
 
-    public Map<String, String> defaults() {
-        LookAndFeel laf = UIManager.getLookAndFeel();
-        Map<String, String> values = new HashMap<>();
-        if ("Metal".equals(laf.getID())) {
-            String metalKey = "swing.boldMetal";
-            boolean boldMetal = !laf.getDefaults().containsKey(metalKey) || UIManager.getBoolean(metalKey);
-            values.put(createKey(metalKey), Boolean.toString(boldMetal));
-        }
-        String lafKey = "lookAndFeel";
-        values.put(createKey("showClosingDialog"), Boolean.toString(true));
-        values.put(createKey(lafKey).concat(".className"), laf.getClass().getName());
-        values.put(createKey(lafKey).concat(".id"), laf.getID());
-        return Collections.unmodifiableMap(values);
-    }
-
     private String createKey(String key) {
         return BASE_KEY + "." + key;
     }
 
     public void loadDefaults() {
-        if (defaults == null) {
-            defaults = new Properties();
+        defaults = new Properties();
+
+        // fuentes
+        UIDefaults uiDefaults = UIManager.getDefaults();
+        Enumeration<Object> keys = uiDefaults.keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Font font = uiDefaults.getFont(key);
+            if (font != null) {
+                defaults.put(createKey(key.toString()).concat(".family"), font.getFamily());
+                defaults.put(createKey(key.toString()).concat(".size"), Integer.toString(font.getSize()));
+                defaults.put(createKey(key.toString()).concat(".style"), Integer.toString(font.getStyle()));
+            }
         }
-        defaults.putAll(defaults());
+
+        // tema
+        LookAndFeel laf = UIManager.getLookAndFeel();
+        String lafKey = "lookAndFeel";
+        if ("Metal".equals(laf.getID())) {
+            String metalKey = "swing.boldMetal";
+            boolean boldMetal = !laf.getDefaults().containsKey(metalKey) || UIManager.getBoolean(metalKey);
+            defaults.put(createKey(metalKey), Boolean.toString(boldMetal));
+        }
+        defaults.put(createKey("showClosingDialog"), Boolean.toString(true));
+        defaults.put(createKey(lafKey).concat(".className"), laf.getClass().getName());
+        defaults.put(createKey(lafKey).concat(".id"), laf.getID());
+
+        // cargo los valores a esta configuración
         putAll(defaults);
     }
 
@@ -107,6 +115,62 @@ public class Settings extends Properties {
     private void updateLookAndFeel(String className, Window origin) throws Exception {
         UIManager.setLookAndFeel(className);
         SwingUtilities.updateComponentTreeUI(origin);
+    }
+
+    public String updateFonts(Component source) {
+        StringBuilder output = new StringBuilder();
+        if (source instanceof JMenuItem menuItem) {
+            for (MenuElement element : menuItem.getSubElements()) {
+                output.append(updateFonts((Component) element));
+            }
+        } else if (source instanceof Container container) {
+            for (Component component : container.getComponents()) {
+                output.append(updateFonts(component));
+            }
+        }
+        String className = findSwingClassName(source.getClass());
+        if (className == null) {
+            return null;
+        } else {
+            String baseName = className.replace("javax.swing.J", "");
+            Predicate<String> containKey = k -> k.contains(baseName) && k.endsWith("font.family");
+            Stream<Object> filtered = keySet().stream().filter(k -> containKey.test(k.toString()));
+            Optional<Object> familyKey = filtered.findFirst();
+            if (familyKey.isPresent()) {
+                String stringFamilyKey = familyKey.get().toString();
+                applyFont(source, stringFamilyKey);
+                String pattern = App.messages.getString("componentFontUpdated");
+                String family = getProperty(stringFamilyKey);
+                output.append(MessageFormat.format(pattern, family, baseName)).append(System.lineSeparator());
+            }
+        }
+        return output.toString();
+    }
+
+    private void applyFont(Component source, String familyKey) {
+        Font font = new Font(getProperty(familyKey), Font.PLAIN, 12);
+        String styleKey = familyKey.replace(".family", ".style");
+        switch (Integer.parseInt(getProperty(styleKey))) {
+            case Font.BOLD -> font = font.deriveFont(Font.BOLD);
+            case Font.ITALIC -> font = font.deriveFont(Font.ITALIC);
+            case Font.BOLD|Font.ITALIC -> font = font.deriveFont(Font.BOLD|Font.ITALIC);
+        }
+        String sizeKey = familyKey.replace(".family", ".size");
+        font = font.deriveFont(Float.parseFloat(getProperty(sizeKey)));
+        Font finalFont = font;
+        SwingUtilities.invokeLater(() -> source.setFont(finalFont));
+    }
+
+    private String findSwingClassName(Class<?> clazz) {
+        if (clazz.getName().startsWith("javax.swing.J")) {
+            return clazz.getName();
+        }
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass == null) {
+            return null;
+        } else {
+            return findSwingClassName(superClass);
+        }
     }
 
 }

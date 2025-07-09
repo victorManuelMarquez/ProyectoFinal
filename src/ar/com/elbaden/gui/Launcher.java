@@ -59,7 +59,8 @@ public class Launcher extends SwingWorker<Void, String> implements ActionListene
         List<Callable<String>> normalList = List.of(
                 new CallLoadSettings(),
                 new CallListSettings(),
-                new CallChangeLook(ancestor)
+                new CallChangeLook(ancestor),
+                new CallApplyFonts(ancestor)
         );
         try {
             processList(normalList);
