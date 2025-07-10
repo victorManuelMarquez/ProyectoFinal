@@ -60,7 +60,8 @@ public class Launcher extends SwingWorker<Void, String> implements ActionListene
                 new CallLoadSettings(),
                 new CallListSettings(),
                 new CallChangeLook(ancestor),
-                new CallApplyFonts(ancestor)
+                new CallApplyFonts(ancestor),
+                new CallListFontFamilies()
         );
         try {
             processList(normalList);

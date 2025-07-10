@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -18,8 +19,11 @@ public class Settings extends Properties {
     public static final String APP_FOLDER = ".baden";
     public static final String BASE_KEY = "settings";
 
+    private final List<String> fontFamilies;
+
     public Settings() {
         loadDefaults();
+        fontFamilies = new ArrayList<>();
     }
 
     public File getAppFolder() {
@@ -68,6 +72,16 @@ public class Settings extends Properties {
 
         // cargo los valores a esta configuración
         putAll(defaults);
+    }
+
+    public String loadAvailableFontFamilies() {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        if (!ge.isHeadlessInstance()) {
+            String[] families = ge.getAvailableFontFamilyNames(Locale.getDefault());
+            fontFamilies.addAll(List.of(families));
+        }
+        String pattern = App.messages.getString("settings.fontFamily.totalLoaded");
+        return MessageFormat.format(pattern, fontFamilies.size());
     }
 
     public String load() throws IOException {
