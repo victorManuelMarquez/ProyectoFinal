@@ -171,8 +171,10 @@ public class Settings extends Properties {
         }
         String sizeKey = familyKey.replace(".family", ".size");
         font = font.deriveFont(Float.parseFloat(getProperty(sizeKey)));
-        Font finalFont = font;
-        SwingUtilities.invokeLater(() -> source.setFont(finalFont));
+        if (!isSameFont(source.getFont(), font)) {
+            Font finalFont = font;
+            SwingUtilities.invokeLater(() -> source.setFont(finalFont));
+        }
     }
 
     private String findSwingClassName(Class<?> clazz) {
@@ -185,6 +187,16 @@ public class Settings extends Properties {
         } else {
             return findSwingClassName(superClass);
         }
+    }
+
+    private boolean isSameFont(Font original, Font generated) {
+        if (original == null) {
+            return false;
+        }
+        boolean familyMatch = original.getFamily().equals(generated.getFamily());
+        boolean styleMatch = original.getStyle() == generated.getStyle();
+        boolean sizeMatch = original.getSize() == generated.getSize();
+        return familyMatch && styleMatch && sizeMatch;
     }
 
 }
