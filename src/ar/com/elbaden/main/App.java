@@ -4,6 +4,7 @@ import ar.com.elbaden.gui.Settings;
 import ar.com.elbaden.gui.window.LoadingScreen;
 
 import javax.swing.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -23,6 +24,10 @@ public class App {
             settings = new Settings();
             messages = ResourceBundle.getBundle("i18n/messages", Locale.getDefault());
             LOGGER.setResourceBundle(messages);
+            File appFolder = settings.getAppFolder();
+            if (!appFolder.exists()) {
+                boolean ignore = appFolder.mkdir();
+            }
             FileHandler fileHandler = new FileHandler(settings.getLog().getPath(), false);
             SimpleFormatter simpleFormatter = new SimpleFormatter();
             fileHandler.setFormatter(simpleFormatter);
