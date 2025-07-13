@@ -22,9 +22,12 @@ public class MainFrame extends JFrame {
         // componentes
         setJMenuBar(new JMenuBar());
         JMenu fileMenu = new JMenu(App.messages.getString("file"));
+        JMenuItem settingsItem = new JMenuItem(App.messages.getString("settings"));
         JMenuItem exitMenuItem = new JMenuItem(App.messages.getString("exit"));
 
         // instalando componentes
+        fileMenu.add(settingsItem);
+        fileMenu.addSeparator();
         fileMenu.add(exitMenuItem);
         getJMenuBar().add(fileMenu);
 
