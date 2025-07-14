@@ -60,6 +60,9 @@ public class ClosingDialog extends ModalDialog {
                         .addComponent(cancelBtn)));
         getContentPane().add(mainPanel);
 
+        // ajustes
+        setResizable(false);
+
         // eventos
         SwingUtilities.invokeLater(exitBtn::requestFocusInWindow);
         confirmExitBtn.addActionListener(_ -> {
