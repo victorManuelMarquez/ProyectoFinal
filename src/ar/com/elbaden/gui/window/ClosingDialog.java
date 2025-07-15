@@ -28,9 +28,9 @@ public class ClosingDialog extends ModalDialog {
         // componentes
         JPanel mainPanel = new JPanel(null);
         GroupLayout groupLayout = new GroupLayout(mainPanel);
-        mainPanel.setLayout(groupLayout);
         groupLayout.setAutoCreateGaps(true);
         groupLayout.setAutoCreateContainerGaps(true);
+        mainPanel.setLayout(groupLayout);
         JLabel iconLabel = new JLabel(UIManager.getIcon("OptionPane.questionIcon"));
         JLabel messageLabel = new JLabel(App.messages.getString("closingDialog.message"));
         JCheckBox confirmExitBtn = new JCheckBox(App.messages.getString("closingDialog.confirmExit"));

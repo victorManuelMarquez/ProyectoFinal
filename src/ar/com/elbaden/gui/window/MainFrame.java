@@ -42,6 +42,7 @@ public class MainFrame extends JFrame {
                 close();
             }
         });
+        settingsItem.addActionListener(_ -> SettingsDialog.createAndShow(this));
         exitMenuItem.addActionListener(_ -> close());
     }
 
