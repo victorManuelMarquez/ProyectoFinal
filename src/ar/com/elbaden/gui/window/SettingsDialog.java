@@ -32,6 +32,8 @@ public class SettingsDialog extends ModalDialog {
         groupLayout.setAutoCreateContainerGaps(true);
         mainPanel.setLayout(groupLayout);
 
+        Box settingsBoxPanel = Box.createVerticalBox();
+
         String generalPaneName = App.messages.getString("settingsDialog.generalPanel.name");
         JPanel generalPanel = new JPanel();
         generalPanel.setName(generalPaneName);
@@ -39,6 +41,10 @@ public class SettingsDialog extends ModalDialog {
 
         String askToExit = App.messages.getString("settingsDialog.askToExit");
         JCheckBox askToExitBtn = new JCheckBox(askToExit);
+
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setMaximumSize(new Dimension(640, 480));
 
         JButton okBtn = new JButton(ok);
         okBtn.setActionCommand(ok);
@@ -48,11 +54,13 @@ public class SettingsDialog extends ModalDialog {
         applyBtn.setActionCommand(apply);
 
         // instalando componentes
+        settingsBoxPanel.add(generalPanel);
+        scrollPane.setViewportView(settingsBoxPanel);
         getRootPane().setDefaultButton(okBtn);
         generalPanel.add(askToExitBtn);
         groupLayout.setHorizontalGroup(groupLayout.createSequentialGroup()
                 .addGroup(groupLayout.createParallelGroup()
-                        .addComponent(generalPanel)
+                        .addComponent(scrollPane)
                         .addGroup(groupLayout.createSequentialGroup()
                                 .addPreferredGap(ComponentPlacement.RELATED, PREFERRED_SIZE, Short.MAX_VALUE)
                                 .addComponent(okBtn)
@@ -60,7 +68,7 @@ public class SettingsDialog extends ModalDialog {
                                 .addComponent(applyBtn))));
         groupLayout.setVerticalGroup(groupLayout.createSequentialGroup()
                 .addGroup(groupLayout.createParallelGroup()
-                        .addComponent(generalPanel))
+                        .addComponent(scrollPane))
                 .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                         .addComponent(okBtn)
                         .addComponent(cancelBtn)
