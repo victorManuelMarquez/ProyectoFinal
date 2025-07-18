@@ -1,5 +1,6 @@
 package ar.com.elbaden.gui.window;
 
+import ar.com.elbaden.gui.MnemonicFinder;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -97,6 +98,7 @@ public class SettingsDialog extends ModalDialog {
             String title = App.messages.getString("settingsDialog.title");
             SettingsDialog dialog = new SettingsDialog(owner, title);
             App.settings.updateFonts(dialog);
+            MnemonicFinder.automaticMnemonics(dialog);
             dialog.pack();
             dialog.setLocationRelativeTo(owner);
             dialog.setVisible(true);
