@@ -6,6 +6,10 @@ import ar.com.elbaden.main.App;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import static javax.swing.LayoutStyle.*;
@@ -15,12 +19,16 @@ public class SettingsDialog extends ModalDialog {
 
     private static final Logger LOGGER = Logger.getLogger(SettingsDialog.class.getName());
 
+    private final Properties changes;
+
     static {
         LOGGER.setParent(Logger.getLogger(App.class.getName()));
     }
 
     private SettingsDialog(Window owner, String title) {
         super(owner, title);
+        changes = new Properties();
+
         // comandos
         String ok = App.messages.getString("ok");
         String cancel = App.messages.getString("cancel");
@@ -42,6 +50,10 @@ public class SettingsDialog extends ModalDialog {
 
         String askToExit = App.messages.getString("settingsDialog.askToExit");
         JCheckBox askToExitBtn = new JCheckBox(askToExit);
+        String closingDialogKey = "settings.showClosingDialog";
+        askToExitBtn.setActionCommand(closingDialogKey);
+        String confirmValue = App.settings.getProperty(closingDialogKey);
+        askToExitBtn.setSelected(Boolean.parseBoolean(confirmValue));
 
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -53,6 +65,7 @@ public class SettingsDialog extends ModalDialog {
         cancelBtn.setActionCommand(cancel);
         JButton applyBtn = new JButton(apply);
         applyBtn.setActionCommand(apply);
+        applyBtn.setEnabled(false);
 
         // instalando componentes
         settingsBoxPanel.add(generalPanel);
@@ -77,9 +90,25 @@ public class SettingsDialog extends ModalDialog {
         getContentPane().add(mainPanel);
 
         // eventos
+        askToExitBtn.addActionListener(notifyChange(applyBtn));
         okBtn.addActionListener(_ -> dispose());
         cancelBtn.addActionListener(_ -> dispose());
-        applyBtn.addActionListener(_ -> dispose());
+        applyBtn.addActionListener(_ -> {
+            Map<Object, Object> copy = Map.copyOf(App.settings);
+            changes.forEach((key, value) -> {
+                if (App.settings.containsKey(key)) {
+                    App.settings.put(key, value);
+                }
+            });
+            try {
+                App.settings.save();
+                changes.clear();
+                applyBtn.setEnabled(false);
+            } catch (IOException e) {
+                App.settings.putAll(copy);
+                LOGGER.severe(e.getMessage());
+            }
+        });
     }
 
     private void installTitledBorder(JComponent component) {
@@ -91,6 +120,25 @@ public class SettingsDialog extends ModalDialog {
         }
         Border titledBorder = BorderFactory.createTitledBorder(component.getName());
         component.setBorder(titledBorder);
+    }
+
+    private ActionListener notifyChange(AbstractButton applyBtn) {
+        return event -> {
+            String key = event.getActionCommand();
+            if (key != null && App.settings.containsKey(key)) {
+                Object source = event.getSource();
+                if (source instanceof JToggleButton button) {
+                    String value = Boolean.toString(button.isSelected());
+                    String actualValue = App.settings.getProperty(key);
+                    if (value.equals(actualValue)) {
+                        changes.remove(key);
+                    } else {
+                        changes.setProperty(key, value);
+                    }
+                }
+                applyBtn.setEnabled(!changes.isEmpty());
+            }
+        };
     }
 
     public static void createAndShow(Window owner) {
