@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui;
 
 import ar.com.elbaden.gui.component.DisplayPane;
+import ar.com.elbaden.gui.window.ErrorDialog;
 import ar.com.elbaden.gui.window.MainFrame;
 import ar.com.elbaden.main.App;
 
@@ -89,12 +90,14 @@ public class Launcher extends SwingWorker<Void, String> implements ActionListene
         ancestor.setCursor(defaultCursor);
         try {
             Object ignore = get();
+            App.messages.getString("failMessage");
             MainFrame.createAndShow();
             ancestor.dispose();
         } catch (Exception e) {
             // manejo del error
             publishError(e);
             countdown.start();
+            ErrorDialog.createAndShow(null, e);
         }
     }
 

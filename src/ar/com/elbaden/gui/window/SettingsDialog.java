@@ -107,6 +107,7 @@ public class SettingsDialog extends ModalDialog {
             } catch (IOException e) {
                 App.settings.putAll(copy);
                 LOGGER.severe(e.getMessage());
+                ErrorDialog.createAndShow(this, e);
             }
         });
     }
