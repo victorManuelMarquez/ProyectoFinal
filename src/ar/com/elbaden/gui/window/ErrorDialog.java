@@ -19,7 +19,6 @@ public class ErrorDialog extends ModalDialog {
     private ErrorDialog(Window owner, String title, Exception exception) {
         super(owner, title);
         // variables
-        Dimension maximum = new Dimension(640, 360);
         List<String> causes = new ArrayList<>();
         for (Throwable throwable = exception.getCause(); throwable != null; throwable = throwable.getCause()) {
             if (throwable.getMessage() != null) {
@@ -34,15 +33,22 @@ public class ErrorDialog extends ModalDialog {
         CardLayout cardLayout = new CardLayout();
         cardsPanel.setLayout(cardLayout);
 
-        JLabel simpleMessageLabel = new JLabel(exception.getMessage());
-        simpleMessageLabel.setMaximumSize(maximum);
+        JTextArea simpleMessageArea = new JTextArea(exception.getMessage());
+        simpleMessageArea.setColumns(32);
+        simpleMessageArea.setRows(4);
+        simpleMessageArea.setLineWrap(true);
+        simpleMessageArea.setWrapStyleWord(true);
+        simpleMessageArea.setBackground(new Color(0, 0, 0, 1));
+        JScrollPane simpleMessageScroll = new JScrollPane();
+        simpleMessageScroll.setBorder(BorderFactory.createEmptyBorder());
 
         JPanel panel = new JPanel();
         JButton okButton = new JButton(App.messages.getString("ok"));
 
         // instalando componentes
         getRootPane().setDefaultButton(okButton);
-        cardsPanel.add(simpleMessageLabel);
+        simpleMessageScroll.setViewportView(simpleMessageArea);
+        cardsPanel.add(simpleMessageScroll);
         cardLayout.show(cardsPanel, causes.isEmpty() ? "simple" : "detailed"); // detalles no implementados todavía
         mainPanel.add(cardsPanel);
         panel.add(okButton);
@@ -63,6 +69,7 @@ public class ErrorDialog extends ModalDialog {
         try {
             String title = exception.getClass().getSimpleName();
             ErrorDialog dialog = new ErrorDialog(owner, title, exception);
+            App.settings.updateFonts(dialog);
             dialog.pack();
             dialog.setLocationRelativeTo(owner);
             dialog.setVisible(true);
