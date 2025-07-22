@@ -90,7 +90,6 @@ public class Launcher extends SwingWorker<Void, String> implements ActionListene
         ancestor.setCursor(defaultCursor);
         try {
             Object ignore = get();
-            App.messages.getString("failMessage");
             MainFrame.createAndShow();
             ancestor.dispose();
         } catch (Exception e) {

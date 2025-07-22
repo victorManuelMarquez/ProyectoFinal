@@ -33,14 +33,18 @@ public class ErrorDialog extends ModalDialog {
         CardLayout cardLayout = new CardLayout();
         cardsPanel.setLayout(cardLayout);
 
-        JTextArea simpleMessageArea = new JTextArea(exception.getMessage());
-        simpleMessageArea.setColumns(32);
-        simpleMessageArea.setRows(4);
-        simpleMessageArea.setLineWrap(true);
-        simpleMessageArea.setWrapStyleWord(true);
-        simpleMessageArea.setBackground(new Color(0, 0, 0, 1));
+        JTextArea simpleMessageArea = createMessageArea(exception.getMessage());
+        Color alpha = new Color(0, 0, 0, 1);
+        simpleMessageArea.setBackground(alpha);
         JScrollPane simpleMessageScroll = new JScrollPane();
         simpleMessageScroll.setBorder(BorderFactory.createEmptyBorder());
+
+        JTabbedPane detailsTab = new JTabbedPane();
+        JTextArea messageArea = createMessageArea(causes.isEmpty() ? "" : causes.getLast());
+        messageArea.setBackground(alpha);
+        JScrollPane messageScrollPane = new JScrollPane();
+        JTextArea detailsArea = createMessageArea(exception.getMessage());
+        JScrollPane detailsScrollPane = new JScrollPane();
 
         JPanel panel = new JPanel();
         JButton okButton = new JButton(App.messages.getString("ok"));
@@ -48,7 +52,12 @@ public class ErrorDialog extends ModalDialog {
         // instalando componentes
         getRootPane().setDefaultButton(okButton);
         simpleMessageScroll.setViewportView(simpleMessageArea);
-        cardsPanel.add(simpleMessageScroll);
+        cardsPanel.add(simpleMessageScroll, "simple");
+        messageScrollPane.setViewportView(messageArea);
+        detailsScrollPane.setViewportView(detailsArea);
+        detailsTab.addTab(App.messages.getString("error"), messageScrollPane);
+        detailsTab.addTab(App.messages.getString("details"), detailsScrollPane);
+        cardsPanel.add(detailsTab, "detailed");
         cardLayout.show(cardsPanel, causes.isEmpty() ? "simple" : "detailed"); // detalles no implementados todavía
         mainPanel.add(cardsPanel);
         panel.add(okButton);
@@ -63,6 +72,15 @@ public class ErrorDialog extends ModalDialog {
         // eventos
         SwingUtilities.invokeLater(okButton::requestFocusInWindow);
         okButton.addActionListener(_ -> dispose());
+    }
+
+    private JTextArea createMessageArea(String message) {
+        JTextArea textArea = new JTextArea(message);
+        textArea.setColumns(40);
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        return textArea;
     }
 
     public static void createAndShow(Window owner, Exception exception) {
