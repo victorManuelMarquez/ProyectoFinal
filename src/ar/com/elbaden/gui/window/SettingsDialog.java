@@ -91,25 +91,12 @@ public class SettingsDialog extends ModalDialog {
 
         // eventos
         askToExitBtn.addActionListener(notifyChange(applyBtn));
-        okBtn.addActionListener(_ -> dispose());
-        cancelBtn.addActionListener(_ -> dispose());
-        applyBtn.addActionListener(_ -> {
-            Map<Object, Object> copy = Map.copyOf(App.settings);
-            changes.forEach((key, value) -> {
-                if (App.settings.containsKey(key)) {
-                    App.settings.put(key, value);
-                }
-            });
-            try {
-                App.settings.save();
-                changes.clear();
-                applyBtn.setEnabled(false);
-            } catch (IOException e) {
-                App.settings.putAll(copy);
-                LOGGER.severe(e.getMessage());
-                ErrorDialog.createAndShow(this, e);
-            }
+        okBtn.addActionListener(_ -> {
+            saveChanges(applyBtn);
+            dispose();
         });
+        cancelBtn.addActionListener(_ -> dispose());
+        applyBtn.addActionListener(_ -> saveChanges(applyBtn));
     }
 
     private void installTitledBorder(JComponent component) {
@@ -121,6 +108,24 @@ public class SettingsDialog extends ModalDialog {
         }
         Border titledBorder = BorderFactory.createTitledBorder(component.getName());
         component.setBorder(titledBorder);
+    }
+
+    private void saveChanges(AbstractButton applyButton) {
+        Map<Object, Object> copy = Map.copyOf(App.settings);
+        changes.forEach((key, value) -> {
+            if (App.settings.containsKey(key)) {
+                App.settings.put(key, value);
+            }
+        });
+        try {
+            App.settings.save();
+            changes.clear();
+            applyButton.setEnabled(false);
+        } catch (IOException e) {
+            App.settings.putAll(copy);
+            LOGGER.severe(e.getMessage());
+            ErrorDialog.createAndShow(this, e);
+        }
     }
 
     private ActionListener notifyChange(AbstractButton applyBtn) {
