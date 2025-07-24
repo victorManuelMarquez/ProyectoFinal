@@ -63,6 +63,7 @@ public class MainFrame extends JFrame {
     public static void createAndShow() {
         try {
             MainFrame frame = new MainFrame(App.messages.getString("mainFrame.title"));
+            App.settings.updateFonts(frame);
             MnemonicFinder.automaticMnemonics(frame);
             frame.pack();
             frame.setLocationRelativeTo(null);
