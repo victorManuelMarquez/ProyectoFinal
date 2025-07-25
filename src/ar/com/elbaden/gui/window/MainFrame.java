@@ -34,6 +34,7 @@ public class MainFrame extends JFrame {
         // ajustes
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setExtendedState(MAXIMIZED_BOTH);
+        setPreferredSize(new Dimension(720, 480));
 
         // eventos
         addWindowListener(new WindowAdapter() {
