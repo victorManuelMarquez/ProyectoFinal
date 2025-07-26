@@ -55,6 +55,33 @@ public class SettingsDialog extends ModalDialog {
         String confirmValue = App.settings.getProperty(closingDialogKey);
         askToExitBtn.setSelected(Boolean.parseBoolean(confirmValue));
 
+        String fontPaneName = App.messages.getString("settingsDialog.fontPanel.name");
+        JPanel fontPanel = new JPanel();
+        fontPanel.setName(fontPaneName);
+        installTitledBorder(fontPanel);
+
+        DefaultComboBoxModel<Font> familyModel = new DefaultComboBoxModel<>();
+        JLabel fontLabel = new JLabel(App.messages.getString("fontFamily"));
+        familyModel.addElement(getFont());
+        JComboBox<Font> familyCombo = new JComboBox<>(familyModel);
+        fontLabel.setLabelFor(familyCombo);
+        familyCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus
+            ) {
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Font font && c instanceof JLabel label) {
+                    label.setText(font.getFamily());
+                }
+                return c;
+            }
+        });
+        JLabel sizeLabel = new JLabel(App.messages.getString("size"));
+        SpinnerNumberModel sizeModel = new SpinnerNumberModel(10, 10, 24, 1);
+        JSpinner sizeSpinner = new JSpinner(sizeModel);
+        sizeLabel.setLabelFor(sizeSpinner);
+
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setMaximumSize(new Dimension(640, 480));
@@ -68,10 +95,15 @@ public class SettingsDialog extends ModalDialog {
         applyBtn.setEnabled(false);
 
         // instalando componentes
+        generalPanel.add(askToExitBtn);
         settingsBoxPanel.add(generalPanel);
+        fontPanel.add(fontLabel);
+        fontPanel.add(familyCombo);
+        fontPanel.add(sizeLabel);
+        fontPanel.add(sizeSpinner);
+        settingsBoxPanel.add(fontPanel);
         scrollPane.setViewportView(settingsBoxPanel);
         getRootPane().setDefaultButton(okBtn);
-        generalPanel.add(askToExitBtn);
         groupLayout.setHorizontalGroup(groupLayout.createSequentialGroup()
                 .addGroup(groupLayout.createParallelGroup()
                         .addComponent(scrollPane)
