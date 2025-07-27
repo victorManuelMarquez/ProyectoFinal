@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui.window;
 
 import ar.com.elbaden.gui.MnemonicFinder;
+import ar.com.elbaden.gui.component.FontListCellRenderer;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -65,18 +66,7 @@ public class SettingsDialog extends ModalDialog {
         familyModel.addElement(getFont());
         JComboBox<Font> familyCombo = new JComboBox<>(familyModel);
         fontLabel.setLabelFor(familyCombo);
-        familyCombo.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus
-            ) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Font font && c instanceof JLabel label) {
-                    label.setText(font.getFamily());
-                }
-                return c;
-            }
-        });
+        familyCombo.setRenderer(new FontListCellRenderer());
         JLabel sizeLabel = new JLabel(App.messages.getString("size"));
         SpinnerNumberModel sizeModel = new SpinnerNumberModel(10, 10, 24, 1);
         JSpinner sizeSpinner = new JSpinner(sizeModel);
