@@ -9,8 +9,10 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Vector;
 import java.util.logging.Logger;
 
 import static javax.swing.LayoutStyle.*;
@@ -68,9 +70,11 @@ public class SettingsDialog extends ModalDialog {
         fontLabel.setLabelFor(familyCombo);
         familyCombo.setRenderer(new FontListCellRenderer());
         JLabel sizeLabel = new JLabel(App.messages.getString("size"));
-        SpinnerNumberModel sizeModel = new SpinnerNumberModel(10, 10, 24, 1);
-        JSpinner sizeSpinner = new JSpinner(sizeModel);
-        sizeLabel.setLabelFor(sizeSpinner);
+        Vector<Integer> sizes = new Vector<>(List.of(8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24));
+        DefaultComboBoxModel<Integer> sizeModel = new DefaultComboBoxModel<>(sizes);
+        JComboBox<Integer> sizeCombo = new JComboBox<>(sizeModel);
+        sizeCombo.setSelectedItem(getFont().getSize());
+        sizeLabel.setLabelFor(sizeCombo);
 
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -90,7 +94,7 @@ public class SettingsDialog extends ModalDialog {
         fontPanel.add(fontLabel);
         fontPanel.add(familyCombo);
         fontPanel.add(sizeLabel);
-        fontPanel.add(sizeSpinner);
+        fontPanel.add(sizeCombo);
         settingsBoxPanel.add(fontPanel);
         scrollPane.setViewportView(settingsBoxPanel);
         getRootPane().setDefaultButton(okBtn);
