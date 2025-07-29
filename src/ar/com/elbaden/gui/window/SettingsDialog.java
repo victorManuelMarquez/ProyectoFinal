@@ -23,6 +23,7 @@ public class SettingsDialog extends ModalDialog {
     private static final Logger LOGGER = Logger.getLogger(SettingsDialog.class.getName());
 
     private final Properties changes;
+    private final AbstractButton applyBtn;
 
     static {
         LOGGER.setParent(Logger.getLogger(App.class.getName()));
@@ -84,7 +85,7 @@ public class SettingsDialog extends ModalDialog {
         okBtn.setActionCommand(ok);
         JButton cancelBtn = new JButton(cancel);
         cancelBtn.setActionCommand(cancel);
-        JButton applyBtn = new JButton(apply);
+        applyBtn = new JButton(apply);
         applyBtn.setActionCommand(apply);
         applyBtn.setEnabled(false);
 
@@ -116,13 +117,13 @@ public class SettingsDialog extends ModalDialog {
         getContentPane().add(mainPanel);
 
         // eventos
-        askToExitBtn.addActionListener(notifyChange(applyBtn));
+        askToExitBtn.addActionListener(notifyChange());
         okBtn.addActionListener(_ -> {
-            saveChanges(applyBtn);
+            saveChanges();
             dispose();
         });
         cancelBtn.addActionListener(_ -> dispose());
-        applyBtn.addActionListener(_ -> saveChanges(applyBtn));
+        applyBtn.addActionListener(_ -> saveChanges());
     }
 
     private void installTitledBorder(JComponent component) {
@@ -136,7 +137,7 @@ public class SettingsDialog extends ModalDialog {
         component.setBorder(titledBorder);
     }
 
-    private void saveChanges(AbstractButton applyButton) {
+    private void saveChanges() {
         Map<Object, Object> copy = Map.copyOf(App.settings);
         changes.forEach((key, value) -> {
             if (App.settings.containsKey(key)) {
@@ -146,7 +147,7 @@ public class SettingsDialog extends ModalDialog {
         try {
             App.settings.save();
             changes.clear();
-            applyButton.setEnabled(false);
+            applyBtn.setEnabled(false);
         } catch (IOException e) {
             App.settings.putAll(copy);
             LOGGER.severe(e.getMessage());
@@ -154,7 +155,7 @@ public class SettingsDialog extends ModalDialog {
         }
     }
 
-    private ActionListener notifyChange(AbstractButton applyBtn) {
+    private ActionListener notifyChange() {
         return event -> {
             String key = event.getActionCommand();
             if (key != null && App.settings.containsKey(key)) {
