@@ -12,14 +12,23 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class Settings extends Properties {
 
+    private static final Logger LOGGER = Logger.getLogger(Settings.class.getName());
+
     public static final String APP_FOLDER = ".baden";
     public static final String BASE_KEY = "settings";
+    public static final int DEFAULT = 0;
+    public static final int CUSTOM = -1;
 
     private final List<String> fontFamilies;
+
+    static {
+        LOGGER.setParent(Logger.getLogger(App.class.getName()));
+    }
 
     public Settings() {
         loadDefaults();
@@ -197,6 +206,42 @@ public class Settings extends Properties {
         boolean styleMatch = original.getStyle() == generated.getStyle();
         boolean sizeMatch = original.getSize() == generated.getSize();
         return familyMatch && styleMatch && sizeMatch;
+    }
+
+    public List<String> fontSizeKeys() {
+        Set<Object> keys = App.settings.keySet();
+        Stream<Object> keyStream = keys.stream().filter(k -> k.toString().endsWith(".size"));
+        return keyStream.map(Object::toString).toList();
+    }
+
+    public int generalFontSize() {
+        List<String> sizeKeys = fontSizeKeys();
+        Map<String, String> defaultFonts = new HashMap<>();
+        sizeKeys.forEach(k -> defaultFonts.put(k, defaults.getProperty(k)));
+        Set<Integer> allSizes = new TreeSet<>();
+        sizeKeys.forEach(k -> {
+            try {
+                int value = Integer.parseInt(getProperty(k));
+                allSizes.add(value);
+            } catch (RuntimeException e) {
+                LOGGER.severe(e.getMessage());
+            }
+        });
+        return containsAll(defaultFonts) ? DEFAULT : allSizes.size() == 1 ? allSizes.stream().findFirst().get(): CUSTOM;
+    }
+
+    private boolean containsAll(Map<String, String> values) {
+        boolean contains = false;
+        for (String key : values.keySet()) {
+            contains = containsKey(key);
+            if (contains) {
+                contains = getProperty(key).equals(values.get(key));
+            }
+            if (!contains) {
+                break;
+            }
+        }
+        return contains;
     }
 
 }

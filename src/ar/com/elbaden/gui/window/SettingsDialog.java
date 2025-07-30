@@ -1,6 +1,7 @@
 package ar.com.elbaden.gui.window;
 
 import ar.com.elbaden.gui.MnemonicFinder;
+import ar.com.elbaden.gui.Settings;
 import ar.com.elbaden.gui.component.FontListCellRenderer;
 import ar.com.elbaden.main.App;
 
@@ -8,6 +9,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +18,9 @@ import java.util.Properties;
 import java.util.Vector;
 import java.util.logging.Logger;
 
-import static javax.swing.LayoutStyle.*;
-import static javax.swing.GroupLayout.*;
+import static javax.swing.GroupLayout.Alignment;
+import static javax.swing.GroupLayout.PREFERRED_SIZE;
+import static javax.swing.LayoutStyle.ComponentPlacement;
 
 public class SettingsDialog extends ModalDialog {
 
@@ -24,6 +28,7 @@ public class SettingsDialog extends ModalDialog {
 
     private final Properties changes;
     private final AbstractButton applyBtn;
+    private boolean fontUpdated;
 
     static {
         LOGGER.setParent(Logger.getLogger(App.class.getName()));
@@ -74,7 +79,28 @@ public class SettingsDialog extends ModalDialog {
         Vector<Integer> sizes = new Vector<>(List.of(8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24));
         DefaultComboBoxModel<Integer> sizeModel = new DefaultComboBoxModel<>(sizes);
         JComboBox<Integer> sizeCombo = new JComboBox<>(sizeModel);
-        sizeCombo.setSelectedItem(getFont().getSize());
+        sizeCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus
+            ) {
+                Component c;
+                c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (c instanceof JLabel label && value instanceof Number number) {
+                    if (number.intValue() == Settings.DEFAULT) {
+                        label.setText(App.messages.getString("default"));
+                    } else if (number.intValue() == Settings.CUSTOM) {
+                        label.setText(App.messages.getString("custom"));
+                    }
+                }
+                return c;
+            }
+        });
+        int generalFontSize = App.settings.generalFontSize();
+        if (!sizes.contains(generalFontSize)) {
+            sizeCombo.addItem(generalFontSize);
+        }
+        sizeCombo.setSelectedItem(generalFontSize);
         sizeLabel.setLabelFor(sizeCombo);
 
         JScrollPane scrollPane = new JScrollPane();
@@ -117,7 +143,8 @@ public class SettingsDialog extends ModalDialog {
         getContentPane().add(mainPanel);
 
         // eventos
-        askToExitBtn.addActionListener(notifyChange());
+        askToExitBtn.addActionListener(notifyShowClosingDialogChanged());
+        sizeCombo.addItemListener(notifySizeChange());
         okBtn.addActionListener(_ -> {
             saveChanges();
             dispose();
@@ -148,6 +175,10 @@ public class SettingsDialog extends ModalDialog {
             App.settings.save();
             changes.clear();
             applyBtn.setEnabled(false);
+            if (fontUpdated) {
+                App.settings.updateFonts(getOwner());
+                App.settings.updateFonts(this);
+            }
         } catch (IOException e) {
             App.settings.putAll(copy);
             LOGGER.severe(e.getMessage());
@@ -155,7 +186,7 @@ public class SettingsDialog extends ModalDialog {
         }
     }
 
-    private ActionListener notifyChange() {
+    private ActionListener notifyShowClosingDialogChanged() {
         return event -> {
             String key = event.getActionCommand();
             if (key != null && App.settings.containsKey(key)) {
@@ -171,6 +202,29 @@ public class SettingsDialog extends ModalDialog {
                 }
                 applyBtn.setEnabled(!changes.isEmpty());
             }
+        };
+    }
+
+    private ItemListener notifySizeChange() {
+        return evt -> {
+            int totalUpdates = 0;
+            if (evt.getItem() != null && evt.getStateChange() == ItemEvent.SELECTED) {
+                Object item = evt.getItem();
+                if (item instanceof Number number) {
+                    // si es un tamaño de fuente general
+                    if (number.intValue() > 0) {
+                        for (String key : App.settings.fontSizeKeys()) {
+                            Object value = App.settings.get(key);
+                            if (!value.equals(item)) {
+                                changes.put(key, item.toString());
+                                totalUpdates++;
+                            }
+                        }
+                    }
+                }
+            }
+            fontUpdated = totalUpdates > 0;
+            applyBtn.setEnabled(!changes.isEmpty());
         };
     }
 
