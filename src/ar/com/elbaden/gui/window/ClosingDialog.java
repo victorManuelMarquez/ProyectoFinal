@@ -90,6 +90,7 @@ public class ClosingDialog extends ModalDialog {
         try {
             ClosingDialog dialog = new ClosingDialog(owner, App.messages.getString("closingDialog.title"));
             MnemonicFinder.automaticMnemonics(dialog);
+            App.settings.updateFonts(dialog);
             dialog.pack();
             dialog.setLocationRelativeTo(owner);
             dialog.setVisible(true);
