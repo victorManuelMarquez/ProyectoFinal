@@ -140,6 +140,7 @@ public class Settings extends Properties {
         SwingUtilities.updateComponentTreeUI(origin);
     }
 
+    // fixme: el tamaño de las ventanas no se ajusta a los cambios
     public String updateFonts(Component source) {
         StringBuilder output = new StringBuilder();
         if (source instanceof JMenuItem menuItem) {
@@ -214,6 +215,20 @@ public class Settings extends Properties {
         return keyStream.map(Object::toString).toList();
     }
 
+    private boolean containsAll(Map<String, String> values) {
+        boolean contains = false;
+        for (String key : values.keySet()) {
+            contains = containsKey(key);
+            if (contains) {
+                contains = getProperty(key).equals(values.get(key));
+            }
+            if (!contains) {
+                break;
+            }
+        }
+        return contains;
+    }
+
     public int generalFontSize() {
         List<String> sizeKeys = fontSizeKeys();
         Map<String, String> defaultFonts = new HashMap<>();
@@ -228,20 +243,6 @@ public class Settings extends Properties {
             }
         });
         return containsAll(defaultFonts) ? DEFAULT : allSizes.size() == 1 ? allSizes.stream().findFirst().get(): CUSTOM;
-    }
-
-    private boolean containsAll(Map<String, String> values) {
-        boolean contains = false;
-        for (String key : values.keySet()) {
-            contains = containsKey(key);
-            if (contains) {
-                contains = getProperty(key).equals(values.get(key));
-            }
-            if (!contains) {
-                break;
-            }
-        }
-        return contains;
     }
 
 }
