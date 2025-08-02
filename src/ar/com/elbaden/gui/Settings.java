@@ -140,7 +140,6 @@ public class Settings extends Properties {
         SwingUtilities.updateComponentTreeUI(origin);
     }
 
-    // fixme: el tamaño de las ventanas no se ajusta a los cambios
     public String updateFonts(Component source) {
         StringBuilder output = new StringBuilder();
         if (source instanceof JMenuItem menuItem) {
@@ -182,8 +181,7 @@ public class Settings extends Properties {
         String sizeKey = familyKey.replace(".family", ".size");
         font = font.deriveFont(Float.parseFloat(getProperty(sizeKey)));
         if (!isSameFont(source.getFont(), font)) {
-            Font finalFont = font;
-            SwingUtilities.invokeLater(() -> source.setFont(finalFont));
+            source.setFont(font);
         }
     }
 
