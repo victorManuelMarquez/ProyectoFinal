@@ -3,6 +3,7 @@ package ar.com.elbaden.gui.component;
 import javax.swing.*;
 import java.awt.*;
 
+@Deprecated
 public class FontListCellRenderer extends DefaultListCellRenderer {
 
     @Override

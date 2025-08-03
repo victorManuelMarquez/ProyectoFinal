@@ -213,6 +213,12 @@ public class Settings extends Properties {
         return keyStream.map(Object::toString).toList();
     }
 
+    public List<String> fontFamilyKeys() {
+        Set<Object> keys = App.settings.keySet();
+        Stream<Object> keyStream = keys.stream().filter(k -> k.toString().endsWith(".family"));
+        return keyStream.map(Object::toString).toList();
+    }
+
     private boolean containsAll(Map<String, String> values) {
         boolean contains = false;
         for (String key : values.keySet()) {
@@ -241,6 +247,21 @@ public class Settings extends Properties {
             }
         });
         return containsAll(defaultFonts) ? DEFAULT : allSizes.size() == 1 ? allSizes.stream().findFirst().get(): CUSTOM;
+    }
+
+    public String generalFontFamily() {
+        List<String> familyKeys = fontFamilyKeys();
+        Set<String> families = new TreeSet<>();
+        familyKeys.forEach(k -> families.add(getProperty(k)));
+        if (families.size() == 1) {
+            return families.stream().findFirst().get();
+        } else {
+            return App.messages.getString("multipleValues");
+        }
+    }
+
+    public List<String> getFontFamilies() {
+        return Collections.unmodifiableList(fontFamilies);
     }
 
 }

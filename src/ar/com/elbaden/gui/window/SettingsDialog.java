@@ -2,7 +2,7 @@ package ar.com.elbaden.gui.window;
 
 import ar.com.elbaden.gui.MnemonicFinder;
 import ar.com.elbaden.gui.Settings;
-import ar.com.elbaden.gui.component.FontListCellRenderer;
+import ar.com.elbaden.gui.component.FontFamilyComboBoxModel;
 import ar.com.elbaden.main.App;
 
 import javax.swing.*;
@@ -69,12 +69,9 @@ public class SettingsDialog extends ModalDialog {
         fontPanel.setName(fontPaneName);
         installTitledBorder(fontPanel);
 
-        DefaultComboBoxModel<Font> familyModel = new DefaultComboBoxModel<>();
         JLabel fontLabel = new JLabel(App.messages.getString("fontFamily"));
-        familyModel.addElement(getFont());
-        JComboBox<Font> familyCombo = new JComboBox<>(familyModel);
+        JComboBox<String> familyCombo = new JComboBox<>(new FontFamilyComboBoxModel());
         fontLabel.setLabelFor(familyCombo);
-        familyCombo.setRenderer(new FontListCellRenderer());
         JLabel sizeLabel = new JLabel(App.messages.getString("size"));
         Vector<Integer> sizes = new Vector<>(List.of(8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24));
         DefaultComboBoxModel<Integer> sizeModel = new DefaultComboBoxModel<>(sizes);
@@ -144,6 +141,7 @@ public class SettingsDialog extends ModalDialog {
 
         // eventos
         askToExitBtn.addActionListener(notifyShowClosingDialogChanged());
+        familyCombo.addActionListener(notifyFamilyChange());
         sizeCombo.addItemListener(notifySizeChange());
         okBtn.addActionListener(_ -> {
             saveChanges();
@@ -202,6 +200,34 @@ public class SettingsDialog extends ModalDialog {
                 }
                 applyBtn.setEnabled(!changes.isEmpty());
             }
+        };
+    }
+
+    private ActionListener notifyFamilyChange() {
+        return evt -> {
+            int totalUpdates = 0;
+            if (evt.getSource() instanceof JComboBox<?> comboBox) {
+                if (comboBox.getModel() instanceof FontFamilyComboBoxModel model) {
+                    Map<String, List<String>> familyMap = model.getFamilyMap();
+                    Object selectedItem = comboBox.getSelectedItem();
+                    if (selectedItem == null) {
+                        return;
+                    }
+                    String fontFamilySelected = selectedItem.toString();
+                    if (familyMap.containsKey(fontFamilySelected)) {
+                        List<String> list = familyMap.get(fontFamilySelected);
+                        // sí es una única fuente
+                        if (list.isEmpty()) {
+                            for (String key : App.settings.fontFamilyKeys()) {
+                                changes.put(key, fontFamilySelected);
+                                totalUpdates++;
+                            }
+                        } // queda pendiente el otro caso por qué no están todos los componentes necesarios.
+                    }
+                }
+            }
+            fontUpdated = totalUpdates > 0;
+            applyBtn.setEnabled(!changes.isEmpty());
         };
     }
 
