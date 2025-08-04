@@ -8,9 +8,11 @@ import java.util.*;
 public class FontFamilyComboBoxModel extends DefaultComboBoxModel<String> {
 
     private final Map<String, List<String>> familyMap;
+    private final String generalFontFamily;
 
     public FontFamilyComboBoxModel() {
         familyMap = new TreeMap<>();
+        generalFontFamily = App.settings.generalFontFamily();
         loadFamilies();
     }
 
@@ -19,7 +21,6 @@ public class FontFamilyComboBoxModel extends DefaultComboBoxModel<String> {
         String sans = "Sans";
         String serif = "Serif";
         String fontFamily;
-        String generalFontFamily = App.settings.generalFontFamily();
         for (String family : allFamilies) {
             String[] split = family.split("\\s");
             if (split.length > 1) {
@@ -40,23 +41,33 @@ public class FontFamilyComboBoxModel extends DefaultComboBoxModel<String> {
                 familyMap.put(family, new ArrayList<>());
             }
         }
-        familyMap.keySet().forEach(k -> {
+        // copia de las claves
+        Set<String> stringSet = Set.copyOf(familyMap.keySet());
+        // descarto la clave para reemplazarla por el único ítem que contiene
+        stringSet.forEach(k -> {
             List<String> list = familyMap.get(k);
             if (list.size() == 1) {
-                addElement(list.getFirst());
-            } else {
-                addElement(k);
+                String unique = list.getFirst();
+                list.clear();
+                familyMap.remove(k);
+                familyMap.put(unique, list);
             }
-            if (list.contains(generalFontFamily)) {
+        });
+        // agrego las claves que son el nombre de cada fuente o familia de fuentes al modelo
+        familyMap.forEach((k, v) -> {
+            addElement(k);
+            if (k.equals(generalFontFamily) || v.contains(generalFontFamily)) {
                 setSelectedItem(k);
-            } else {
-                setSelectedItem(generalFontFamily);
             }
         });
     }
 
     public Map<String, List<String>> getFamilyMap() {
         return Collections.unmodifiableMap(familyMap);
+    }
+
+    public String getGeneralFontFamily() {
+        return generalFontFamily;
     }
 
 }

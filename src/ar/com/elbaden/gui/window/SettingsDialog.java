@@ -8,14 +8,10 @@ import ar.com.elbaden.main.App;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
 import java.io.IOException;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import static javax.swing.GroupLayout.Alignment;
@@ -28,6 +24,8 @@ public class SettingsDialog extends ModalDialog {
 
     private final Properties changes;
     private final AbstractButton applyBtn;
+    private final Map<String, List<String>> familyMap;
+    private String actualFamily;
     private boolean fontUpdated;
 
     static {
@@ -70,8 +68,13 @@ public class SettingsDialog extends ModalDialog {
         installTitledBorder(fontPanel);
 
         JLabel fontLabel = new JLabel(App.messages.getString("fontFamily"));
-        JComboBox<String> familyCombo = new JComboBox<>(new FontFamilyComboBoxModel());
+        FontFamilyComboBoxModel familyComboBoxModel = new FontFamilyComboBoxModel();
+        familyMap = familyComboBoxModel.getFamilyMap();
+        actualFamily = familyComboBoxModel.getGeneralFontFamily();
+        JComboBox<String> familyCombo = new JComboBox<>(familyComboBoxModel);
         fontLabel.setLabelFor(familyCombo);
+        JPanel familyGroupPanel = new JPanel(null);
+        installFamilyGroupsCombos(familyGroupPanel);
         JLabel sizeLabel = new JLabel(App.messages.getString("size"));
         Vector<Integer> sizes = new Vector<>(List.of(8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24));
         DefaultComboBoxModel<Integer> sizeModel = new DefaultComboBoxModel<>(sizes);
@@ -93,11 +96,11 @@ public class SettingsDialog extends ModalDialog {
                 return c;
             }
         });
-        int generalFontSize = App.settings.generalFontSize();
-        if (!sizes.contains(generalFontSize)) {
-            sizeCombo.addItem(generalFontSize);
+        int actualFontSize = App.settings.generalFontSize();
+        if (!sizes.contains(actualFontSize)) {
+            sizeCombo.addItem(actualFontSize);
         }
-        sizeCombo.setSelectedItem(generalFontSize);
+        sizeCombo.setSelectedItem(actualFontSize);
         sizeLabel.setLabelFor(sizeCombo);
 
         JScrollPane scrollPane = new JScrollPane();
@@ -117,6 +120,7 @@ public class SettingsDialog extends ModalDialog {
         settingsBoxPanel.add(generalPanel);
         fontPanel.add(fontLabel);
         fontPanel.add(familyCombo);
+        fontPanel.add(familyGroupPanel);
         fontPanel.add(sizeLabel);
         fontPanel.add(sizeCombo);
         settingsBoxPanel.add(fontPanel);
@@ -141,7 +145,16 @@ public class SettingsDialog extends ModalDialog {
 
         // eventos
         askToExitBtn.addActionListener(notifyShowClosingDialogChanged());
-        familyCombo.addActionListener(notifyFamilyChange());
+        familyCombo.addItemListener(notifyFamilyChange());
+        familyCombo.addActionListener(_ -> {
+            LayoutManager layoutManager = familyGroupPanel.getLayout();
+            if (layoutManager instanceof CardLayout cardLayout) {
+                Object selectedItem = familyCombo.getSelectedItem();
+                if (selectedItem != null) {
+                    cardLayout.show(familyGroupPanel, selectedItem.toString());
+                }
+            }
+        });
         sizeCombo.addItemListener(notifySizeChange());
         okBtn.addActionListener(_ -> {
             saveChanges();
@@ -162,6 +175,36 @@ public class SettingsDialog extends ModalDialog {
         component.setBorder(titledBorder);
     }
 
+    private void installFamilyGroupsCombos(Container container) {
+        CardLayout layout = new CardLayout();
+        container.setLayout(layout);
+        familyMap.forEach((k, v) -> {
+            if (!v.isEmpty()) {
+                JComboBox<String> familyCombo = new JComboBox<>(new Vector<>(v));
+                familyCombo.setSelectedItem(actualFamily);
+                familyCombo.addItemListener(notifyFamilyChange());
+                familyCombo.addComponentListener(new ComponentAdapter() {
+                    @Override
+                    public void componentShown(ComponentEvent e) {
+                        Object item = familyCombo.getSelectedItem();
+                        if (actualFamily.equals(item)) {
+                            return;
+                        }
+                        int index = familyCombo.getSelectedIndex();
+                        ItemEvent itemEvent = new ItemEvent(familyCombo, index, item, ItemEvent.SELECTED);
+                        notifyFamilyChange().itemStateChanged(itemEvent);
+                    }
+                });
+                container.add(familyCombo, k);
+                if (v.contains(actualFamily)) {
+                    layout.show(container, k);
+                }
+            } else {
+                container.add(new JLabel(), k);
+            }
+        });
+    }
+
     private void saveChanges() {
         Map<Object, Object> copy = Map.copyOf(App.settings);
         changes.forEach((key, value) -> {
@@ -177,6 +220,8 @@ public class SettingsDialog extends ModalDialog {
                 App.settings.updateFonts(getOwner());
                 App.settings.updateFonts(this);
             }
+            // actualizo el valor
+            actualFamily = App.settings.generalFontFamily();
         } catch (IOException e) {
             App.settings.putAll(copy);
             LOGGER.severe(e.getMessage());
@@ -203,31 +248,26 @@ public class SettingsDialog extends ModalDialog {
         };
     }
 
-    private ActionListener notifyFamilyChange() {
+    private ItemListener notifyFamilyChange() {
         return evt -> {
-            int totalUpdates = 0;
-            if (evt.getSource() instanceof JComboBox<?> comboBox) {
-                if (comboBox.getModel() instanceof FontFamilyComboBoxModel model) {
-                    Map<String, List<String>> familyMap = model.getFamilyMap();
-                    Object selectedItem = comboBox.getSelectedItem();
-                    if (selectedItem == null) {
-                        return;
+            if (evt.getStateChange() == ItemEvent.SELECTED) {
+                if (evt.getItem() instanceof String item) {
+                    int totalUpdates = 0;
+                    // sí es una sola fuente
+                    boolean isKey = familyMap.containsKey(item) && familyMap.get(item).isEmpty();
+                    // si es parte de una familia
+                    boolean isValue = familyMap.keySet().stream().anyMatch(k -> familyMap.get(k).contains(item));
+                    // lo establezco como fuente general
+                    if (isKey || isValue) {
+                        for (String key : App.settings.fontFamilyKeys()) {
+                            changes.put(key, item);
+                            totalUpdates++;
+                        }
                     }
-                    String fontFamilySelected = selectedItem.toString();
-                    if (familyMap.containsKey(fontFamilySelected)) {
-                        List<String> list = familyMap.get(fontFamilySelected);
-                        // sí es una única fuente
-                        if (list.isEmpty()) {
-                            for (String key : App.settings.fontFamilyKeys()) {
-                                changes.put(key, fontFamilySelected);
-                                totalUpdates++;
-                            }
-                        } // queda pendiente el otro caso por qué no están todos los componentes necesarios.
-                    }
+                    fontUpdated = totalUpdates > 0;
+                    applyBtn.setEnabled(!changes.isEmpty());
                 }
             }
-            fontUpdated = totalUpdates > 0;
-            applyBtn.setEnabled(!changes.isEmpty());
         };
     }
 
