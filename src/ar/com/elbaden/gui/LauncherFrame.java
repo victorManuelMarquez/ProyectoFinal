@@ -5,8 +5,15 @@ import ar.com.elbaden.main.App;
 import javax.swing.*;
 import javax.swing.text.Caret;
 import java.awt.*;
+import java.util.logging.Logger;
 
 public class LauncherFrame extends JFrame {
+
+    private static final Logger LOGGER = Logger.getLogger(LauncherFrame.class.getName());
+
+    static {
+        LOGGER.setParent(Logger.getLogger(App.class.getName()));
+    }
 
     private LauncherFrame(String title) throws HeadlessException {
         super(title);
@@ -44,6 +51,7 @@ public class LauncherFrame extends JFrame {
             frame.setVisible(true);
         } catch (RuntimeException e) {
             e.printStackTrace(System.err);
+            LOGGER.severe(e.getMessage());
         }
     }
 
