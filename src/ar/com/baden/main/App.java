@@ -1,9 +1,13 @@
 package ar.com.baden.main;
 
+import ar.com.baden.gui.LauncherFrame;
+
+import javax.swing.*;
+
 public class App {
 
     public static void main(String[] args) {
-        System.out.println("¡Hola mundo!");
+        SwingUtilities.invokeLater(LauncherFrame::createAndShow);
     }
 
 }
