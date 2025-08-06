@@ -1,5 +1,7 @@
 package ar.com.elbaden.gui;
 
+import ar.com.elbaden.main.App;
+
 import javax.swing.*;
 import javax.swing.text.Caret;
 import java.awt.*;
@@ -35,7 +37,8 @@ public class LauncherFrame extends JFrame {
 
     public static void createAndShow() {
         try {
-            LauncherFrame frame = new LauncherFrame(LauncherFrame.class.getSimpleName());
+            String title = App.messages.getString("launcher.title");
+            LauncherFrame frame = new LauncherFrame(title);
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
