@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="El Baden v1.0" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="ar.com.baden.main.App" />
+    <module name="ProyectoFinal" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
