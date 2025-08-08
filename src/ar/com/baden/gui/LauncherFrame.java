@@ -13,14 +13,14 @@ public class LauncherFrame extends JFrame {
         /* variables */
         LaunchWorker worker;
         // componentes
-        JTextArea infoArea = new JTextArea();
-        JScrollPane scrollPane = new JScrollPane(infoArea);
+        JTextPane infoPane = new JTextPane();
+        JScrollPane scrollPane = new JScrollPane(infoPane);
         JProgressBar progressBar = new JProgressBar();
 
         // instalando componentes
         getContentPane().add(scrollPane, BorderLayout.CENTER);
         getContentPane().add(progressBar, BorderLayout.SOUTH);
-        worker = new LaunchWorker(infoArea); // se requiere que el área de texto ya esté contenida en una ventana
+        worker = new LaunchWorker(infoPane); // se requiere que el área de texto ya esté contenida en una ventana
 
         /* ajustes */
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -32,11 +32,9 @@ public class LauncherFrame extends JFrame {
             }
         }
         // área de texto
-        infoArea.setWrapStyleWord(true);
-        infoArea.setLineWrap(true);
-        infoArea.setEditable(false);
-        infoArea.setFocusable(false);
-        Caret caret = infoArea.getCaret();
+        infoPane.setEditable(false);
+        infoPane.setFocusable(false);
+        Caret caret = infoPane.getCaret();
         caret.setVisible(false);
         // barra de progreso
         progressBar.setIndeterminate(true);
