@@ -1,20 +1,29 @@
 package ar.com.baden.gui;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.text.MessageFormat;
 import java.util.List;
 
 public class LaunchWorker extends SwingWorker<Void, String> {
 
-    private final JTextArea textArea;
     private final Window ancestor;
     private final Cursor cursor;
+    private final StyledDocument document;
+    private final Style errorStyle;
 
-    public LaunchWorker(JTextArea textArea) {
-        this.textArea = textArea;
-        ancestor = SwingUtilities.getWindowAncestor(textArea);
+    public LaunchWorker(JTextPane textPane) {
+        ancestor = SwingUtilities.getWindowAncestor(textPane);
         cursor = ancestor.getCursor();
+        document = textPane.getStyledDocument();
+        Style boldStyle = document.addStyle("boldStyle", null);
+        StyleConstants.setBold(boldStyle, true);
+        errorStyle = document.addStyle("errorStyle", boldStyle);
+        StyleConstants.setForeground(errorStyle, Color.RED);
     }
 
     @Override
@@ -37,7 +46,7 @@ public class LaunchWorker extends SwingWorker<Void, String> {
 
     @Override
     protected void process(List<String> chunks) {
-        chunks.forEach(this::appendNewLine);
+        chunks.forEach(str -> appendText(str, null));
     }
 
     @Override
@@ -53,11 +62,15 @@ public class LaunchWorker extends SwingWorker<Void, String> {
         }
     }
 
-    private void appendNewLine(String value) {
-        if (value.endsWith(System.lineSeparator())) {
-            textArea.append(value);
-        } else {
-            textArea.append(value.concat(System.lineSeparator()));
+    private void appendText(String value, Style style) {
+        if (!value.endsWith(System.lineSeparator())) {
+            value = value.concat(System.lineSeparator());
+        }
+        try {
+            int offset = document.getLength();
+            document.insertString(offset, value, style);
+        } catch (BadLocationException e) {
+            e.printStackTrace(System.err);
         }
     }
 
@@ -69,9 +82,9 @@ public class LaunchWorker extends SwingWorker<Void, String> {
             }
         }
         if (message != null) {
-            appendNewLine(message);
+            appendText(message, errorStyle);
         } else {
-            appendNewLine(e.getMessage());
+            appendText(e.getMessage(), errorStyle);
         }
     }
 
